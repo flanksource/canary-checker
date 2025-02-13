@@ -6,5 +6,5 @@ spec:
   schedule: "*/1 * * * *"
   tcp:
     - name: "flanksource website"
-      url: www.flanksource.com:80
+      endpoint: www.flanksource.com:80
       thresholdMillis: 1200

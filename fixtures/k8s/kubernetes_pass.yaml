@@ -5,13 +5,13 @@ metadata:
 spec:
   schedule: "@every 5m"
   kubernetes:
-    - namspaceSelector:
+    - namespaceSelector:
         name: canaries
       name: k8s-ready pods
       kind: Pod
       resource:
         labelSelector: app=k8s-ready
-    - namspaceSelector:
+    - namespaceSelector:
         name: canaries
       kind: Pod
       name: k8s-ready pods

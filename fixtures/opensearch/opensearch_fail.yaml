@@ -2,7 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: opensearch-fail
-  namespace: canaries
   labels:
     canary: opensearch
     "Expected-Fail": "true"

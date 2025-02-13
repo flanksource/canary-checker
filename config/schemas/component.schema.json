@@ -4187,6 +4187,9 @@
         },
         "bucketName": {
           "type": "string"
+        },
+        "storageClass": {
+          "type": "string"
         }
       },
       "additionalProperties": false,

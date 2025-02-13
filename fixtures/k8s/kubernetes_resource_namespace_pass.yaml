@@ -2,8 +2,7 @@
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: namespace-creation 
-  namespace: default
+  name: namespace-creation
   labels:
     "Expected-Fail": "false"
 spec:
@@ -12,7 +11,7 @@ spec:
     - name: "namespace creation"
       namespace: "default"
       description: "create a namespace and pod in it"
-      waitFor: 
+      waitFor:
         timeout: 3m
         delete: true
       staticResources:

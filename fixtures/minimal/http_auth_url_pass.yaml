@@ -2,7 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: http-basic-auth-url
-  namespace: canaries
 spec:
   http:
     - name: test-url-via-env

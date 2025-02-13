@@ -5,12 +5,13 @@ metadata:
 spec:
   schedule: "@every 5m"
   azureDevops:
-    - project: Demo1
+    - name: ado test
+      project: Demo1
       pipeline: ^windows-
       personalAccessToken:
         value: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
       organization: flanksource
-      variable:
+      variables:
         env: prod
       branch:
         - main

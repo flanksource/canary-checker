@@ -123,7 +123,7 @@ type HTTPCheck struct {
 	Body string `yaml:"body,omitempty" json:"body,omitempty" template:"true"`
 	// Header fields to be used in the query
 	Headers []types.EnvVar `yaml:"headers,omitempty" json:"headers,omitempty"`
-	//Template the request body
+	// Template the request body
 	TemplateBody bool `yaml:"templateBody,omitempty" json:"templateBody,omitempty"`
 	// EnvVars are the environment variables that are accessible to templated body
 	EnvVars []types.EnvVar `yaml:"env,omitempty" json:"env,omitempty"`
@@ -187,6 +187,7 @@ type S3Check struct {
 	Relatable               `yaml:",inline" json:",inline"`
 	connection.S3Connection `yaml:",inline" json:",inline"`
 	BucketName              string `yaml:"bucketName" json:"bucketName,omitempty"`
+	StorageClass            string `yaml:"storageClass" json:"storageClass,omitempty"`
 }
 
 func (c S3Check) GetEndpoint() string {

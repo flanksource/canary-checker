@@ -5,16 +5,17 @@ metadata:
 spec:
   schedule: "@every 5m"
   cloudwatch:
-    region: "eu-west-1"
-    transform:
-      expr: |
-        results.MetricAlarms.filter(i, i.StateValue != 'OK' ).map(i,
-           {
-            'name': i.MetricName,
-            'icon': 'aws-cloudwatch-alarm',
-            'duration': time.Since(timestamp(i.StateTransitionedTimestamp)).getMilliseconds(),
-            'labels': fromAWSMap(i.Dimensions).
-              merge({'arn': i.AlarmArn}),
-            'message': "%s (%s) %s".format([i.AlarmDescription, i.AlarmArn, fromAWSMap(i.Dimensions)]),
-          }
-        ).toJSON()
+    - name: cloudwatch test
+      region: "eu-west-1"
+      transform:
+        expr: |
+          results.MetricAlarms.filter(i, i.StateValue != 'OK' ).map(i,
+            {
+              'name': i.MetricName,
+              'icon': 'aws-cloudwatch-alarm',
+              'duration': time.Since(timestamp(i.StateTransitionedTimestamp)).getMilliseconds(),
+              'labels': fromAWSMap(i.Dimensions).
+                merge({'arn': i.AlarmArn}),
+              'message': "%s (%s) %s".format([i.AlarmDescription, i.AlarmArn, fromAWSMap(i.Dimensions)]),
+            }
+          ).toJSON()

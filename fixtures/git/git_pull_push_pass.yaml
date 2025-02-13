@@ -2,7 +2,6 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: git-pull-push
-  namespace: canaries
 spec:
   gitProtocol:
     - name: git-pull-push

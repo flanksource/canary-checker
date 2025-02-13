@@ -2,7 +2,7 @@
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= ""
 NAME=canary-checker
-YQ=$(shell readlink -f .bin/yq)
+YQ=yq
 OS   ?= $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH ?= $(shell uname -m | sed 's/x86_64/amd64/')
 LD_FLAGS=-ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""
@@ -71,33 +71,17 @@ gen-schemas:
 	go run ./main.go
 
 # Generate manifests e.g. CRD, RBAC etc.
-manifests: .bin/controller-gen .bin/yq
+manifests: .bin/controller-gen
 	# For debugging
-	$(YQ) -V
-
-	schemaPath=.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties
+	# $(YQ) -V
 
 	# Generate CRDS
 	.bin/controller-gen crd paths="./api/..." output:stdout | $(YQ) ea -P '[.] | sort_by(.metadata.name) | .[] | splitDoc' - > config/deploy/crd.yaml
 
 	$(MAKE) gen-schemas
 
-	# Remove various nested properties within the CRD structure, such as checks, forEach, lookup, and properties
-	# to reduce the CRD size.
-	cd config/deploy && \
-		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.checks.items.properties)' crd.yaml | \
-		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.forEach.properties)' /dev/stdin | \
-		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.[].items.properties.metrics.items.properties)' /dev/stdin | \
-		$(YQ) ea '.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties[] |= (select(.items.properties.metrics != null) | .items.properties.metrics.items |= {"type":"object","additionalProperties":true,"properties":{"labels":{"type":"array","items":{"type":"object","additionalProperties":true}}}})' /dev/stdin | \
-		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.lookup.properties)' /dev/stdin | \
-		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.properties.items.properties.lookup.properties)' /dev/stdin | \
-		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.forEach.properties)' /dev/stdin | \
-		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.lookup.properties)' /dev/stdin | \
-		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.checks.items.properties.inline.properties)' /dev/stdin | \
-		$(YQ) ea 'del(.. | select(has("scope")).scope | .. | select(has("description")).description)' /dev/stdin | \
-		$(YQ) ea 'del(.spec.versions[0].schema.openAPIV3Schema.properties.spec.properties.components.items.properties.properties.items.properties.lookup.properties)' /dev/stdin > crd.slim.yaml
-
-	cd config/deploy && mv crd.slim.yaml crd.yaml
+	./hack/compress-crds.sh
+	rm config/deploy/crd.yaml
 
 tidy:
 	go mod tidy
