@@ -383,6 +383,7 @@ func NewProperty(property v1.Property) *dutyTypes.Property {
 		Headline:       property.Headline,
 		Type:           property.Type,
 		Color:          property.Color,
+		Hidden:         property.Hidden,
 	}
 }
 
