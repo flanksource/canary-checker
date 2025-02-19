@@ -22,8 +22,9 @@ spec:
       - name: postgresql
         image: {{ include "canary-checker.postgres.imageString" . }}
         volumeMounts:
-          - name: postgresql
-            mountPath: /data
+          - mountPath: /var/lib/postgresql/data
+            name: postgresql
+            subPath: postgres
         envFrom:
           - secretRef:
               name: {{ .Values.db.external.secretKeyRef.name }}
