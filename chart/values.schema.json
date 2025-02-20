@@ -73,6 +73,12 @@
         "external": {
           "additionalProperties": false,
           "properties": {
+            "conf": {
+              "additionalProperties": true,
+              "required": [],
+              "title": "conf",
+              "type": "object"
+            },
             "create": {
               "default": false,
               "description": "Setting create to true will create a postgres stateful set for config-db to connect to.\nIf create=true, the secretKeyRef will be created by helm with the specified name and key\n  Optionally populate a secret named 'postgres-connection' before install with `POSTGRES_USER` and `POSTGRES_PASSWORD` to set the created username and password, otherwise a random password will be created for a 'postgres' user\nIf false and an existing connection must be specified under secretKeyRef\nIf create=false, a prexisting secret containing the URI to an existing postgres database must be provided\n  The URI must be in the format `postgresql://$user:$password@$host/$database`",
@@ -86,6 +92,31 @@
               "required": [],
               "title": "enabled",
               "type": "boolean"
+            },
+            "resources": {
+              "additionalProperties": false,
+              "properties": {
+                "requests": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "memory": {
+                      "default": "2Gi",
+                      "required": [],
+                      "title": "memory",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "memory"
+                  ],
+                  "title": "requests",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "requests"
+              ],
+              "title": "resources"
             },
             "secretKeyRef": {
               "additionalProperties": false,
@@ -110,6 +141,11 @@
               ],
               "title": "secretKeyRef",
               "type": "object"
+            },
+            "shmVolume": {
+              "default": "256Mi",
+              "required": [],
+              "title": "shmVolume"
             },
             "storage": {
               "default": "20Gi",
@@ -490,6 +526,13 @@
               "title": "configmaps",
               "type": "boolean"
             },
+            "deploymentCreateAndDelete": {
+              "default": true,
+              "description": "for deployment canary",
+              "required": [],
+              "title": "deploymentCreateAndDelete",
+              "type": "boolean"
+            },
             "enabled": {
               "default": true,
               "description": "\nInstall (Cluster)Role and RoleBinding for the ServiceAccount",
@@ -525,13 +568,6 @@
               "description": "for namespace canary",
               "required": [],
               "title": "namespaceCreateAndDelete",
-              "type": "boolean"
-            },
-            "deploymentCreateAndDelete": {
-              "default": true,
-              "description": "for deployment canary",
-              "required": [],
-              "title": "deploymentCreateAndDelete",
               "type": "boolean"
             },
             "podsCreateAndDelete": {

@@ -22,10 +22,41 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | db.embedded.persist | bool | `false` | persist the embedded DB with a PVC |
 | db.embedded.storage | string | `"20Gi"` |  |
 | db.embedded.storageClass | string | `""` |  |
+| db.external.conf.db_user_namespace | string | `"off"` |  |
+| db.external.conf.effective_cache_size | string | `"3GB"` |  |
+| db.external.conf.effective_io_concurrency | int | `200` |  |
+| db.external.conf.extra_float_digits | int | `0` |  |
+| db.external.conf.log_autovacuum_min_duration | int | `0` |  |
+| db.external.conf.log_connections | string | `"on"` |  |
+| db.external.conf.log_destination | string | `"stderr"` |  |
+| db.external.conf.log_directory | string | `"/var/log/postgresql"` |  |
+| db.external.conf.log_file_mode | int | `420` |  |
+| db.external.conf.log_filename | string | `"postgresql-%d.log"` |  |
+| db.external.conf.log_line_prefix | string | `"%m [%p] %q[user=%u,db=%d,app=%a] "` |  |
+| db.external.conf.log_lock_waits | string | `"on"` |  |
+| db.external.conf.log_min_duration_statement | string | `"1s"` |  |
+| db.external.conf.log_rotation_age | string | `"1d"` |  |
+| db.external.conf.log_rotation_size | string | `"100MB"` |  |
+| db.external.conf.log_statement | string | `"all"` |  |
+| db.external.conf.log_temp_files | int | `0` |  |
+| db.external.conf.log_timezone | string | `"UTC"` |  |
+| db.external.conf.log_truncate_on_rotation | string | `"on"` |  |
+| db.external.conf.logging_collector | string | `"on"` |  |
+| db.external.conf.maintenance_work_mem | string | `"256MB"` |  |
+| db.external.conf.max_connections | int | `50` |  |
+| db.external.conf.max_wal_size | string | `"4GB"` |  |
+| db.external.conf.password_encryption | string | `"scram-sha-256"` |  |
+| db.external.conf.shared_buffers | string | `"1GB"` |  |
+| db.external.conf.ssl | string | `"off"` |  |
+| db.external.conf.timezone | string | `"UTC"` |  |
+| db.external.conf.wal_buffers | string | `"16MB"` |  |
+| db.external.conf.work_mem | string | `"10MB"` |  |
 | db.external.create | bool | `false` | If false and an existing connection must be specified under secretKeyRef If create=false, a prexisting secret containing the URI to an existing postgres database must be provided   The URI must be in the format `postgresql://$user:$password@$host/$database` |
 | db.external.enabled | bool | `false` | Setting to true will disable the embedded DB |
+| db.external.resources.requests.memory | string | `"2Gi"` |  |
 | db.external.secretKeyRef.key | string | `"DB_URL"` |  |
 | db.external.secretKeyRef.name | string | `"canary-checker-postgres"` |  |
+| db.external.shmVolume | string | `"256Mi"` |  |
 | db.external.storage | string | `"20Gi"` |  |
 | db.external.storageClass | string | `""` |  |
 | db.runMigrations | bool | `true` |  |
@@ -89,11 +120,12 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | serviceAccount.name | string | `"canary-checker-sa"` |  |
 | serviceAccount.rbac.clusterRole | bool | `true` | whether to create cluster-wide or namespaced roles |
 | serviceAccount.rbac.configmaps | bool | `true` | for secret management with valueFrom |
+| serviceAccount.rbac.deploymentCreateAndDelete | bool | `true` | for deployment canary |
 | serviceAccount.rbac.enabled | bool | `true` | Install (Cluster)Role and RoleBinding for the ServiceAccount |
 | serviceAccount.rbac.exec | bool | `true` |  |
+| serviceAccount.rbac.extra | list | `[]` |  |
 | serviceAccount.rbac.ingressCreateAndDelete | bool | `true` | for pod canary |
 | serviceAccount.rbac.namespaceCreateAndDelete | bool | `true` | for namespace canary |
-| serviceAccount.rbac.deploymentCreateAndDelete | bool | `true` | for deployment canary |
 | serviceAccount.rbac.podsCreateAndDelete | bool | `true` | for pod and junit canaries |
 | serviceAccount.rbac.readAll | bool | `true` | for use with kubernetes resource lookups |
 | serviceAccount.rbac.secrets | bool | `true` | for secret management with valueFrom |
