@@ -1,4 +1,14 @@
 {{- if eq .Values.db.external.create true }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-scripts
+data:
+  post-startup.sh: |
+    #!/bin/bash
+    psql -U postgres -c "ALTER USER postgres PASSWORD '${POSTGRES_PASSWORD}';"
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -18,12 +28,61 @@ spec:
         app: postgresql
         {{- include "postgresql.selectorLabels" . | nindent 8 }}
     spec:
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "{{- .Values.db.external.shmVolume }}"
+        - name: logs
+          emptyDir: {}
+        - name: scripts
+          configMap:
+            name: postgresql-scripts
+            defaultMode: 0755
+      initContainers:
+        - image: busybox
+          name: postgres-perms
+          command:
+            - sh
+            - -c
+            - mkdir -p /postgres && chmod -R 0750 /postgres && chown 999:999 -R /postgres && chmod -R 777 /dev/shm
+          volumeMounts:
+            - mountPath: /postgres
+              name: postgresql
+            - name: dshm
+              mountPath: /dev/shm
       containers:
       - name: postgresql
         image: {{ include "canary-checker.postgres.imageString" . }}
+        command:
+          - /usr/local/bin/docker-entrypoint.sh
+          - -D
+          - /var/lib/postgresql/data
+          - --config-file=/etc/postgresql/postgresql.conf
+          {{- range $k, $v := .Values.db.external.conf }}
+          - '--{{ $k }}={{ $v }}'
+          {{- end }}
+        resources:
+            {{- toYaml .Values.db.external.resources | nindent 12 }}
+        env:
+          - name: PGDATA
+            value: /var/lib/postgresql/data
+        startupProbe:
+          initialDelaySeconds: 15
+          exec:
+            command:
+            - /post-startup.sh
         volumeMounts:
-          - name: postgresql
-            mountPath: /data
+          - mountPath: /var/lib/postgresql/data
+            name: postgresql
+            subPath: postgres
+          - name: dshm
+            mountPath: /dev/shm
+          - name: logs
+            mountPath: /var/log/postgresql
+          - name: scripts
+            mountPath: /post-startup.sh
+            subPath: post-startup.sh
         envFrom:
           - secretRef:
               name: {{ .Values.db.external.secretKeyRef.name }}

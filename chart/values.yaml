@@ -218,6 +218,55 @@ db:
     storageClass: ""
     storage: 20Gi
 
+    # @schema
+    # type: object
+    # required: false
+    # additionalProperties: true
+    # properties: {}
+    # @schema
+    conf:
+      max_connections: 50
+      shared_buffers: 1GB
+      effective_cache_size: 3GB
+      maintenance_work_mem: 256MB
+      wal_buffers: 16MB
+      effective_io_concurrency: 200
+      work_mem: 10MB
+      max_wal_size: 4GB
+      log_autovacuum_min_duration: 0
+      log_connections: on
+      log_destination: "stderr"
+      log_directory: "/var/log/postgresql"
+      log_file_mode: 0644
+      log_filename: "postgresql-%d.log"
+      log_line_prefix: "%m [%p] %q[user=%u,db=%d,app=%a] "
+      log_lock_waits: on
+      log_min_duration_statement: "1s"
+      log_rotation_age: "1d"
+      log_rotation_size: "100MB"
+      log_truncate_on_rotation: on
+      log_statement: "all"
+      log_temp_files: 0
+      log_timezone: "UTC"
+      logging_collector: on
+      ssl: off
+      timezone: "UTC"
+      password_encryption: scram-sha-256
+      db_user_namespace: off
+      extra_float_digits: 0
+
+    # @schema
+    # required: false
+    # @schema
+    shmVolume: 256Mi
+
+    # @schema
+    # required: false
+    # @schema
+    resources:
+      requests:
+        memory: 2Gi
+
 # @schema
 # required: false
 # @schema
