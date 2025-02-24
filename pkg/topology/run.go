@@ -219,7 +219,7 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 	// canaryCtx.Environment = ctx.
 	// canaryCtx.Logger = ctx.Logger
 
-	checkResults, err := checks.Exec(canaryCtx)
+	checkResults, err := checks.Exec(canaryCtx, false)
 	if err != nil {
 		return nil, err
 	}

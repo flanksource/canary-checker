@@ -194,7 +194,7 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 
 			ctx = _ctx.(context.Context)
 			checkCtx := context.New(ctx.Context, virtualCanary)
-			res, err := Exec(checkCtx)
+			res, err := Exec(checkCtx, true)
 			if err != nil {
 				return fmt.Errorf("error executing check: %w", err)
 			} else {
