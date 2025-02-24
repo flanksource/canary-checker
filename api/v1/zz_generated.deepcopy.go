@@ -2197,11 +2197,7 @@ func (in *KubernetesCheck) DeepCopyInto(out *KubernetesCheck) {
 	in.Relatable.DeepCopyInto(&out.Relatable)
 	out.Namespace = in.Namespace
 	out.Resource = in.Resource
-	if in.KubeConfig != nil {
-		in, out := &in.KubeConfig, &out.KubeConfig
-		*out = new(types.EnvVar)
-		(*in).DeepCopyInto(*out)
-	}
+	in.KubernetesConnection.DeepCopyInto(&out.KubernetesConnection)
 	if in.Ignore != nil {
 		in, out := &in.Ignore, &out.Ignore
 		*out = make([]string, len(*in))
@@ -2252,6 +2248,7 @@ func (in *KubernetesResourceCheck) DeepCopyInto(out *KubernetesResourceCheck) {
 		*out = new(types.EnvVar)
 		(*in).DeepCopyInto(*out)
 	}
+	in.KubernetesConnection.DeepCopyInto(&out.KubernetesConnection)
 	in.WaitFor.DeepCopyInto(&out.WaitFor)
 }
 

@@ -978,6 +978,8 @@ type KubernetesResourceCheck struct {
 	// Kubeconfig is the kubeconfig or the path to the kubeconfig file.
 	Kubeconfig *types.EnvVar `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
 
+	connection.KubernetesConnection `yaml:",inline"`
+
 	WaitFor KubernetesResourceCheckWaitFor `json:"waitFor,omitempty"`
 }
 
@@ -1091,7 +1093,7 @@ type KubernetesCheck struct {
 	Namespace   ResourceSelector `yaml:"namespaceSelector,omitempty" json:"namespaceSelector,omitempty"`
 	Resource    ResourceSelector `yaml:"resource,omitempty" json:"resource,omitempty"`
 	// KubeConfig is the kubeconfig or the path to the kubeconfig file.
-	KubeConfig *types.EnvVar `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
+	connection.KubernetesConnection `yaml:",inline" json:",inline"`
 	// Ignore the specified resources from the fetched resources. Can be a glob pattern.
 	Ignore []string `yaml:"ignore,omitempty" json:"ignore,omitempty"`
 	Kind   string   `yaml:"kind" json:"kind"`

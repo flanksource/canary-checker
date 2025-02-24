@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/duty/connection"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
@@ -215,10 +216,9 @@ func (ctx *Context) WithDutyContext(c dutyCtx.Context) *Context {
 	return ctx
 }
 
-func (ctx *Context) WithKubeconfig(input types.EnvVar) (Context, error) {
-	c, err := ctx.Context.WithKubeconfig(input)
-	ctx.Context = *c
-	return *ctx, err
+func (ctx *Context) WithKubernetesConnection(conn connection.KubernetesConnection) Context {
+	ctx.Context = ctx.Context.WithKubernetes(conn)
+	return *ctx
 }
 
 func (ctx *Context) WithCheck(check external.Check) *Context {
