@@ -37,19 +37,13 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 	var results pkg.Results
 	results = append(results, result)
 
-	if check.KubeConfig != nil {
-		var err error
-		ctx, err = ctx.WithKubeconfig(*check.KubeConfig)
-		if err != nil {
-			return results.WithError(err).Invalidf("Cannot connect to kubernetes")
-		}
+	ctx = ctx.WithKubernetesConnection(check.KubernetesConnection)
+	k8sClient, err := ctx.Kubernetes()
+	if err != nil {
+		return results.Failf("Kubernetes is not initialized: %v", err)
 	}
 
-	if ctx.KubernetesRestConfig() == nil {
-		return results.Failf("Kubernetes is not initialized")
-	}
-
-	client, err := ctx.KubernetesClient().GetClientByKind(check.Kind)
+	client, err := k8sClient.GetClientByKind(check.Kind)
 	if err != nil {
 		return results.Failf("Failed to get client for kind %s: %v", check.Kind, err)
 	}
@@ -135,7 +129,11 @@ func getNamespaces(ctx context.Context, check v1.KubernetesCheck) ([]string, err
 	if check.Namespace.FieldSelector == "" && check.Namespace.LabelSelector == "" {
 		return []string{""}, nil
 	}
-	namespaceList, err := ctx.Kubernetes().CoreV1().Namespaces().List(ctx, metav1.ListOptions{
+	k8sClient, err := ctx.Kubernetes()
+	if err != nil {
+		return nil, fmt.Errorf("error creating kubernetes client: %w", err)
+	}
+	namespaceList, err := k8sClient.CoreV1().Namespaces().List(ctx, metav1.ListOptions{
 		LabelSelector: check.Namespace.LabelSelector,
 		FieldSelector: check.Namespace.FieldSelector,
 	})
