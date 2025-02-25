@@ -5,7 +5,8 @@ metadata:
 spec:
   schedule: "@every 5m"
   github:
-    - query: "SELECT * FROM github_repo_checks('flanksource/template-operator') where branch='master'"
+    - query: >
+        SELECT * FROM github_repo_checks('flanksource/artifacts') where branch='main'
       name: github-expresion-check
       test:
         expr: 'Age(results[0]["started_at"]) > Duration("10m")'
