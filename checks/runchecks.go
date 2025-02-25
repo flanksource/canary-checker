@@ -60,7 +60,7 @@ func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
 }
 
 // Exec runs the actions specified and returns the results, without saving artifacts
-func Exec(ctx *context.Context, exportMetrics bool) ([]*pkg.CheckResult, error) {
+func Exec(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	var results []*pkg.CheckResult
 	disabledChecks, err := getDisabledChecks(ctx)
 	if err != nil {
@@ -84,9 +84,7 @@ func Exec(ctx *context.Context, exportMetrics bool) ([]*pkg.CheckResult, error) 
 		result := c.Run(ctx)
 		transformedResults := TransformResults(ctx, result)
 		results = append(results, transformedResults...)
-		if exportMetrics {
-			ExportCheckMetrics(ctx, transformedResults)
-		}
+		ExportCheckMetrics(ctx, transformedResults, false)
 	}
 	return results, nil
 }
@@ -129,7 +127,7 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 		result := c.Run(ctx)
 		transformedResults := TransformResults(ctx, result)
 		results = append(results, transformedResults...)
-		ExportCheckMetrics(ctx, transformedResults)
+		ExportCheckMetrics(ctx, transformedResults, true)
 	}
 
 	if err := saveArtifacts(ctx, results); err != nil {
