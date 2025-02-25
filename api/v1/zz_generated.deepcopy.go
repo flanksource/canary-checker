@@ -2243,11 +2243,6 @@ func (in *KubernetesResourceCheck) DeepCopyInto(out *KubernetesResourceCheck) {
 		}
 	}
 	in.CheckRetries.DeepCopyInto(&out.CheckRetries)
-	if in.Kubeconfig != nil {
-		in, out := &in.Kubeconfig, &out.Kubeconfig
-		*out = new(types.EnvVar)
-		(*in).DeepCopyInto(*out)
-	}
 	in.KubernetesConnection.DeepCopyInto(&out.KubernetesConnection)
 	in.WaitFor.DeepCopyInto(&out.WaitFor)
 }

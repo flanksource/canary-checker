@@ -3,6 +3,26 @@
   "$id": "https://github.com/flanksource/canary-checker/api/v1/kubernetes",
   "$ref": "#/$defs/Kubernetes",
   "$defs": {
+    "CNRMConnection": {
+      "properties": {
+        "gke": {
+          "$ref": "#/$defs/GKEConnection"
+        },
+        "clusterResource": {
+          "type": "string"
+        },
+        "clusterResourceNamespace": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "gke",
+        "clusterResource",
+        "clusterResourceNamespace"
+      ]
+    },
     "CheckRelationship": {
       "properties": {
         "components": {
@@ -34,6 +54,42 @@
       "type": "object",
       "required": [
         "key"
+      ]
+    },
+    "EKSConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "assumeRole": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "cluster": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "cluster"
       ]
     },
     "EnvVar": {
@@ -68,6 +124,38 @@
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "GKEConnection": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "projectID": {
+          "type": "string"
+        },
+        "zone": {
+          "type": "string"
+        },
+        "cluster": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "projectID",
+        "zone",
+        "cluster"
+      ]
     },
     "HelmRefKeySelector": {
       "properties": {
@@ -128,8 +216,20 @@
         "resource": {
           "$ref": "#/$defs/ResourceSelector"
         },
+        "connection": {
+          "type": "string"
+        },
         "kubeconfig": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "eks": {
+          "$ref": "#/$defs/EKSConnection"
+        },
+        "gke": {
+          "$ref": "#/$defs/GKEConnection"
+        },
+        "cnrm": {
+          "$ref": "#/$defs/CNRMConnection"
         },
         "ignore": {
           "items": {

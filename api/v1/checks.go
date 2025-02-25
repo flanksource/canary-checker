@@ -975,7 +975,7 @@ type KubernetesResourceCheck struct {
 	// Ensure that the resources are deleted before creating them.
 	ClearResources bool `json:"clearResources,omitempty"`
 
-	connection.KubernetesConnection `yaml:",inline"`
+	connection.KubernetesConnection `json:",inline" yaml:",inline"`
 
 	WaitFor KubernetesResourceCheckWaitFor `json:"waitFor,omitempty"`
 }
