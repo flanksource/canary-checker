@@ -52,7 +52,11 @@ func (c *NamespaceChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Namespace {
 		if c.k8s == nil {
-			c.k8s = ctx.Kubernetes()
+			var err error
+			c.k8s, err = ctx.Kubernetes()
+			if err != nil {
+				return results.Failf("error creating kubernetes client: %v", err)
+			}
 			c.ctx = ctx
 		}
 		results = append(results, c.Check(c.ctx, conf)...)

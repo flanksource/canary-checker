@@ -12,9 +12,9 @@ import (
 	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/pkg/utils"
+	dutyKubernetes "github.com/flanksource/duty/kubernetes"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 
 	"k8s.io/apimachinery/pkg/util/rand"
 
@@ -119,18 +119,18 @@ func newPod(ctx *context.Context, check v1.JunitCheck) (*corev1.Pod, error) {
 	return pod, nil
 }
 
-func deletePod(ctx *context.Context, pod *corev1.Pod) {
+func deletePod(ctx *context.Context, k8sClient *dutyKubernetes.Client, pod *corev1.Pod) {
 	if ctx.Canary.Annotations["skipDelete"] == "true" { // nolint: goconst
 		return
 	}
 
-	if _, err := ctx.KubernetesClient().DeleteByGVK(ctx, pod.Namespace, pod.Name, pod.GroupVersionKind()); err != nil {
+	if _, err := k8sClient.DeleteByGVK(ctx, pod.Namespace, pod.Name, pod.GroupVersionKind()); err != nil {
 		ctx.Warnf("failed to delete pod %s/%s: %v", pod.Namespace, pod.Name, err)
 	}
 }
 
-func getLogs(ctx *context.Context, pod corev1.Pod) string {
-	reader, err := ctx.KubernetesClient().GetPodLogs(ctx, pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
+func getLogs(ctx *context.Context, k8sClient *dutyKubernetes.Client, pod corev1.Pod) string {
+	reader, err := k8sClient.GetPodLogs(ctx, pod.Namespace, pod.Name, pod.Spec.InitContainers[0].Name)
 	if err != nil {
 		ctx.Errorf("failed to get pod logs %s/%s: %v", pod.Namespace, pod.Name, err)
 		return ""
@@ -149,22 +149,22 @@ func getLogs(ctx *context.Context, pod corev1.Pod) string {
 	return string(message)
 }
 
-func podExecf(ctx *context.Context, pod corev1.Pod, results pkg.Results, cmd string, args ...interface{}) (string, bool) {
+func podExecf(ctx *context.Context, k8sClient *dutyKubernetes.Client, pod corev1.Pod, results pkg.Results, cmd string, args ...interface{}) (string, bool) {
 	_cmd := fmt.Sprintf(cmd, args...)
-	stdout, stderr, err := ctx.KubernetesClient().ExecutePodf(ctx, pod.Namespace, pod.Name, containerName, "bash", "-c", _cmd)
+	stdout, stderr, err := k8sClient.ExecutePodf(ctx, pod.Namespace, pod.Name, containerName, "bash", "-c", _cmd)
 	if stderr != "" || err != nil {
-		podFail(ctx, pod, results.Failf("error running %s: %v %v %v", _cmd, stdout, stderr, err))
+		podFail(ctx, k8sClient, pod, results.Failf("error running %s: %v %v %v", _cmd, stdout, stderr, err))
 		return "", false
 	}
 
 	return strings.TrimSpace(stdout), true
 }
 
-func podFail(ctx *context.Context, pod corev1.Pod, results pkg.Results) pkg.Results {
-	return results.ErrorMessage(fmt.Errorf("%s is %s\n %v", pod.Name, pod.Status.Phase, getLogs(ctx, pod)))
+func podFail(ctx *context.Context, k8sClient *dutyKubernetes.Client, pod corev1.Pod, results pkg.Results) pkg.Results {
+	return results.ErrorMessage(fmt.Errorf("%s is %s\n %v", pod.Name, pod.Status.Phase, getLogs(ctx, k8sClient, pod)))
 }
 
-func cleanupExistingPods(ctx *context.Context, k8s kubernetes.Interface, selector string) (bool, error) {
+func cleanupExistingPods(ctx *context.Context, k8s *dutyKubernetes.Client, selector string) (bool, error) {
 	pods := k8s.CoreV1().Pods(ctx.Namespace)
 	existingPods, err := pods.List(ctx, metav1.ListOptions{
 		LabelSelector: selector,
@@ -183,7 +183,7 @@ func cleanupExistingPods(ctx *context.Context, k8s kubernetes.Interface, selecto
 		}
 
 		if time.Now().After((*nextRuntime)) {
-			defer deletePod(ctx, &_junitPod)
+			defer deletePod(ctx, k8s, &_junitPod)
 			ctx.Warnf("stale pod found: %s, created=%s", junitPod.Name, time.Since(junitPod.GetCreationTimestamp().Local()))
 			skip = true
 		}
@@ -200,11 +200,10 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	var results pkg.Results
 	results = append(results, result)
 
-	if ctx.KubernetesClient() == nil {
-		return results.Failf("Kubernetes is not initialized")
+	k8s, err := ctx.Kubernetes()
+	if err != nil {
+		return results.Failf("error creating kubernetes client: %w", err)
 	}
-
-	k8s := ctx.Kubernetes()
 	timeout := time.Duration(check.GetTimeout()) * time.Minute
 	pod, err := newPod(ctx, check)
 	if err != nil {
@@ -222,18 +221,18 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 		return results.ErrorMessage(err)
 	}
 
-	defer deletePod(ctx, pod)
+	defer deletePod(ctx, k8s, pod)
 
 	ctx.Tracef("[%s/%s] waiting for tests to complete", ctx.Namespace, ctx.Canary.Name)
 	if ctx.IsTrace() {
 		go func() {
-			if err := ctx.KubernetesClient().StreamLogsV2(ctx, ctx.Namespace, pod.Name, timeout, pod.Spec.InitContainers[0].Name); err != nil {
+			if err := k8s.StreamLogsV2(ctx, ctx.Namespace, pod.Name, timeout, pod.Spec.InitContainers[0].Name); err != nil {
 				ctx.Error(err, "error streaming")
 			}
 		}()
 	}
 
-	if err := ctx.KubernetesClient().WaitForPod(ctx, ctx.Namespace, pod.Name, timeout, corev1.PodRunning, corev1.PodSucceeded, corev1.PodFailed); err != nil {
+	if err := k8s.WaitForPod(ctx, ctx.Namespace, pod.Name, timeout, corev1.PodRunning, corev1.PodSucceeded, corev1.PodFailed); err != nil {
 		result.ErrorMessage(err)
 	}
 
@@ -243,17 +242,17 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	}
 
 	if !kommons.IsPodHealthy(*podObj) {
-		return podFail(ctx, *pod, results)
+		return podFail(ctx, k8s, *pod, results)
 	}
 
 	var suites JunitTestSuites
-	exitCode, _ := podExecf(ctx, *pod, results, "cat %v/exit-code", mountPath)
+	exitCode, _ := podExecf(ctx, k8s, *pod, results, "cat %v/exit-code", mountPath)
 
 	if exitCode != "" && exitCode != "0" {
 		// we don't exit early as junit files may have been generated in addition to a failing exit code
-		result.Failf("process exited with: %s:\n%s", exitCode, getLogs(ctx, *pod))
+		result.Failf("process exited with: %s:\n%s", exitCode, getLogs(ctx, k8s, *pod))
 	}
-	files, ok := podExecf(ctx, *pod, results, fmt.Sprintf("find %v -name \\*.xml -type f", mountPath))
+	files, ok := podExecf(ctx, k8s, *pod, results, fmt.Sprintf("find %v -name \\*.xml -type f", mountPath))
 	if !ok {
 		return results
 	}
@@ -262,7 +261,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 		return results.Failf("No junit files found")
 	}
 	for _, file := range strings.Split(files, "\n") {
-		output, ok := podExecf(ctx, *pod, results, "cat %v", file)
+		output, ok := podExecf(ctx, k8s, *pod, results, "cat %v", file)
 		if !ok {
 			return results
 		}
@@ -272,7 +271,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	}
 
 	// signal container to exit
-	_, _ = podExecf(ctx, *pod, results, "touch %s/done", mountPath)
+	_, _ = podExecf(ctx, k8s, *pod, results, "touch %s/done", mountPath)
 	result.AddDetails(suites)
 	result.Duration = int64(suites.Duration * 1000)
 	if check.Test.IsEmpty() && suites.Failed > 0 {

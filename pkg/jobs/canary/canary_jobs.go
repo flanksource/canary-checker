@@ -228,8 +228,11 @@ var CleanupCRDDeleteCanaries = &dutyjob.Job{
 			return nil
 		}
 
-		canaryClient, err := ctx.KubernetesClient().
-			GetClientByGroupVersionKind(v1.GroupVersion.Group, v1.GroupVersion.Version, "Canary")
+		k8sClient, err := ctx.LocalKubernetes()
+		if err != nil {
+			return fmt.Errorf("failed to create local kubernetes client: %w", err)
+		}
+		canaryClient, err := k8sClient.GetClientByGroupVersionKind(ctx, v1.GroupVersion.Group, v1.GroupVersion.Version, "Canary")
 		if err != nil {
 			return fmt.Errorf("failed to get kubernetes client for canaries: %w", err)
 		}

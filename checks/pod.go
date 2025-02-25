@@ -30,8 +30,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
+	dutyKubernetes "github.com/flanksource/duty/kubernetes"
 	"golang.org/x/sync/semaphore"
-	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -42,7 +42,7 @@ const (
 
 type PodChecker struct {
 	lock *semaphore.Weighted
-	k8s  kubernetes.Interface
+	k8s  *dutyKubernetes.Client
 	ng   *NameGenerator
 
 	latestNodeIndex int
@@ -64,7 +64,11 @@ func (c *PodChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
 	if len(ctx.Canary.Spec.Pod) > 0 {
 		if c.k8s == nil {
-			c.k8s = ctx.Kubernetes()
+			var err error
+			c.k8s, err = ctx.Kubernetes()
+			if err != nil {
+				return results.Failf("error creating kubernetes client: %v", err)
+			}
 		}
 		for _, conf := range ctx.Canary.Spec.Pod {
 			results = append(results, c.Check(ctx, conf)...)
@@ -276,7 +280,7 @@ func (c *PodChecker) Cleanup(ctx *context.Context, podCheck canaryv1.PodCheck) {
 	}
 
 	for _, s := range services.Items {
-		if err := ctx.Kubernetes().CoreV1().Services(podCheck.Namespace).Delete(ctx, s.Name, metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
+		if err := c.k8s.CoreV1().Services(podCheck.Namespace).Delete(ctx, s.Name, metav1.DeleteOptions{}); err != nil && !errors.IsNotFound(err) {
 			ctx.Warnf("Failed delete services %s in namespace %s : %v", s.Name, podCheck.Namespace, err)
 		}
 	}
