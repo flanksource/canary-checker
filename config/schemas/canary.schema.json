@@ -2295,8 +2295,20 @@
         "resource": {
           "$ref": "#/$defs/ResourceSelector"
         },
+        "connection": {
+          "type": "string"
+        },
         "kubeconfig": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "eks": {
+          "$ref": "#/$defs/EKSConnection"
+        },
+        "gke": {
+          "$ref": "#/$defs/GKEConnection"
+        },
+        "cnrm": {
+          "$ref": "#/$defs/CNRMConnection"
         },
         "ignore": {
           "items": {
@@ -2404,8 +2416,20 @@
         "clearResources": {
           "type": "boolean"
         },
+        "connection": {
+          "type": "string"
+        },
         "kubeconfig": {
           "$ref": "#/$defs/EnvVar"
+        },
+        "eks": {
+          "$ref": "#/$defs/EKSConnection"
+        },
+        "gke": {
+          "$ref": "#/$defs/GKEConnection"
+        },
+        "cnrm": {
+          "$ref": "#/$defs/CNRMConnection"
         },
         "waitFor": {
           "$ref": "#/$defs/KubernetesResourceCheckWaitFor"
