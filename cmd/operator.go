@@ -68,8 +68,8 @@ func run() error {
 		return errors.New("operator requires a db connection")
 	}
 
-	if ctx.KubernetesRestConfig() == nil {
-		return errors.New("operator requires a kubernetes connection")
+	if _, err := ctx.LocalKubernetes(); err != nil {
+		return fmt.Errorf("operator requires a kubernetes connection: %w", err)
 	}
 
 	ctx.WithTracer(otel.GetTracerProvider().Tracer(app))

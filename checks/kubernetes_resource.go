@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/gomplate/v3"
 	"github.com/flanksource/is-healthy/pkg/health"
 	"github.com/flanksource/is-healthy/pkg/lua"
@@ -76,11 +77,11 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 	}
 
 	if check.Kubeconfig != nil {
-		var err error
-		ctx, err = ctx.WithKubeconfig(*check.Kubeconfig)
-		if err != nil {
-			return results.WithError(err).Invalidf("Cannot connect to kubernetes")
-		}
+		ctx = ctx.WithKubernetesConnection(connection.KubernetesConnection{
+			KubeconfigConnection: connection.KubeconfigConnection{
+				Kubeconfig: check.Kubeconfig,
+			},
+		})
 	}
 
 	if check.HasResourcesWithMissingNamespace() {
@@ -98,7 +99,12 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 		return results.Failf("templating error: %v", err)
 	}
 
-	kClient := kommons.NewClient(ctx.KubernetesRestConfig(), ctx.Logger)
+	k8sClient, err := ctx.Kubernetes()
+	if err != nil {
+		return results.WithError(err).Invalidf("Cannot connect to kubernetes")
+	}
+
+	kClient := kommons.NewClient(k8sClient.RestConfig(), ctx.Logger)
 
 	for i := range check.StaticResources {
 		resource := check.StaticResources[i]
@@ -241,6 +247,10 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 	var resourceObjs []unstructured.Unstructured
 	var err error
 	var attempts int
+	k8sClient, err := ctx.Kubernetes()
+	if err != nil {
+		return nil, nil, fmt.Errorf("error creating kubernetes client: %w", err)
+	}
 	backoff := retry.WithMaxDuration(waitTimeout, retry.NewConstant(waitInterval))
 	retryErr := retry.Do(ctx, backoff, func(_ctx gocontext.Context) error {
 		ctx = _ctx.(context.Context)
@@ -248,7 +258,7 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 
 		ctx.Tracef("waiting for %d resources, attempt=%d, timeout=%s", check.TotalResources(), attempts, waitTimeout)
 
-		resourceObjs, err = ctx.KubernetesClient().FetchResources(ctx, append(check.StaticResources, check.Resources...)...)
+		resourceObjs, err = k8sClient.FetchResources(ctx, append(check.StaticResources, check.Resources...)...)
 		if err != nil {
 			if apiErrors.IsNotFound(err) {
 				return retry.RetryableError(err)
@@ -335,6 +345,10 @@ func DeleteResources(ctx context.Context, check v1.KubernetesResourceCheck, dele
 	if deleteStatic {
 		resources = append(resources, check.StaticResources...)
 	}
+	k8sClient, err := ctx.Kubernetes()
+	if err != nil {
+		return fmt.Errorf("error creating kubernetes client: %w", err)
+	}
 
 	// firstly, cache dynamic clients by gvk
 	clients := sync.Map{}
@@ -346,7 +360,7 @@ func DeleteResources(ctx context.Context, check v1.KubernetesResourceCheck, dele
 			continue // client already cached
 		}
 
-		rc, err := ctx.KubernetesClient().GetClientByGroupVersionKind(resource.GroupVersionKind().Group, resource.GroupVersionKind().Version, resource.GetKind())
+		rc, err := k8sClient.GetClientByGroupVersionKind(ctx, resource.GroupVersionKind().Group, resource.GroupVersionKind().Version, resource.GetKind())
 		if err != nil {
 			return fmt.Errorf("failed to get rest client for (%s/%s/%s): %w", resource.GetKind(), resource.GetNamespace(), resource.GetName(), err)
 		}
@@ -518,12 +532,16 @@ func templateKubernetesResourceCheck(canaryID, checkID string, check *v1.Kuberne
 var apiResourceCache = cache.New(time.Hour*24, time.Hour*24)
 
 func fetchNamespacedResources(ctx context.Context) (map[schema.GroupVersionKind]bool, error) {
-	kubeconfigCacheKey := ctx.KubernetesRestConfig().Host + ctx.KubernetesRestConfig().APIPath
+	kubeconfigCacheKey := ctx.KubeAuthFingerprint()
 	if val, ok := apiResourceCache.Get(kubeconfigCacheKey); ok {
 		return val.(map[schema.GroupVersionKind]bool), nil
 	}
 
-	_, resourceList, err := ctx.Kubernetes().Discovery().ServerGroupsAndResources()
+	k8sClient, err := ctx.Kubernetes()
+	if err != nil {
+		return nil, fmt.Errorf("error creating kubernetes client: %w", err)
+	}
+	_, resourceList, err := k8sClient.Discovery().ServerGroupsAndResources()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get server groups & resources: %w", err)
 	}

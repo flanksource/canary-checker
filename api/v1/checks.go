@@ -975,9 +975,6 @@ type KubernetesResourceCheck struct {
 	// Ensure that the resources are deleted before creating them.
 	ClearResources bool `json:"clearResources,omitempty"`
 
-	// Kubeconfig is the kubeconfig or the path to the kubeconfig file.
-	Kubeconfig *types.EnvVar `yaml:"kubeconfig,omitempty" json:"kubeconfig,omitempty"`
-
 	connection.KubernetesConnection `yaml:",inline"`
 
 	WaitFor KubernetesResourceCheckWaitFor `json:"waitFor,omitempty"`

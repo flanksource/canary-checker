@@ -179,7 +179,12 @@ var TopologyCRDReconcile = &job.Job{
 			return err
 		}
 
-		client, err := ctx.KubernetesClient().GetClientByKind("Topology")
+		k8sClient, err := ctx.LocalKubernetes()
+		if err != nil {
+			return fmt.Errorf("failed to create local kubernetes client: %w", err)
+		}
+
+		client, err := k8sClient.GetClientByKind("Topology")
 		if err != nil {
 			return fmt.Errorf("error creating dynamic client for Topology: %w", err)
 		}
