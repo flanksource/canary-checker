@@ -82,7 +82,7 @@ func getLabelString(labels map[string]string) string {
 	return s
 }
 
-func ExportCheckMetrics(ctx *context.Context, results pkg.Results) {
+func ExportCheckMetrics(ctx *context.Context, results pkg.Results, exportResultMetrics bool) {
 	if len(results) == 0 {
 		return
 	}
@@ -90,8 +90,10 @@ func ExportCheckMetrics(ctx *context.Context, results pkg.Results) {
 	for _, r := range results {
 		checkCtx := ctx.WithCheckResult(r)
 		for _, metric := range r.Metrics {
-			if err := exportMetric(checkCtx, metric); err != nil {
-				r.ErrorMessage(err)
+			if exportResultMetrics {
+				if err := exportMetric(checkCtx, metric); err != nil {
+					r.ErrorMessage(err)
+				}
 			}
 		}
 		for _, spec := range r.Check.GetMetricsSpec() {
