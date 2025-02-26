@@ -75,6 +75,18 @@ spec:
           - name: net.ipv4.ping_group_range
             value: "0 2147483647"
         {{- end }}
+      {{- if eq .Values.db.embedded.persist true }}
+      initContainers:
+        - image: busybox
+          name: postgres-perms
+          command:
+            - sh
+            - -c
+            - mkdir -p /opt/database && chmod -R 0750 /opt/database && chown 1000:1000 -R /opt/database
+          volumeMounts:
+            - mountPath: /opt/database
+              name: canarychecker-database
+      {{- end}}
       containers:
         - name: {{ include "canary-checker.name" . }}
           {{- if eq .Values.allowPrivilegeEscalation true }}
