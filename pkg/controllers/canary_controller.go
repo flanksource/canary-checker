@@ -247,9 +247,14 @@ func (r *CanaryReconciler) Report() {
 
 		if payload.Message != "" {
 			canary.Status.Message = lo.ToPtr(pkg.TruncateMessage(payload.Message))
+		} else {
+			canary.Status.Message = nil
 		}
+
 		if payload.ErrorMessage != "" {
 			canary.Status.ErrorMessage = lo.ToPtr(pkg.TruncateError(payload.ErrorMessage))
+		} else {
+			canary.Status.ErrorMessage = nil
 		}
 
 		canary.Status.LastCheck = &metav1.Time{Time: time.Now()}
