@@ -129,12 +129,12 @@ docker-push:
 	docker push ${IMG}
 
 .PHONY: compress
-compress: .bin/upx
-	test -e ./$(RELEASE_DIR)/$(NAME)_linux_amd64 && $(UPX) -5 ./$(RELEASE_DIR)/$(NAME)_linux_amd64 || true
-	test -e ./$(RELEASE_DIR)/$(NAME)_linux_arm64 && $(UPX) -5 ./$(RELEASE_DIR)/$(NAME)_linux_arm64 || true
+compress:
+	test -e ./$(RELEASE_DIR)/$(NAME)_linux_amd64 && upx -5 ./$(RELEASE_DIR)/$(NAME)_linux_amd64 || true
+	test -e ./$(RELEASE_DIR)/$(NAME)_linux_arm64 && upx -5 ./$(RELEASE_DIR)/$(NAME)_linux_arm64 || true
 
 .PHONY: compress-build
-compress-build: .bin/upx
+compress-build:
 	upx -5 ./$(RELEASE_DIR)/$(NAME) ./$(RELEASE_DIR)/$(NAME).test
 
 .PHONY: linux
@@ -193,22 +193,6 @@ install:
 test-e2e: bin
 	./test/e2e.sh
 
-
-.bin/upx:
-ifeq (, $(shell which upx))
-ifeq ($(OS), darwin)
-	brew install upx
-	UPX=upx
-else
-	wget -nv -O upx.tar.xz https://github.com/upx/upx/releases/download/v3.96/upx-3.96-$(OS)_$(ARCH).xz
-	tar xf upx.tar.xz
-	mv upx-3.96-$(OS)_$(ARCH)/upx .bin
-	rm -rf upx-3.96-$(OS)_$(ARCH)
-	UPX=.bin/upx
-endif
-else
-	UPX=$(shell which upx)
-endif
 
 
 .PHONY: ginkgo
