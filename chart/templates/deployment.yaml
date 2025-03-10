@@ -214,13 +214,9 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
-            httpGet:
-              path: /health
-              port: 8080
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:
-            httpGet:
-              path: /health
-              port: 8080
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
       {{- with .Values.extra }}
       {{- toYaml . | nindent 6 }}
       {{- end }}
