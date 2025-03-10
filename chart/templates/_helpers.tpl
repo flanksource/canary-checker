@@ -77,9 +77,9 @@ control-plane: canary-checker
 Image Name
 */}}
 {{- define "canary-checker.imageString" -}}
-{{ tpl .Values.global.imageRegistry . }}/{{ tpl .Values.image.name . }}{{- if eq (lower .Values.image.type) "full" }}-full{{- end }}:{{ .Values.image.tag }}
+{{ tpl .Values.global.imageRegistry . }}/{{ tpl .Values.image.name . }}:{{ .Values.image.tag }}{{- if ne (lower .Values.image.type) "minimal" }}-{{.Values.image.type}}{{- end }}
 {{- end }}
 
 {{- define "canary-checker.postgres.imageString" -}}
-{{ tpl .Values.global.imageRegistry . }}/supabase/postgres:14.1.0.89
+{{ tpl .Values.global.imageRegistry . }}/{{.Values.db.external.image}}:{{.Values.db.external.version}}
 {{- end }}

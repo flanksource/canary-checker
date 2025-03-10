@@ -53,12 +53,14 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | db.external.conf.work_mem | string | `"10MB"` |  |
 | db.external.create | bool | `false` | If false and an existing connection must be specified under secretKeyRef If create=false, a prexisting secret containing the URI to an existing postgres database must be provided   The URI must be in the format `postgresql://$user:$password@$host/$database` |
 | db.external.enabled | bool | `false` | Setting to true will disable the embedded DB |
+| db.external.image | string | `"supabase/postgres"` |  |
 | db.external.resources.requests.memory | string | `"2Gi"` |  |
 | db.external.secretKeyRef.key | string | `"DB_URL"` |  |
-| db.external.secretKeyRef.name | string | `"canary-checker-postgres"` |  |
+| db.external.secretKeyRef.name | string | `"canary-checker-postgres"` | name of secret containing external db credentials |
 | db.external.shmVolume | string | `"256Mi"` |  |
 | db.external.storage | string | `"20Gi"` |  |
 | db.external.storageClass | string | `""` |  |
+| db.external.version | string | `"14.1.0.89"` |  |
 | db.runMigrations | bool | `true` |  |
 | debug | bool | `false` | Turn on pprof /debug endpoint |
 | disableChecks | list | `[]` | List of check types to disable |
@@ -88,7 +90,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | image.name | string | `"{{.Values.global.imagePrefix}}/canary-checker"` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.tag | string | `"latest"` |  |
-| image.type | string | `"minimal"` | full image is larger and requires more permissions to run, but is required to execute 3rd party checks (jmeter, restic, k6 etc) |
+| image.type | string | `"minimal"` | full image is larger and requires more permissions to run, but is required to execute 3rd party checks (jmeter, restic, k6 etc), minimal includes PowerShell and aws,azure,gcp CLIs  |
 | ingress.annotations | object | `{}` |  |
 | ingress.className | string | `""` |  |
 | ingress.enabled | bool | `false` | Expose the canary-checker service on an ingress, normally not needed as the service is exposed through `flanksource-ui.ingress` |
@@ -121,7 +123,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | serviceAccount.rbac.clusterRole | bool | `true` | whether to create cluster-wide or namespaced roles |
 | serviceAccount.rbac.configmaps | bool | `true` | for secret management with valueFrom |
 | serviceAccount.rbac.deploymentCreateAndDelete | bool | `true` | for deployment canary |
-| serviceAccount.rbac.enabled | bool | `true` | Install (Cluster)Role and RoleBinding for the ServiceAccount |
+| serviceAccount.rbac.enabled | bool | `true` |  |
 | serviceAccount.rbac.exec | bool | `true` |  |
 | serviceAccount.rbac.extra | list | `[]` |  |
 | serviceAccount.rbac.ingressCreateAndDelete | bool | `true` | for pod canary |
@@ -138,7 +140,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | upstream.host | string | `""` |  |
 | upstream.insecureSkipVerify | bool | `false` |  |
 | upstream.password | string | `""` |  |
-| upstream.secretKeyRef | object | `{"name":null}` | Alternative to inlining values, secret must contain: AGENT_NAME, UPSTREAM_USER, UPSTREAM_PASSWORD & UPSTREAM_HOST @schema required: false @schema |
+| upstream.secretKeyRef | object | `{"name":null}` | Alternative to inlining values, secret must contain: AGENT_NAME, UPSTREAM_USER, UPSTREAM_PASSWORD,  UPSTREAM_HOST @schema required: false @schema |
 | upstream.user | string | `""` |  |
 | volumeMounts | list | `[]` |  |
 | volumes | list | `[]` |  |
