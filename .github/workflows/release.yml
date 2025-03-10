@@ -80,16 +80,6 @@ jobs:
         with:
           go-version: v1.23.x
 
-      - uses: actions/cache@v4.2.0
-        with:
-          path: |
-            ~/go/pkg/mod
-            ~/.cache/go-build
-            .bin
-          key: cache-${{ hashFiles('**/go.sum') }}-${{ hashFiles('.bin/*') }}
-          restore-keys: |
-            cache-
-
       - run: make ${{matrix.os}} compress
         env:
           VERSION: v${{ needs.semantic-release.outputs.release-version }}
