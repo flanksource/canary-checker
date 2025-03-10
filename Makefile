@@ -130,7 +130,8 @@ docker-push:
 
 .PHONY: compress
 compress: .bin/upx
-	upx -5 ./$(RELEASE_DIR)/$(NAME)_linux_amd64 ./$(RELEASE_DIR)/$(NAME)_linux_arm64
+	test -e ./$(RELEASE_DIR)/$(NAME)_linux_amd64 && $(UPX) -5 ./$(RELEASE_DIR)/$(NAME)_linux_amd64 || true
+	test -e ./$(RELEASE_DIR)/$(NAME)_linux_arm64 && $(UPX) -5 ./$(RELEASE_DIR)/$(NAME)_linux_arm64 || true
 
 .PHONY: compress-build
 compress-build: .bin/upx
