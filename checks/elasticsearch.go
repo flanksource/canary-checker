@@ -63,16 +63,18 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 	if res.IsError() {
 		var e map[string]any
 		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
-			return results.ErrorMessage(
-				fmt.Errorf("error parsing the response body: %s", err),
-			)
-		} else {
+			return results.ErrorMessage(fmt.Errorf("error parsing the response body: %w", err))
+		}
+
+		if errorResponse, ok := e["error"].(map[string]any); ok {
 			return results.ErrorMessage(fmt.Errorf("error from elasticsearch [%s]: %v, %v",
 				res.Status(),
-				e["error"].(map[string]any)["type"],
-				e["error"].(map[string]any)["reason"],
+				errorResponse["type"],
+				errorResponse["reason"],
 			))
 		}
+
+		return results.ErrorMessage(fmt.Errorf("error from elasticsearch [%s]: %v", res.Status(), e))
 	}
 
 	// We are closing the body after error as the Body object is not set in case of error
