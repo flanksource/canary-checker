@@ -36,7 +36,7 @@ spec:
   {{- end }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      {{- with  (merge .Values.podAnnotations .Values.global.podAnnotations) }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -161,6 +161,9 @@ spec:
             - "8080"
             - --disable-postgrest={{ .Values.disablePostgrest }}
             - --db-migrations={{ .Values.db.runMigrations }}
+            {{- if .Values.db.postgrestAnonRole}}
+            - --postgrest-anon-role={{.Values.db.postgrestAnonRole}}
+            {{- end }}
             {{- if ne .Values.canaryNamespace "" }}
             - --namespace={{ .Values.canaryNamespace }}
             {{- end }}
