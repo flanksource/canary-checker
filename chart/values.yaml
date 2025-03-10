@@ -475,7 +475,7 @@ serviceAccount:
     # required: false
     # default: true
     # @schema
-    #-- Install (Cluster)Role and RoleBinding for the ServiceAccount
+    # -- Install (Cluster)Role and RoleBinding for the ServiceAccount
     enabled: true
 
     # @schema
