@@ -5,6 +5,9 @@ metadata:
   name: {{ include "canary-checker.name" . }}-monitor
   labels:
     {{- include "canary-checker.labels" . | nindent 4 }}
+    {{- range $k, $v := .Values.serviceMonitorLabels }}
+    {{ $k }}: {{ $v | quote }}
+    {{- end }}
 spec:
   jobLabel: {{ include "canary-checker.name" . }}
   endpoints:
