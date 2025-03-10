@@ -16,6 +16,8 @@ endif
 IMG_F ?= docker.io/flanksource/canary-checker-full:${VERSION_TAG}
 IMG ?= docker.io/flanksource/canary-checker:${VERSION_TAG}
 
+RELEASE_DIR=.release
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -128,25 +130,25 @@ docker-push:
 
 .PHONY: compress
 compress: .bin/upx
-	upx -5 ./.bin/$(NAME)_linux_amd64 ./.bin/$(NAME)_linux_arm64
+	upx -5 ./$(RELEASE_DIR)/$(NAME)_linux_amd64 ./$(RELEASE_DIR)/$(NAME)_linux_arm64
 
 .PHONY: compress-build
 compress-build: .bin/upx
-	upx -5 ./.bin/$(NAME) ./.bin/$(NAME).test
+	upx -5 ./$(RELEASE_DIR)/$(NAME) ./$(RELEASE_DIR)/$(NAME).test
 
 .PHONY: linux
 linux:
-	GOOS=linux GOARCH=amd64 go build  -o ./.bin/$(NAME)_linux_amd64 $(LD_FLAGS)  main.go
-	GOOS=linux GOARCH=arm64 go build  -o ./.bin/$(NAME)_linux_arm64 $(LD_FLAGS)  main.go
+	GOOS=linux GOARCH=amd64 go build  -o ./$(RELEASE_DIR)/$(NAME)_linux_amd64 $(LD_FLAGS)  main.go
+	GOOS=linux GOARCH=arm64 go build  -o ./$(RELEASE_DIR)/$(NAME)_linux_arm64 $(LD_FLAGS)  main.go
 
 .PHONY: darwin
 darwin:
-	GOOS=darwin GOARCH=amd64 go build -o ./.bin/$(NAME)_darwin_amd64 $(LD_FLAGS)  main.go
-	GOOS=darwin GOARCH=arm64 go build -o ./.bin/$(NAME)_darwin_arm64 $(LD_FLAGS)  main.go
+	GOOS=darwin GOARCH=amd64 go build -o ./$(RELEASE_DIR)/$(NAME)_darwin_amd64 $(LD_FLAGS)  main.go
+	GOOS=darwin GOARCH=arm64 go build -o ./$(RELEASE_DIR)/$(NAME)_darwin_arm64 $(LD_FLAGS)  main.go
 
 .PHONY: windows
 windows:
-	GOOS=windows GOARCH=amd64 go build -o ./.bin/$(NAME).exe $(LD_FLAGS)  main.go
+	GOOS=windows GOARCH=amd64 go build -o ./$(RELEASE_DIR)/$(NAME).exe $(LD_FLAGS)  main.go
 
 .PHONY: binaries
 binaries: linux darwin windows compress
@@ -156,7 +158,6 @@ release: binaries
 	mkdir -p .release
 	cd config/base && kustomize edit set image controller=${IMG}
 	kustomize build config/ > .release/release.yaml
-	cp .bin/canary-checker* .release/
 
 .PHONY: lint
 lint: gen-schemas
@@ -239,10 +240,13 @@ ginkgo:
 	curl -sSLo .bin/karina https://github.com/flanksource/karina/releases/download/v0.50.0/karina_$(OS)-$(ARCH) && \
 	chmod +x .bin/karina
 
+$(RELEASE_DIR):
+	mkdir -p $(RELEASE_DIR)
+
 .bin:
 	mkdir -p .bin
 
-bin: .bin .bin/wait4x .bin/karina
+bin: .bin .bin/wait4x .bin/karina $(RELEASE_DIR)
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources
