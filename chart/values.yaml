@@ -81,8 +81,10 @@ image:
   # enum:
   # - full
   # - minimal
+  # - slim
   # @schema
-  # -- full image is larger and requires more permissions to run, but is required to execute 3rd party checks (jmeter, restic, k6 etc)
+  # -- full image is larger and requires more permissions to run, but is required to execute 3rd party checks (jmeter, restic, k6 etc), minimal includes PowerShell and aws,azure,gcp CLIs
+  #
   type: minimal
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
@@ -108,6 +110,7 @@ disablePostgrest: false
 # @schema
 # --  Set to true to enable prometheus service monitor
 serviceMonitor: false
+
 # @schema
 # required: false
 # additionalProperties: true
@@ -179,12 +182,17 @@ otel:
 
 # @schema
 # required: false
+# type: object
 # @schema
 db:
   # @schema
   # required: false
   # @schema
   runMigrations: true
+  # @schema
+  # required: false
+  # type: object
+  # @schema
   embedded:
     # -- persist the embedded DB with a PVC
     persist: false
@@ -198,10 +206,19 @@ db:
     storage: 20Gi
   # @schema
   # required: false
+  # type: object
   # @schema
   external:
     # -- Setting to true will disable the embedded DB
     enabled: false
+    # @schema
+    # required: false
+    # @schema
+    version: 14.1.0.89
+    # @schema
+    # required: false
+    # @schema
+    image: supabase/postgres
     # Setting create to true will create a postgres stateful set for config-db to connect to.
     # If create=true, the secretKeyRef will be created by helm with the specified name and key
     #   Optionally populate a secret named 'postgres-connection' before install with `POSTGRES_USER` and `POSTGRES_PASSWORD` to set the created username and password, otherwise a random password will be created for a 'postgres' user
@@ -209,11 +226,20 @@ db:
     # If create=false, a prexisting secret containing the URI to an existing postgres database must be provided
     #   The URI must be in the format `postgresql://$user:$password@$host/$database`
     create: false
+    # @schema
+    # required: false
+    # type: object
+    # @schema
     secretKeyRef:
+      # @schema
+      # required: true
+      # @schema
+      # -- name of secret containing external db credentials
       name: canary-checker-postgres
-      # This is the key that either the secret will create(if create is true) or
-      # this is the key it will look for in the secret(if secretRefKey is
-      # mentioned). The name of the key is mandatory to set.
+      # @schema
+      # required: true
+      # @schema
+      # - secret key name containing a postgres connection string
       key: DB_URL
     storageClass: ""
     storage: 20Gi
@@ -308,7 +334,7 @@ upstream:
   user: ""
   password: ""
   insecureSkipVerify: false
-  # -- Alternative to inlining values, secret must contain: AGENT_NAME, UPSTREAM_USER, UPSTREAM_PASSWORD & UPSTREAM_HOST
+  # -- Alternative to inlining values, secret must contain: AGENT_NAME, UPSTREAM_USER, UPSTREAM_PASSWORD,  UPSTREAM_HOST
   # @schema
   # required: false
   # @schema
@@ -320,6 +346,7 @@ upstream:
 
 # @schema
 # required: false
+# type: object
 # @schema
 ingress:
   # @schema
@@ -448,7 +475,7 @@ serviceAccount:
     # required: false
     # default: true
     # @schema
-    # -- Install (Cluster)Role and RoleBinding for the ServiceAccount
+    #-- Install (Cluster)Role and RoleBinding for the ServiceAccount
     enabled: true
 
     # @schema
@@ -470,6 +497,7 @@ serviceAccount:
 
     # -- for pod and junit canaries
     podsCreateAndDelete: true
+
     # to collect logs and output from pod and junit canaries
     exec: true
 
