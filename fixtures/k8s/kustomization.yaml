@@ -10,6 +10,7 @@ resources:
   - pod_pass.yaml
   - cronjob_monitor_fail.yaml
   - cronjob_monitor.yaml
+  - vcluster-canary-checker.yaml
   - kubernetes_bundle.yaml
   - kubernetes_resource_ingress_pass.yaml
   - kubernetes_resource_namespace_pass.yaml
