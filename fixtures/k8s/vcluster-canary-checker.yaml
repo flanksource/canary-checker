@@ -1,0 +1,104 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: kubernetes-resource-helm-chart-install
+spec:
+  schedule: "@every 1h"
+  kubernetesResource:
+    - name: canary-checker-helm-in-vcluster
+      description: Install a vcluster and deploy canary-checker using HelmChart
+      staticResources:
+        - apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: canary-checker-vcluster-test
+        - apiVersion: source.toolkit.fluxcd.io/v1
+          kind: HelmRepository
+          metadata:
+            name: loft-sh
+            namespace: canary-checker-vcluster-test
+          spec:
+            url: https://charts.loft.sh
+            interval: 1h
+        - apiVersion: source.toolkit.fluxcd.io/v1
+          kind: HelmRepository
+          metadata:
+            name: flanksource
+            namespace: canary-checker-vcluster-test
+          spec:
+            url: https://flanksource.github.io/charts
+            interval: 1h
+        - apiVersion: helm.toolkit.fluxcd.io/v2
+          kind: HelmRelease
+          metadata:
+            name: vcluster
+            namespace: canary-checker-vcluster-test
+          spec:
+            chart:
+              spec:
+                chart: vcluster
+                version: "0.16.4"
+                sourceRef:
+                  kind: HelmRepository
+                  name: loft-sh
+                  namespace: canary-checker-vcluster-test
+            values:
+              plugin:
+                sync-host-secrets:
+                  image: docker.io/flanksource/vcluster-sync-host-secrets:v0.1.6
+                  env:
+                  - name: DESTINATION_NAMESPACE
+                    value: c-test
+              sync:
+                secrets:
+                  all: true
+              syncer:
+                extraArgs:
+                  - --tls-san=vcluster.canary-checker-vcluster-test.svc
+                  - --out-kube-config-server=https://vcluster.canary-checker-vcluster-test.svc:443
+            install:
+              createNamespace: true
+            interval: 5m
+      resources:
+        - apiVersion: helm.toolkit.fluxcd.io/v2
+          kind: HelmRelease
+          metadata:
+            name: canary-checker
+            namespace: canary-checker-vcluster-test
+          spec:
+            chart:
+              spec:
+                chart: canary-checker
+                sourceRef:
+                  kind: HelmRepository
+                  name: flanksource
+                  namespace: canary-checker-vcluster-test
+            kubeConfig:
+              secretRef:
+                name: vc-vcluster
+                key: config
+            targetNamespace: default
+            storageNamespace: default
+            values:
+              flanksource-ui:
+                enabled: false
+              serviceAccount:
+                rbac:
+                  clusterRole: false
+            install:
+              createNamespace: true
+            interval: 5m
+      waitFor:
+        timeout: 5m
+        expr: dyn(resources).all(r, k8s.isReady(r))
+        interval: 2s
+      checks:
+        - http:
+            - url: http://canary-checker-x-default-x-vcluster.canary-checker-vcluster-test.svc:8080/health
+              name: canary-checker-health-check
+              timeout: 5000
+              thresholdMillis: 3000
+      checkRetries:
+        delay: 5s
+        timeout: 1m
+        interval: 5s
