@@ -87,7 +87,7 @@ type TLSConfig struct {
 	// certificate chain and host name
 	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty" yaml:"insecureSkipVerify,omitempty"`
 	// HandshakeTimeout defaults to 10 seconds
-	HandshakeTimeout time.Duration `json:"handshakeTimeout,omitempty" yaml:"handshakeTimeout,omitempty"`
+	HandshakeTimeout Duration `json:"handshakeTimeout,omitempty" yaml:"handshakeTimeout,omitempty"`
 	// PEM encoded certificate of the CA to verify the server certificate
 	CA types.EnvVar `json:"ca,omitempty" yaml:"ca,omitempty"`
 	// PEM encoded client certificate
@@ -96,6 +96,23 @@ type TLSConfig struct {
 	Key types.EnvVar `json:"key,omitempty" yaml:"key,omitempty"`
 }
 
+type Crawl struct {
+	// Filters is a list of regex filters to apply to the crawled links.
+	Filters []string `yaml:"filters,omitempty" json:"filters,omitempty"`
+	// Depth is the maximum number of links to follow.
+	Depth                int      `yaml:"depth,omitempty" json:"depth,omitempty"`
+	AllowedDomains       []string `yaml:"allowedDomains,omitempty" json:"allowedDomains,omitempty"`
+	DisallowedDomains    []string `yaml:"disallowedDomains,omitempty" json:"disallowedDomains,omitempty"`
+	AllowedURLFilters    []string `yaml:"allowedURLFilters,omitempty" json:"allowedURLFilters,omitempty"`
+	DisallowedURLFilters []string `yaml:"disallowedURLFilters,omitempty" json:"disallowedURLFilters,omitempty"`
+
+	// Delay is the duration to wait before creating a new request to the matching domains, defaults to 500ms
+	Delay Duration `yaml:"delay,omitempty" json:"delay,omitempty"`
+	// RandomDelay is the extra randomized duration to wait added to Delay before creating a new request, defaults to 100ms
+	RandomDelay Duration `yaml:"randomDelay,omitempty" json:"randomDelay,omitempty"`
+	// Parallelism is the number of the maximum allowed concurrent requests, defaults to 2
+	Parallelism int `yaml:"parallelism,omitempty" json:"parallelism,omitempty"`
+}
 type HTTPCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
@@ -131,6 +148,8 @@ type HTTPCheck struct {
 	Oauth2 *Oauth2Config `yaml:"oauth2,omitempty" json:"oauth2,omitempty"`
 	// TLS Config
 	TLSConfig *TLSConfig `yaml:"tlsConfig,omitempty" json:"tlsConfig,omitempty"`
+	// Crawl site and verify links
+	Crawl *Crawl `yaml:"crawl,omitempty" json:"crawl,omitempty"`
 }
 
 func (c HTTPCheck) GetType() string {
@@ -826,9 +845,9 @@ type KubernetesResourceChecks struct {
 
 type KubernetesResourceCheckRetries struct {
 	// Delay is the initial delay
-	Delay    string `json:"delay,omitempty"`
-	Timeout  string `json:"timeout,omitempty"`
-	Interval string `json:"interval,omitempty"`
+	Delay    *Duration `json:"delay,omitempty"`
+	Timeout  *Duration `json:"timeout,omitempty"`
+	Interval *Duration `json:"interval,omitempty"`
 
 	parsedDelay    *time.Duration `json:"-"`
 	parsedTimeout  *time.Duration `json:"-"`
@@ -836,57 +855,24 @@ type KubernetesResourceCheckRetries struct {
 }
 
 func (t *KubernetesResourceCheckRetries) GetDelay() (time.Duration, error) {
-	if t.parsedDelay != nil {
-		return *t.parsedDelay, nil
-	}
-
-	if t.Delay == "" {
+	if t.Delay == nil {
 		return time.Duration(0), nil
 	}
-
-	tt, err := duration.ParseDuration(t.Delay)
-	if err != nil {
-		return time.Duration(0), err
-	}
-	t.parsedDelay = lo.ToPtr(time.Duration(tt))
-
-	return *t.parsedDelay, nil
+	return t.Delay.GetDurationOrZero()
 }
 
 func (t *KubernetesResourceCheckRetries) GetTimeout() (time.Duration, error) {
-	if t.parsedTimeout != nil {
-		return *t.parsedTimeout, nil
-	}
-
-	if t.Timeout == "" {
+	if t.Timeout == nil {
 		return time.Duration(0), nil
 	}
-
-	tt, err := duration.ParseDuration(t.Timeout)
-	if err != nil {
-		return time.Duration(0), err
-	}
-	t.parsedTimeout = lo.ToPtr(time.Duration(tt))
-
-	return *t.parsedTimeout, nil
+	return t.Timeout.GetDurationOrZero()
 }
 
 func (t *KubernetesResourceCheckRetries) GetInterval() (time.Duration, error) {
-	if t.parsedInterval != nil {
-		return *t.parsedInterval, nil
-	}
-
-	if t.Interval == "" {
+	if t.Interval == nil {
 		return time.Duration(0), nil
 	}
-
-	tt, err := duration.ParseDuration(t.Interval)
-	if err != nil {
-		return time.Duration(0), err
-	}
-	t.parsedInterval = lo.ToPtr(time.Duration(tt))
-
-	return *t.parsedInterval, nil
+	return t.Interval.GetDurationOrZero()
 }
 
 type KubernetesResourceCheckWaitFor struct {
