@@ -78,7 +78,7 @@
           "$ref": "#/$defs/GCPDatabase"
         },
         "maxAge": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         }
       },
       "additionalProperties": false,
@@ -86,6 +86,10 @@
       "required": [
         "name"
       ]
+    },
+    "Duration": {
+      "type": "string",
+      "description": "Duration e.g. 500ms, 2h, 2m"
     },
     "EnvVar": {
       "properties": {

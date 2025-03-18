@@ -1,0 +1,14 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: flanksource-com
+spec:
+  schedule: "@daily"
+  http:
+    - name: docs
+      url: https://flanksource.com/
+      crawl:
+        parallelism: 10
+        delay: 1ms
+        randomDelay: 1ms
+        depth: 10

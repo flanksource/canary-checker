@@ -40,8 +40,10 @@ func InitContext() (context.Context, error) {
 	}
 
 	ctx.WithTracer(otel.GetTracerProvider().Tracer(app))
-	if err := ctx.DB().Use(db.NewOopsPlugin()); err != nil {
-		return ctx, fmt.Errorf("failed to use oops gorm plugin: %w", err)
+	if ctx.DB() != nil {
+		if err := ctx.DB().Use(db.NewOopsPlugin()); err != nil {
+			return ctx, fmt.Errorf("failed to use oops gorm plugin: %w", err)
+		}
 	}
 
 	return ctx, nil
