@@ -826,9 +826,9 @@ type KubernetesResourceChecks struct {
 
 type KubernetesResourceCheckRetries struct {
 	// Delay is the initial delay
-	Delay    string `json:"delay,omitempty"`
-	Timeout  string `json:"timeout,omitempty"`
-	Interval string `json:"interval,omitempty"`
+	Delay    *Duration `json:"delay,omitempty"`
+	Timeout  *Duration `json:"timeout,omitempty"`
+	Interval *Duration `json:"interval,omitempty"`
 
 	parsedDelay    *time.Duration `json:"-"`
 	parsedTimeout  *time.Duration `json:"-"`
@@ -836,57 +836,24 @@ type KubernetesResourceCheckRetries struct {
 }
 
 func (t *KubernetesResourceCheckRetries) GetDelay() (time.Duration, error) {
-	if t.parsedDelay != nil {
-		return *t.parsedDelay, nil
-	}
-
-	if t.Delay == "" {
+	if t.Delay == nil {
 		return time.Duration(0), nil
 	}
-
-	tt, err := duration.ParseDuration(t.Delay)
-	if err != nil {
-		return time.Duration(0), err
-	}
-	t.parsedDelay = lo.ToPtr(time.Duration(tt))
-
-	return *t.parsedDelay, nil
+	return t.Delay.GetDurationOrZero()
 }
 
 func (t *KubernetesResourceCheckRetries) GetTimeout() (time.Duration, error) {
-	if t.parsedTimeout != nil {
-		return *t.parsedTimeout, nil
-	}
-
-	if t.Timeout == "" {
+	if t.Timeout == nil {
 		return time.Duration(0), nil
 	}
-
-	tt, err := duration.ParseDuration(t.Timeout)
-	if err != nil {
-		return time.Duration(0), err
-	}
-	t.parsedTimeout = lo.ToPtr(time.Duration(tt))
-
-	return *t.parsedTimeout, nil
+	return t.Timeout.GetDurationOrZero()
 }
 
 func (t *KubernetesResourceCheckRetries) GetInterval() (time.Duration, error) {
-	if t.parsedInterval != nil {
-		return *t.parsedInterval, nil
-	}
-
-	if t.Interval == "" {
+	if t.Interval == nil {
 		return time.Duration(0), nil
 	}
-
-	tt, err := duration.ParseDuration(t.Interval)
-	if err != nil {
-		return time.Duration(0), err
-	}
-	t.parsedInterval = lo.ToPtr(time.Duration(tt))
-
-	return *t.parsedInterval, nil
+	return t.Interval.GetDurationOrZero()
 }
 
 type KubernetesResourceCheckWaitFor struct {
@@ -903,50 +870,11 @@ type KubernetesResourceCheckWaitFor struct {
 
 	// Timeout to wait for all static & non-static resources to be ready.
 	// 	Default: 10m
-	Timeout string `json:"timeout,omitempty"`
+	Timeout *Duration `json:"timeout,omitempty"`
 
 	// Interval to check if all static & non-static resources are ready.
 	// 	Default: 5s
-	Interval string `json:"interval,omitempty"`
-
-	parsedTimeout  *time.Duration `json:"-"`
-	parsedInterval *time.Duration `json:"-"`
-}
-
-func (t *KubernetesResourceCheckWaitFor) GetTimeout() (time.Duration, error) {
-	if t.parsedTimeout != nil {
-		return *t.parsedTimeout, nil
-	}
-
-	if t.Timeout == "" {
-		return time.Duration(0), nil
-	}
-
-	tt, err := duration.ParseDuration(t.Timeout)
-	if err != nil {
-		return time.Duration(0), err
-	}
-	t.parsedTimeout = lo.ToPtr(time.Duration(tt))
-
-	return *t.parsedTimeout, nil
-}
-
-func (t *KubernetesResourceCheckWaitFor) GetInterval() (time.Duration, error) {
-	if t.parsedInterval != nil {
-		return *t.parsedInterval, nil
-	}
-
-	if t.Interval == "" {
-		return time.Duration(0), nil
-	}
-
-	tt, err := duration.ParseDuration(t.Interval)
-	if err != nil {
-		return time.Duration(0), err
-	}
-	t.parsedInterval = lo.ToPtr(time.Duration(tt))
-
-	return *t.parsedInterval, nil
+	Interval *Duration `json:"interval,omitempty"`
 }
 
 type KubernetesResourceCheck struct {
