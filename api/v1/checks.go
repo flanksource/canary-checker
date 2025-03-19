@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
-	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/models"
@@ -87,7 +86,7 @@ type TLSConfig struct {
 	// certificate chain and host name
 	InsecureSkipVerify bool `json:"insecureSkipVerify,omitempty" yaml:"insecureSkipVerify,omitempty"`
 	// HandshakeTimeout defaults to 10 seconds
-	HandshakeTimeout time.Duration `json:"handshakeTimeout,omitempty" yaml:"handshakeTimeout,omitempty"`
+	HandshakeTimeout Duration `json:"handshakeTimeout,omitempty" yaml:"handshakeTimeout,omitempty"`
 	// PEM encoded certificate of the CA to verify the server certificate
 	CA types.EnvVar `json:"ca,omitempty" yaml:"ca,omitempty"`
 	// PEM encoded client certificate
@@ -96,6 +95,23 @@ type TLSConfig struct {
 	Key types.EnvVar `json:"key,omitempty" yaml:"key,omitempty"`
 }
 
+type Crawl struct {
+	// Filters is a list of regex filters to apply to the crawled links.
+	Filters []string `yaml:"filters,omitempty" json:"filters,omitempty"`
+	// Depth is the maximum number of links to follow.
+	Depth                int      `yaml:"depth,omitempty" json:"depth,omitempty"`
+	AllowedDomains       []string `yaml:"allowedDomains,omitempty" json:"allowedDomains,omitempty"`
+	DisallowedDomains    []string `yaml:"disallowedDomains,omitempty" json:"disallowedDomains,omitempty"`
+	AllowedURLFilters    []string `yaml:"allowedURLFilters,omitempty" json:"allowedURLFilters,omitempty"`
+	DisallowedURLFilters []string `yaml:"disallowedURLFilters,omitempty" json:"disallowedURLFilters,omitempty"`
+
+	// Delay is the duration to wait before creating a new request to the matching domains, defaults to 500ms
+	Delay Duration `yaml:"delay,omitempty" json:"delay,omitempty"`
+	// RandomDelay is the extra randomized duration to wait added to Delay before creating a new request, defaults to 100ms
+	RandomDelay Duration `yaml:"randomDelay,omitempty" json:"randomDelay,omitempty"`
+	// Parallelism is the number of the maximum allowed concurrent requests, defaults to 2
+	Parallelism int `yaml:"parallelism,omitempty" json:"parallelism,omitempty"`
+}
 type HTTPCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
@@ -131,6 +147,8 @@ type HTTPCheck struct {
 	Oauth2 *Oauth2Config `yaml:"oauth2,omitempty" json:"oauth2,omitempty"`
 	// TLS Config
 	TLSConfig *TLSConfig `yaml:"tlsConfig,omitempty" json:"tlsConfig,omitempty"`
+	// Crawl site and verify links
+	Crawl *Crawl `yaml:"crawl,omitempty" json:"crawl,omitempty"`
 }
 
 func (c HTTPCheck) GetType() string {

@@ -1,0 +1,16 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-crawler
+spec:
+  schedule: "@daily"
+  http:
+    - name: docs
+      url: http://httpbin.demo.aws.flanksource.com/
+      display:
+        expr: missing.join("\n")
+      crawl:
+        parallelism: 10
+        delay: 1ms
+        randomDelay: 1ms
+        depth: 10

@@ -6,6 +6,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/duty/db"
 )
 
@@ -137,6 +138,15 @@ func (result *CheckResult) ToSlice() Results {
 func (result *CheckResult) AddMetric(metric Metric) *CheckResult {
 	result.Metrics = append(result.Metrics, metric)
 	return result
+}
+
+func (result *CheckResult) AddDataStruct(data interface{}) *CheckResult {
+	if m, err := utils.ToJSONMap(data); err != nil {
+		result.Invalidf(err.Error())
+		return result
+	} else {
+		return result.AddData(m)
+	}
 }
 
 func (result *CheckResult) AddData(data map[string]interface{}) *CheckResult {
