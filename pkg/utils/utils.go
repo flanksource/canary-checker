@@ -186,3 +186,29 @@ func IsMapIdentical[K comparable](map1, map2 map[string]K) bool {
 
 	return true
 }
+
+// ToJSONMap takes an input value of struct or map type and converts it to a map[string]any representation
+// using JSON encoding and decoding.
+func ToJSONMap(s any) (map[string]any, error) {
+	var raw []byte
+	var err error
+
+	switch s := s.(type) {
+	case string:
+		raw = []byte(s)
+	case []byte:
+		raw = s
+	default:
+		raw, err = json.Marshal(s)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	result := make(map[string]any)
+	if err := json.Unmarshal(raw, &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}

@@ -1285,6 +1285,54 @@
         "image"
       ]
     },
+    "Crawl": {
+      "properties": {
+        "filters": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "depth": {
+          "type": "integer"
+        },
+        "allowedDomains": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "disallowedDomains": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "allowedURLFilters": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "disallowedURLFilters": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "delay": {
+          "$ref": "#/$defs/Duration"
+        },
+        "randomDelay": {
+          "$ref": "#/$defs/Duration"
+        },
+        "parallelism": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "DNSCheck": {
       "properties": {
         "description": {
@@ -2290,6 +2338,9 @@
         },
         "tlsConfig": {
           "$ref": "#/$defs/TLSConfig"
+        },
+        "crawl": {
+          "$ref": "#/$defs/Crawl"
         }
       },
       "additionalProperties": false,

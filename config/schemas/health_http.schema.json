@@ -36,6 +36,58 @@
         "key"
       ]
     },
+    "Crawl": {
+      "properties": {
+        "filters": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "depth": {
+          "type": "integer"
+        },
+        "allowedDomains": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "disallowedDomains": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "allowedURLFilters": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "disallowedURLFilters": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "delay": {
+          "$ref": "#/$defs/Duration"
+        },
+        "randomDelay": {
+          "$ref": "#/$defs/Duration"
+        },
+        "parallelism": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "Duration": {
+      "type": "string",
+      "description": "Duration e.g. 500ms, 2h, 2m"
+    },
     "EnvVar": {
       "properties": {
         "name": {
@@ -172,6 +224,9 @@
         },
         "tlsConfig": {
           "$ref": "#/$defs/TLSConfig"
+        },
+        "crawl": {
+          "$ref": "#/$defs/Crawl"
         }
       },
       "additionalProperties": false,
@@ -349,7 +404,7 @@
           "type": "boolean"
         },
         "handshakeTimeout": {
-          "type": "integer"
+          "$ref": "#/$defs/Duration"
         },
         "ca": {
           "$ref": "#/$defs/EnvVar"
