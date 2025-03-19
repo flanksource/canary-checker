@@ -36,6 +36,10 @@
         "key"
       ]
     },
+    "Duration": {
+      "type": "string",
+      "description": "Duration e.g. 500ms, 2h, 2m"
+    },
     "EnvVar": {
       "properties": {
         "name": {
@@ -117,10 +121,10 @@
           "$ref": "#/$defs/FolderFilter"
         },
         "minAge": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         },
         "maxAge": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         },
         "minCount": {
           "type": "integer"
@@ -163,10 +167,10 @@
     "FolderFilter": {
       "properties": {
         "minAge": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         },
         "maxAge": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         },
         "since": {
           "type": "string"

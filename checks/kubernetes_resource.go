@@ -235,15 +235,8 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 
 func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.KubernetesResourceCheck) (map[string]health.HealthStatus, []unstructured.Unstructured, error) {
 	healthMap := make(map[string]health.HealthStatus)
-	waitTimeout := resourceWaitTimeoutDefault
-	if wt, _ := check.WaitFor.GetTimeout(); wt > 0 {
-		waitTimeout = wt
-	}
-
-	waitInterval := resourceWaitIntervalDefault
-	if wt, _ := check.WaitFor.GetInterval(); wt > 0 {
-		waitInterval = wt
-	}
+	waitTimeout, _ := check.WaitFor.Timeout.GetDurationOr(resourceWaitTimeoutDefault)
+	waitInterval, _ := check.WaitFor.Interval.GetDurationOr(resourceWaitIntervalDefault)
 	var resourceObjs []unstructured.Unstructured
 	var err error
 	var attempts int
@@ -310,24 +303,24 @@ func (c *KubernetesResourceChecker) evalWaitFor(ctx context.Context, check v1.Ku
 }
 
 func (c *KubernetesResourceChecker) validate(ctx context.Context, check v1.KubernetesResourceCheck) error {
-	if _, err := check.WaitFor.GetTimeout(); err != nil {
-		return fmt.Errorf("invalid wait timeout (%s): %w", check.WaitFor.Timeout, err)
+	if err := check.WaitFor.Timeout.Validate(); err != nil {
+		return fmt.Errorf("waitFor.timeout: %s", err)
 	}
 
-	if _, err := check.WaitFor.GetInterval(); err != nil {
-		return fmt.Errorf("invalid wait interval (%s): %w", check.WaitFor.Interval, err)
+	if err := check.WaitFor.Interval.Validate(); err != nil {
+		return fmt.Errorf("waitFor.interval: %s", err)
 	}
 
-	if _, err := check.CheckRetries.GetTimeout(); err != nil {
-		return fmt.Errorf("invalid check timeout (%s): %w", check.CheckRetries.Timeout, err)
+	if err := check.CheckRetries.Timeout.Validate(); err != nil {
+		return fmt.Errorf("timeout: %s", err)
 	}
 
 	if _, err := check.CheckRetries.GetInterval(); err != nil {
-		return fmt.Errorf("invalid check retry interval (%s): %w", check.CheckRetries.Interval, err)
+		return fmt.Errorf("timeout: %s", err)
 	}
 
 	if _, err := check.CheckRetries.GetDelay(); err != nil {
-		return fmt.Errorf("invalid check initial delay (%s): %w", check.CheckRetries.Delay, err)
+		return fmt.Errorf("timeout: %s", err)
 	}
 
 	maxResourcesAllowed := ctx.Properties().Int("checks.kubernetesResource.maxResources", defaultMaxResourcesAllowed)

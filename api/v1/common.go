@@ -15,6 +15,8 @@ import (
 	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/gomplate/v3"
+	"github.com/invopop/jsonschema"
+	"github.com/samber/lo"
 	"github.com/timberio/go-datemath"
 )
 
@@ -29,9 +31,43 @@ func (d Duration) GetHours() (*time.Duration, error) {
 	return &_d, nil
 }
 
-func (d Duration) GetDuration() (*time.Duration, error) {
-	_d, err := time.ParseDuration(string(d))
-	return &_d, err
+func (d *Duration) GetDuration() (*time.Duration, error) {
+	if d == nil {
+		return nil, nil
+	}
+	_d, err := duration.ParseDuration(string(*d))
+	return lo.ToPtr(time.Duration(_d)), err
+}
+
+func (d *Duration) GetDurationOrZero() (time.Duration, error) {
+	return d.GetDurationOr(time.Duration(0))
+}
+
+// GetDuration parses a duration or returns the default if a nil value is passed or a parsing error occurs
+func (d *Duration) GetDurationOr(def time.Duration) (time.Duration, error) {
+	if d == nil {
+		return def, nil
+	}
+
+	parsed, err := duration.ParseDuration(string(*d))
+	if err != nil {
+		return def, err
+	}
+	return time.Duration(parsed), nil
+}
+
+func (d *Duration) Validate() error {
+	if _, err := d.GetDuration(); err != nil {
+		return fmt.Errorf("invalid duration: %v", string(*d))
+	}
+	return nil
+}
+
+func (d Duration) JSONSchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		Type:        "string",
+		Description: "Duration e.g. 500ms, 2h, 2m",
+	}
 }
 
 type Size string

@@ -1390,7 +1390,7 @@
           "$ref": "#/$defs/GCPDatabase"
         },
         "maxAge": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         }
       },
       "additionalProperties": false,
@@ -1508,6 +1508,10 @@
         "name",
         "image"
       ]
+    },
+    "Duration": {
+      "type": "string",
+      "description": "Duration e.g. 500ms, 2h, 2m"
     },
     "DynatraceCheck": {
       "properties": {
@@ -1848,10 +1852,10 @@
           "$ref": "#/$defs/FolderFilter"
         },
         "minAge": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         },
         "maxAge": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         },
         "minCount": {
           "type": "integer"
@@ -1894,10 +1898,10 @@
     "FolderFilter": {
       "properties": {
         "minAge": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         },
         "maxAge": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         },
         "since": {
           "type": "string"
@@ -2742,13 +2746,13 @@
     "KubernetesResourceCheckRetries": {
       "properties": {
         "delay": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         },
         "timeout": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         },
         "interval": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         }
       },
       "additionalProperties": false,
@@ -2766,10 +2770,10 @@
           "type": "boolean"
         },
         "timeout": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         },
         "interval": {
-          "type": "string"
+          "$ref": "#/$defs/Duration"
         }
       },
       "additionalProperties": false,
@@ -4514,7 +4518,7 @@
           "type": "boolean"
         },
         "handshakeTimeout": {
-          "type": "integer"
+          "$ref": "#/$defs/Duration"
         },
         "ca": {
           "$ref": "#/$defs/EnvVar"

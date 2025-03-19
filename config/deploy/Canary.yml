@@ -4518,8 +4518,7 @@ spec:
                             type: object
                           handshakeTimeout:
                             description: HandshakeTimeout defaults to 10 seconds
-                            format: int64
-                            type: integer
+                            type: string
                           insecureSkipVerify:
                             description: |-
                               InsecureSkipVerify controls whether a client verifies the server's
