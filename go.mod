@@ -1,8 +1,7 @@
 module github.com/flanksource/canary-checker
 
 go 1.23
-
-toolchain go1.23.4
+toolchain go1.24.1
 
 godebug x509negativeserial=1
 
@@ -71,7 +70,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.22.0
 	go.opentelemetry.io/otel/sdk v1.34.0
 	go.opentelemetry.io/otel/trace v1.34.0
-	golang.org/x/net v0.35.0
+	golang.org/x/net v0.36.0
 	golang.org/x/sync v0.11.0
 	google.golang.org/api v0.198.0
 	google.golang.org/genproto v0.0.0-20240903143218-8af14fe29dc1
@@ -342,7 +341,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	gocloud.dev v0.40.0 // indirect
-	golang.org/x/crypto v0.33.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
 	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/oauth2 v0.25.0 // indirect
