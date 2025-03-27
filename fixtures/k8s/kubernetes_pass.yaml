@@ -5,16 +5,19 @@ metadata:
 spec:
   schedule: "@every 5m"
   kubernetes:
-    - namespaceSelector:
-        name: canaries
-      name: k8s-ready pods
+    - name: k8s-ready pods
       kind: Pod
+      namespaceSelector:
+        name: canaries
       resource:
-        labelSelector: app=k8s-ready
-    - namespaceSelector:
-        name: canaries
+        name: k8s-check-ready
+    - name: k8s-ready pods
+
       kind: Pod
-      name: k8s-ready pods
+      namespaceSelector:
+        name: canaries
       ready: false
       resource:
-        labelSelector: app=k8s-not-ready
+        # resource name supports wildcards
+        name: k8s-check-not-*
+        #labelSelector: app=k8s-not-ready
