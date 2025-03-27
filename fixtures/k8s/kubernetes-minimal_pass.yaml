@@ -5,14 +5,13 @@ metadata:
 spec:
   schedule: "@every 5m"
   kubernetes:
-    - namespace: kube-system
-      name: kube-system
+    - name: kube-system
       kind: Pod
       # ready: true
       # resource:
       #   labelSelector: k8s-app=kube-dns
       namespaceSelector:
-        name: default
+        name: kube-system
       display:
         expr: |
           dyn(results).

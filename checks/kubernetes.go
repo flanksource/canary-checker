@@ -9,7 +9,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/is-healthy/pkg/health"
 	"github.com/gobwas/glob"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -42,14 +41,18 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 		return results.Failf("Kubernetes is not initialized: %v", err)
 	}
 
-	namespaces, err := getNamespaces(ctx, check)
+	namespaces, err := k8sClient.QueryResources(ctx, check.Namespace.ToDutySelector().Type("Namespace"))
+
 	if err != nil {
 		return results.Failf("Failed to get namespaces: %v", err)
 	}
 	var allResources []unstructured.Unstructured
 
 	for _, namespace := range namespaces {
-		resources, err := k8sClient.QueryResources(ctx, check.Kind, check.Resource.ToDutySelector())
+		selector := check.Resource.ToDutySelector()
+		selector.Namespace = namespace.GetName()
+		selector.Types = []string{check.Kind}
+		resources, err := k8sClient.QueryResources(ctx, selector)
 		if err != nil {
 			return results.Failf("failed to get resources: %v. namespace: %v", err, namespace)
 		}
@@ -92,32 +95,6 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 
 	result.AddDetails(allResources)
 	return results
-}
-
-func getNamespaces(ctx context.Context, check v1.KubernetesCheck) ([]string, error) {
-	var namespaces []string
-	if check.Namespace.Name != "" {
-		return []string{check.Namespace.Name}, nil
-	}
-
-	if check.Namespace.FieldSelector == "" && check.Namespace.LabelSelector == "" {
-		return []string{""}, nil
-	}
-	k8sClient, err := ctx.Kubernetes()
-	if err != nil {
-		return nil, fmt.Errorf("error creating kubernetes client: %w", err)
-	}
-	namespaceList, err := k8sClient.CoreV1().Namespaces().List(ctx, metav1.ListOptions{
-		LabelSelector: check.Namespace.LabelSelector,
-		FieldSelector: check.Namespace.FieldSelector,
-	})
-	if err != nil {
-		return nil, err
-	}
-	for _, namespace := range namespaceList.Items {
-		namespaces = append(namespaces, namespace.Name)
-	}
-	return namespaces, nil
 }
 
 func filterResources(resources []unstructured.Unstructured, filter string) ([]unstructured.Unstructured, error) {
