@@ -11,7 +11,6 @@ import (
 	"github.com/gobwas/glob"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/client-go/dynamic"
 )
 
 type KubernetesChecker struct{}
@@ -43,11 +42,6 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 		return results.Failf("Kubernetes is not initialized: %v", err)
 	}
 
-	client, err := k8sClient.GetClientByKind(check.Kind)
-	if err != nil {
-		return results.Failf("Failed to get client for kind %s: %v", check.Kind, err)
-	}
-
 	namespaces, err := getNamespaces(ctx, check)
 	if err != nil {
 		return results.Failf("Failed to get namespaces: %v", err)
@@ -55,7 +49,7 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 	var allResources []unstructured.Unstructured
 
 	for _, namespace := range namespaces {
-		resources, err := getResourcesFromNamespace(ctx, client, check, namespace)
+		resources, err := k8sClient.QueryResources(ctx, check.Kind, check.Resource.ToDutySelector())
 		if err != nil {
 			return results.Failf("failed to get resources: %v. namespace: %v", err, namespace)
 		}
@@ -98,26 +92,6 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 
 	result.AddDetails(allResources)
 	return results
-}
-
-func getResourcesFromNamespace(ctx context.Context, client dynamic.NamespaceableResourceInterface, check v1.KubernetesCheck, namespace string) ([]unstructured.Unstructured, error) {
-	var resources []unstructured.Unstructured
-	if check.Resource.Name != "" {
-		resource, err := client.Namespace(namespace).Get(ctx, check.Resource.Name, metav1.GetOptions{})
-		if err != nil {
-			return nil, err
-		}
-		return []unstructured.Unstructured{*resource}, nil
-	}
-	resourceList, err := client.Namespace(namespace).List(ctx, metav1.ListOptions{
-		LabelSelector: check.Resource.LabelSelector,
-		FieldSelector: check.Resource.FieldSelector,
-	})
-	if err != nil {
-		return nil, err
-	}
-	resources = append(resources, resourceList.Items...)
-	return resources, nil
 }
 
 func getNamespaces(ctx context.Context, check v1.KubernetesCheck) ([]string, error) {

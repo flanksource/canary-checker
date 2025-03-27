@@ -1029,6 +1029,14 @@ type ResourceSelector struct {
 	FieldSelector string `json:"fieldSelector,omitempty" yaml:"fieldSelector,omitempty"`
 }
 
+func (rs ResourceSelector) ToDutySelector() types.ResourceSelector {
+	return types.ResourceSelector{
+		Name:          rs.Name,
+		LabelSelector: rs.LabelSelector,
+		FieldSelector: rs.FieldSelector,
+	}
+}
+
 type KubernetesCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
