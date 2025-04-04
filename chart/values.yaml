@@ -107,9 +107,24 @@ disablePostgrest: false
 
 # @schema
 # required: false
+# type: object
 # @schema
-# --  Set to true to enable prometheus service monitor
-serviceMonitor: false
+# --  Configuration for prometheus service monitor
+serviceMonitor:
+  # @schema
+  # required: false
+  # --  Set to true to enable prometheus service monitor
+  enabled: false
+  # @schema
+  # required: false
+  # @schema
+  # -- Set to true to enable TLS for the prometheus service monitor
+  tlsConfig:
+    enabled: false
+    caFile: ""
+    certFile: ""
+    keyFile: ""
+    insecureSkipVerify: false
 
 # @schema
 # required: false

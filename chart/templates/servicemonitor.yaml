@@ -1,4 +1,4 @@
-{{- if eq .Values.serviceMonitor true }}
+{{- if eq .Values.serviceMonitor.enabled true }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -12,6 +12,11 @@ spec:
   jobLabel: {{ include "canary-checker.name" . }}
   endpoints:
     - port: http
+      {{- with .Values.serviceMonitor.tlsconfig }}
+      scheme: https
+      tlsConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       interval: 30s
       honorLabels: true
       metricRelabelings:
