@@ -12,6 +12,11 @@ spec:
   jobLabel: {{ include "canary-checker.name" . }}
   endpoints:
     - port: http
+      {{- if and .Values.serviceMonitorTlsConfig .Values.serviceMonitorTlsConfig.enabled }}
+      scheme: https
+      tlsConfig:
+        {{- toYaml .Values.serviceMonitorTlsConfig | nindent 8 }}
+      {{- end }}
       interval: 30s
       honorLabels: true
       metricRelabelings:

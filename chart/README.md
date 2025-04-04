@@ -123,7 +123,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | serviceAccount.rbac.clusterRole | bool | `true` | whether to create cluster-wide or namespaced roles |
 | serviceAccount.rbac.configmaps | bool | `true` | for secret management with valueFrom |
 | serviceAccount.rbac.deploymentCreateAndDelete | bool | `true` | for deployment canary |
-| serviceAccount.rbac.enabled | bool | `true` |  |
+| serviceAccount.rbac.enabled | bool | `true` | Install (Cluster)Role and RoleBinding for the ServiceAccount |
 | serviceAccount.rbac.exec | bool | `true` |  |
 | serviceAccount.rbac.extra | list | `[]` |  |
 | serviceAccount.rbac.ingressCreateAndDelete | bool | `true` | for pod canary |
@@ -134,6 +134,11 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | serviceAccount.rbac.tokenRequest | bool | `true` | for secret management with valueFrom |
 | serviceMonitor | bool | `false` | Set to true to enable prometheus service monitor |
 | serviceMonitorLabels | object | `{}` |  |
+| serviceMonitorTlsConfig | object | `{"caFile":"","certFile":"","enabled":false,"insecureSkipVerify":false,"keyFile":""}` | ServiceMonitor TLS config |
+| serviceMonitorTlsConfig.certFile | string | `""` | Cert file for the ServiceMonitor |
+| serviceMonitorTlsConfig.enabled | bool | `false` | Enable TLS for the ServiceMonitor |
+| serviceMonitorTlsConfig.insecureSkipVerify | bool | `false` | skip TLS verification for the ServiceMonitor |
+| serviceMonitorTlsConfig.keyFile | string | `""` | Key file for the ServiceMonitor |
 | tolerations | list | `[]` |  |
 | upstream.agentName | string | `""` |  |
 | upstream.enabled | bool | `false` |  |
