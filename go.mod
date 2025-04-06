@@ -22,7 +22,7 @@ require (
 	github.com/flanksource/commons v1.36.1
 	github.com/flanksource/duty v1.0.909
 	github.com/flanksource/gomplate/v3 v3.24.55
-	github.com/flanksource/is-healthy v1.0.68
+	github.com/flanksource/is-healthy v1.0.69
 	github.com/flanksource/kommons v0.31.6
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-git/go-git/v5 v5.13.0
@@ -60,8 +60,8 @@ require (
 	github.com/samber/oops v1.13.1
 	github.com/sethvargo/go-retry v0.3.0
 	github.com/sevennt/echo-pprof v0.1.1-0.20220616082843-66a461746b5f
-	github.com/spf13/cobra v1.8.1
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/cobra v1.9.1
+	github.com/spf13/pflag v1.0.6
 	github.com/timberio/go-datemath v0.1.0
 	go.mongodb.org/mongo-driver v1.13.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.47.0
