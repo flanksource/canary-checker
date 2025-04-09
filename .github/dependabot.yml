@@ -1,36 +1,34 @@
 version: 2
 updates:
+
   - package-ecosystem: gomod
     directory: "/"
     schedule:
       interval: daily
+    groups:
+      go-modules:
+        patterns:
+          - "*" # All go.mod dependencies
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: daily
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
 
   - package-ecosystem: docker
-    directory: /build/dev
+    directories:
+      - /build/dev
+      - /build/minimal
+      - /build/full
+      - /build/slim
     schedule:
       interval: daily
-
-  - package-ecosystem: docker
-    directory: /build/full
-    schedule:
-      interval: daily
-
-  - package-ecosystem: docker
-    directory: /build/minimal
-    schedule:
-      interval: daily
-
-  # - package-ecosystem: gomod
-  #   directory: /fixtures/datasources
-  #   schedule:
-  #     interval: daily
-
-  - package-ecosystem: gomod
-    directory: /sdk
-    schedule:
-      interval: daily
+    groups:
+      docker-updates:
+        patterns:
+          - "*"
