@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.23-bookworm@sha256:0ace92a91fb174f5ec759b39ce66ba365237b1b5ee8b35ff311e46659f05ef68 AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.24-bookworm@sha256:00eccd446e023d3cd9566c25a6e6a02b90db3e1e0bbe26a48fc29cd96e800901 AS builder
 WORKDIR /app
 
 ARG TARGETOS
@@ -15,7 +15,7 @@ RUN go mod download
 COPY ./ ./
 RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM debian:bookworm-slim@sha256:12c396bd585df7ec21d5679bb6a83d4878bc4415ce926c9e5ea6426d23c60bdc AS base
+FROM debian:bookworm-slim@sha256:b1211f6d19afd012477bd34fdcabb6b663d680e0f4b0537da6e6b0fd057a3ec3 AS base
 WORKDIR /app
 ARG TARGETARCH
 ENV DEBIAN_FRONTEND=noninteractive
