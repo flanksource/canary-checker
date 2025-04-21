@@ -27,21 +27,25 @@ type SQLDetails struct {
 	Count int                      `json:"count"`
 }
 
-// Package contains common function used by SQL Checks (Currently Postgresql and Mssql)
-
 // Connects to a db using the specified `driver` and `connectionstring`
 // Performs the test query given in `query`.
 // Gives the single row test query result as result.
 func querySQL(driver string, connection string, query string) (SQLDetails, error) {
-	result := SQLDetails{}
+	var result SQLDetails
+
+	if driver == mysqlCheckType {
+		// mysql driver expects a connection string in the format:
+		// username:password@protocol(address)/dbname?param=value
+		connection = strings.TrimPrefix(connection, "mysql://")
+	}
+
 	db, err := sql.Open(driver, connection)
 	if err != nil {
-		return result, fmt.Errorf("failed to connect to db: %w", err)
+		return result, fmt.Errorf("failed to connect to %s db: %w", driver, err)
 	}
 	defer db.Close()
 
 	rows, err := db.Query(query)
-
 	if err != nil || rows.Err() != nil {
 		return result, fmt.Errorf("failed to query db: %w", err)
 	}

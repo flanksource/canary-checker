@@ -9,10 +9,12 @@ import (
 	_ "github.com/go-sql-driver/mysql" // Necessary for mysql
 )
 
+const mysqlCheckType = "mysql"
+
 type MysqlChecker struct{}
 
 func (c *MysqlChecker) Type() string {
-	return "mysql"
+	return mysqlCheckType
 }
 
 // Run: Check every entry from config according to Checker interface
