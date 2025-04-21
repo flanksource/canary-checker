@@ -5,7 +5,7 @@ metadata:
 spec:
   schedule: "@every 5m"
   mysql:
-    - url: "$(username):$(password)@tcp(mysql.canaries.svc.cluster.local:3306)/mysqldb"
+    - url: "mysql://$(username):$(password)@tcp(mysql.canaries.svc.cluster.local:3306)/mysqldb"
       name: mysql ping check
       username:
         value: mysqladmin
