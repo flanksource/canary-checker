@@ -11,7 +11,7 @@ spec:
       # resource:
       #   labelSelector: k8s-app=kube-dns
       namespaceSelector:
-        name: kube-system
+        name: kube-*,!*lease
       display:
         expr: |
           dyn(results).

@@ -40,31 +40,39 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 	if err != nil {
 		return results.Failf("Kubernetes is not initialized: %v", err)
 	}
-
-	namespaces, err := k8sClient.QueryResources(ctx, check.Namespace.ToDutySelector().Type("Namespace"))
-
-	if err != nil {
-		return results.Failf("Failed to get namespaces: %v", err)
+	var namespaces = []string{}
+	var nsSelector = check.Namespace.ToDutySelector()
+	if !nsSelector.IsEmpty() && !nsSelector.Wildcard() {
+		list, err := k8sClient.QueryResources(ctx, check.Namespace.ToDutySelector().Type("Namespace").MetadataOnly())
+		if err != nil {
+			return results.Failf("Failed to get namespaces: %v", err)
+		}
+		for _, v := range list {
+			namespaces = append(namespaces, v.GetName())
+		}
 	}
+
 	var allResources []unstructured.Unstructured
 
 	for _, namespace := range namespaces {
 		selector := check.Resource.ToDutySelector()
-		selector.Namespace = namespace.GetName()
+		if namespace != "" {
+			selector.Namespace = namespace
+		}
 		selector.Types = []string{check.Kind}
 		resources, err := k8sClient.QueryResources(ctx, selector)
+
 		if err != nil {
-			return results.Failf("failed to get resources: %v. namespace: %v", err, namespace)
+			return results.Failf("failed to get resources (%s): %v", selector, err)
 		}
 		for _, filter := range check.Ignore {
 			resources, err = filterResources(resources, filter)
 			if err != nil {
-				results.Failf("failed to filter resources: %v. filter: %v", err, filter)
+				results.Failf("failed to filter resources: %v, filter: %v", err, filter)
 				return results
 			}
 		}
 
-		ctx.Tracef("Found %d %s in namespace %s with label=%s field=%s", len(resources), check.Kind, namespace, check.Resource.LabelSelector, check.Resource.FieldSelector)
 		for _, resource := range resources {
 			_resource := resource
 			resourceHealth, err := health.GetResourceHealth(&_resource, nil)
@@ -75,12 +83,12 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 				resource.Object["healthStatus"] = resourceHealth
 
 				if check.Healthy && resourceHealth.Health != health.HealthHealthy {
-					results.Failf("%s/%s/%s is not healthy (health: %s, status: %s): %s",
+					results.Failf("%s/%s/%s is not healthy (health: %s, status: %s): %s\n",
 						resource.GetKind(), resource.GetNamespace(), resource.GetName(), resourceHealth.Health, resourceHealth.Status, resourceHealth.Message)
 				}
 
 				if check.Ready && !resourceHealth.Ready {
-					results.Failf("%s/%s/%s is not ready (status: %s): %s", resource.GetKind(),
+					results.Failf("%s/%s/%s is not ready (status: %s): %s\n", resource.GetKind(),
 						resource.GetNamespace(), resource.GetName(), resourceHealth.Status, resourceHealth.Message)
 				}
 			}
