@@ -4,14 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/pkg/utils"
 	dutyKubernetes "github.com/flanksource/duty/kubernetes"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -281,21 +278,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 		return results.Failf("")
 	}
 
-	for _, artifactConfig := range check.Artifacts {
-		paths := utils.UnfoldGlobs(artifactConfig.Path)
-		for _, path := range paths {
-			file, err := os.Open(path)
-			if err != nil {
-				ctx.Error(err, "error opening file. path=%s", path)
-				continue
-			}
-
-			result.Artifacts = append(result.Artifacts, artifacts.Artifact{
-				Path:    path,
-				Content: file,
-			})
-		}
-	}
+	//FIXME: junit.artifacts should be extracted from the pod, not from canary-checker
 
 	return results
 }
