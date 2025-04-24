@@ -1027,6 +1027,7 @@ type ResourceSelector struct {
 	Name          string `yaml:"name,omitempty" json:"name,omitempty"`
 	LabelSelector string `json:"labelSelector,omitempty" yaml:"labelSelector,omitempty"`
 	FieldSelector string `json:"fieldSelector,omitempty" yaml:"fieldSelector,omitempty"`
+	Search        string `json:"search,omitempty" yaml:"search,omitempty"`
 }
 
 func (rs ResourceSelector) ToDutySelector() types.ResourceSelector {
@@ -1034,6 +1035,7 @@ func (rs ResourceSelector) ToDutySelector() types.ResourceSelector {
 		Name:          rs.Name,
 		LabelSelector: rs.LabelSelector,
 		FieldSelector: rs.FieldSelector,
+		Search:        rs.Search,
 	}
 }
 
