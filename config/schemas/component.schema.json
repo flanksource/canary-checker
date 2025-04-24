@@ -4225,6 +4225,9 @@
         },
         "fieldSelector": {
           "type": "string"
+        },
+        "search": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
