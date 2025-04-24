@@ -7,11 +7,14 @@ spec:
   kubernetes:
     - name: kube-system
       kind: Pod
-      # ready: true
+      healthy: true
       # resource:
-      #   labelSelector: k8s-app=kube-dns
+      #  search: labels.app=test
+      #      OR
+      #  labelSelector: k8s-app=kube-dns
       namespaceSelector:
         name: kube-*,!*lease
+      # name: "*"
       display:
         expr: |
           dyn(results).

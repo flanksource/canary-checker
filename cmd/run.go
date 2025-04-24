@@ -37,7 +37,8 @@ var Run = &cobra.Command{
 		if err != nil {
 			logger.Fatalf("Failed to initialize db: %v", err.Error())
 		}
-		shutdown.AddHook(closer)
+		shutdown.AddHookWithPriority("db", 0, closer)
+		defer closer()
 
 		apicontext.DefaultContext = ctx
 

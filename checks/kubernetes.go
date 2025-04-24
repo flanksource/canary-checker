@@ -42,7 +42,9 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 	}
 	var namespaces = []string{}
 	var nsSelector = check.Namespace.ToDutySelector()
-	if !nsSelector.IsEmpty() && !nsSelector.Wildcard() {
+	if nsSelector.Wildcard() {
+		namespaces = append(namespaces, "")
+	} else if !nsSelector.IsEmpty() {
 		list, err := k8sClient.QueryResources(ctx, check.Namespace.ToDutySelector().Type("Namespace").MetadataOnly())
 		if err != nil {
 			return results.Failf("Failed to get namespaces: %v", err)
@@ -50,6 +52,8 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 		for _, v := range list {
 			namespaces = append(namespaces, v.GetName())
 		}
+	} else {
+		namespaces = append(namespaces, ctx.GetNamespace())
 	}
 
 	var allResources []unstructured.Unstructured

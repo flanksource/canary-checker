@@ -1,0 +1,10 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: tcp-invalid
+spec:
+  schedule: "*/1 * * * *"
+  tcp:
+    - name: "flanksource website"
+      endpoint: https://www.flanksource.com:80
+      thresholdMillis: 1200
