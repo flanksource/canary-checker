@@ -18,12 +18,14 @@ package controllers
 
 import (
 	gocontext "context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/samber/lo"
+	"github.com/samber/oops"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -37,7 +39,7 @@ import (
 	"github.com/nsf/jsondiff"
 	"github.com/patrickmn/go-cache"
 	"github.com/robfig/cron/v3"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8sErrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -63,15 +65,18 @@ type CanaryReconciler struct {
 
 const FinalizerName = "canary.canaries.flanksource.com"
 
+// oops errors with this tag will be reported in the canary CRD status
+const errTagStatusReportable = "status-reportable"
+
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=canaries.flanksource.com,resources=canaries/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=pods/exec,verbs=*
 // +kubebuilder:rbac:groups="",resources=pods/logs,verbs=*
 func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithValues("canary", req.NamespacedName)
+
 	canary := &v1.Canary{}
-	err := r.Get(parentCtx, req.NamespacedName, canary)
-	if errors.IsNotFound(err) {
+	if err := r.Get(parentCtx, req.NamespacedName, canary); k8sErrs.IsNotFound(err) {
 		return ctrl.Result{}, nil
 	} else if err != nil {
 		return ctrl.Result{RequeueAfter: 10 * time.Minute}, corev1.ErrUnexpectedEndOfGroupGenerated
@@ -83,20 +88,39 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 
 	ctx := r.Context.WithObject(canary.ObjectMeta).WithName(req.NamespacedName.String())
 
+	result, err := r.reconcile(ctx, canary, req.NamespacedName)
+	if err != nil {
+		logger.Error(err, "reconciliation failed")
+
+		var oopsErr oops.OopsError
+		if errors.As(err, &oopsErr) && oopsErr.HasTag(errTagStatusReportable) {
+			if updateErr := r.updateStatusWithError(ctx, req.NamespacedName, err.Error()); updateErr != nil {
+				logger.Error(updateErr, "failed to update status with error")
+			}
+		}
+
+		return result, err
+	}
+
+	return result, nil
+}
+
+func (r *CanaryReconciler) reconcile(ctx dutyContext.Context, canary *v1.Canary, namespacedName client.ObjectKey) (ctrl.Result, error) {
 	canary.SetRunnerName(r.RunnerName)
 
 	// Add finalizer first if not exist to avoid the race condition between init and delete
 	if !controllerutil.ContainsFinalizer(canary, FinalizerName) {
 		controllerutil.AddFinalizer(canary, FinalizerName)
 		if err := r.Client.Update(ctx, canary); err != nil {
-			logger.Error(err, "failed to update finalizers")
+			return ctrl.Result{Requeue: true}, fmt.Errorf("failed to update finalizers: %w", err)
 		}
 	}
 
 	if !canary.DeletionTimestamp.IsZero() {
 		if err := db.DeleteCanary(ctx, canary.GetPersistedID()); err != nil {
-			logger.Error(err, "failed to delete canary")
+			return ctrl.Result{Requeue: true}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to delete canary")
 		}
+
 		canaryJobs.Unschedule(canary.GetPersistedID())
 		controllerutil.RemoveFinalizer(canary, FinalizerName)
 		return ctrl.Result{}, r.Update(ctx, canary)
@@ -104,39 +128,37 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 
 	dbCanary, err := r.updateCanaryInDB(ctx, canary)
 	if err != nil {
-		return ctrl.Result{Requeue: true}, err
+		return ctrl.Result{Requeue: true}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to update canary in DB")
 	}
 
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 {
 		if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
-			logger.Error(err, "failed to sync canary job")
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to sync canary job")
 		}
 	}
 
 	// Update status
 	var canaryForStatus v1.Canary
-	err = r.Get(ctx, req.NamespacedName, &canaryForStatus)
+	err = r.Get(ctx, namespacedName, &canaryForStatus)
 	if err != nil {
-		logger.Error(err, "Error fetching canary for status update")
-		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, fmt.Errorf("error fetching canary for status update: %w", err)
 	}
 	patch := client.MergeFrom(canaryForStatus.DeepCopy())
 
 	if val, ok := canary.Annotations["next-runtime"]; ok {
 		runAt := utils.ParseTime(val)
 		if runAt == nil {
-			return ctrl.Result{}, fmt.Errorf("invalid next-runtime: %s", val)
+			return ctrl.Result{}, ctx.Oops().Tags(errTagStatusReportable).Errorf("invalid next-runtime: %s", val)
 		}
 
 		if err := canaryJobs.TriggerAt(ctx, *dbCanary, *runAt); err != nil {
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to trigger canary")
 		}
 
 		delete(canary.Annotations, "next-runtime")
 		if err := r.Update(ctx, canary); err != nil {
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, fmt.Errorf("failed to update canary: %w", err)
 		}
 	}
 
@@ -145,7 +167,7 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 			canaryJobs.Unschedule(canary.GetPersistedID())
 		} else {
 			if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
-				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to sync canary job")
 			}
 		}
 
@@ -155,11 +177,21 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 	canaryForStatus.Status.Checks = dbCanary.Checks
 	canaryForStatus.Status.ObservedGeneration = canary.Generation
 	if err = r.Status().Patch(ctx, &canaryForStatus, patch); err != nil {
-		logger.Error(err, "failed to update status for canary")
-		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, fmt.Errorf("failed to update status for canary: %w", err)
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *CanaryReconciler) updateStatusWithError(ctx gocontext.Context, namespacedName client.ObjectKey, errorMsg string) error {
+	var canaryForStatus v1.Canary
+	if err := r.Get(ctx, namespacedName, &canaryForStatus); err != nil {
+		return err
+	}
+
+	patch := client.MergeFrom(canaryForStatus.DeepCopy())
+	canaryForStatus.Status.ErrorMessage = lo.ToPtr(pkg.TruncateError(errorMsg))
+	return r.Status().Patch(ctx, &canaryForStatus, patch)
 }
 
 func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
