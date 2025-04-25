@@ -105,23 +105,21 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	}
 
 	if existingJob == nil {
-		newCanaryJob(canaryJob)
-		return nil
+		return newCanaryJob(canaryJob)
 	}
 
 	existingCanary := existingJob.Context.Value("canary")
 	if existingCanary != nil && !reflect.DeepEqual(existingCanary.(v1.Canary).Spec, canary.Spec) {
 		ctx.Debugf("Rescheduling %s canary with updated specs", canary)
 		Unschedule(id)
-		newCanaryJob(canaryJob)
-		return nil
+		return newCanaryJob(canaryJob)
 	}
 
 	ctx.Logger.V(2).Infof("canary %s was not rescheduled", canary.Name)
 	return nil
 }
 
-func newCanaryJob(c CanaryJob) {
+func newCanaryJob(c CanaryJob) error {
 	schedule := c.Canary.Spec.Schedule
 	if schedule == "" && c.Canary.Spec.Interval > 0 {
 		schedule = fmt.Sprintf("@every %ds", c.Canary.Spec.Interval)
@@ -145,10 +143,12 @@ func newCanaryJob(c CanaryJob) {
 		Fn:                   c.Run,
 	}
 
-	canaryJobs.Store(c.DBCanary.ID.String(), j)
 	if err := j.AddToScheduler(CanaryScheduler); err != nil {
-		logger.Errorf("[%s] failed to schedule %v", j.Name, err)
+		return fmt.Errorf("failed to schedule canary %s: %w", j.ID, err)
 	}
+	canaryJobs.Store(c.DBCanary.ID.String(), j)
+
+	return nil
 }
 
 var SyncCanaryJobs = &job.Job{
