@@ -6257,6 +6257,8 @@ spec:
                           template:
                             type: string
                         type: object
+                      timeout:
+                        type: integer
                       transform:
                         properties:
                           expr:
@@ -6434,6 +6436,8 @@ spec:
                           template:
                             type: string
                         type: object
+                      timeout:
+                        type: integer
                       transform:
                         properties:
                           expr:
@@ -6988,6 +6992,8 @@ spec:
                           template:
                             type: string
                         type: object
+                      timeout:
+                        type: integer
                       transform:
                         properties:
                           expr:
