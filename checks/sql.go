@@ -1,10 +1,12 @@
 package checks
 
 import (
+	gocontext "context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
@@ -30,7 +32,7 @@ type SQLDetails struct {
 // Connects to a db using the specified `driver` and `connectionstring`
 // Performs the test query given in `query`.
 // Gives the single row test query result as result.
-func querySQL(driver string, connection string, query string) (SQLDetails, error) {
+func querySQL(driver string, connection string, query string, timout time.Duration) (SQLDetails, error) {
 	var result SQLDetails
 
 	if driver == mysqlCheckType {
@@ -44,8 +46,10 @@ func querySQL(driver string, connection string, query string) (SQLDetails, error
 		return result, fmt.Errorf("failed to connect to %s db: %w", driver, err)
 	}
 	defer db.Close()
+	ctx, cancel := gocontext.WithTimeout(gocontext.Background(), timout*time.Second)
+	defer cancel()
+	rows, err := db.QueryContext(ctx, query)
 
-	rows, err := db.Query(query)
 	if err != nil || rows.Err() != nil {
 		return result, fmt.Errorf("failed to query db: %w", err)
 	}
@@ -67,7 +71,7 @@ func querySQL(driver string, connection string, query string) (SQLDetails, error
 			return result, err
 		}
 
-		var row = make(map[string]interface{})
+		row := make(map[string]interface{})
 		for i, val := range rowValues {
 			if val == nil {
 				row[columns[i]] = nil
@@ -112,7 +116,7 @@ func querySQL(driver string, connection string, query string) (SQLDetails, error
 					row[columns[i]] = nil
 				}
 			case *types.JSON:
-				var jsonObj = make(map[string]any)
+				jsonObj := make(map[string]any)
 				var jsonArray []any
 				if err := json.Unmarshal(*v, &jsonObj); err == nil {
 					row[columns[i]] = jsonObj
@@ -155,6 +159,7 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 	}
 
 	query := check.GetQuery()
+	timout := check.GetQueryTimeout()
 
 	if ctx.CanTemplate() {
 		query, err = template(ctx.WithCheck(checker.GetCheck()), v1.Template{
@@ -168,7 +173,7 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 		}
 	}
 
-	details, err := querySQL(checker.GetDriver(), connection.URL, query)
+	details, err := querySQL(checker.GetDriver(), connection.URL, query, timout)
 	result.AddDetails(details)
 
 	if err != nil {

@@ -197,6 +197,9 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
+        "timeout": {
+          "type": "integer"
+        },
         "query": {
           "type": "string"
         },

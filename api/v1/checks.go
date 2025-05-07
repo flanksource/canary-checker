@@ -389,6 +389,7 @@ type SQLCheck struct {
 	Templatable `yaml:",inline" json:",inline"`
 	Relatable   `yaml:",inline" json:",inline"`
 	Connection  `yaml:",inline" json:",inline"`
+	Timeout     int    `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 	Query       string `yaml:"query" json:"query,omitempty" template:"true"`
 	// Number rows to check for
 	Result int `yaml:"results" json:"results,omitempty"`
@@ -399,6 +400,14 @@ func (c *SQLCheck) GetQuery() string {
 		return "SELECT 1"
 	}
 	return c.Query
+}
+
+func (c *SQLCheck) GetQueryTimeout() time.Duration {
+	if c.Timeout == 0 {
+		c.Timeout = 60
+	}
+
+	return time.Duration(c.Timeout) * time.Second
 }
 
 func (c SQLCheck) GetEndpoint() string {
