@@ -35,6 +35,7 @@ var All = []Checker{
 	&ElasticsearchChecker{},
 	&ExecChecker{},
 	&FolderChecker{},
+	&GCPChecker{},
 	&GitHubChecker{},
 	&GitProtocolChecker{},
 	&HTTPChecker{},

@@ -698,6 +698,22 @@ func (c DNSCheck) GetType() string {
 	return "dns"
 }
 
+type GCPIncidentsCheck struct {
+	Description              `yaml:",inline" json:",inline"`
+	Templatable              `yaml:",inline" json:",inline"`
+	connection.GCPConnection `yaml:",inline" json:",inline"`
+	Subscription             string `yaml:"subscription" json:"subscription"`
+	Project                  string `yaml:"project" json:"project"`
+}
+
+func (c GCPIncidentsCheck) GetEndpoint() string {
+	return fmt.Sprintf("gcppubsub://projects/%s/subscriptions/%s", c.Project, c.Subscription)
+}
+
+func (c GCPIncidentsCheck) GetType() string {
+	return "gcp_incidents"
+}
+
 type HelmCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Relatable   `yaml:",inline" json:",inline"`
@@ -1350,6 +1366,14 @@ This check will try to connect to a specified MsSQL database, run a query agains
 */
 type MsSQL struct {
 	MssqlCheck `yaml:",inline" json:"inline"`
+}
+
+/*
+This check pulls GCP Incidents from a Pub/Sub Subscription
+[include:datasources/gcp_incidents.yaml]
+*/
+type GCPIncidents struct {
+	GCPIncidentsCheck `yaml:",inline" json:"inline"`
 }
 
 /*
