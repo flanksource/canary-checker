@@ -1,7 +1,6 @@
 package checks
 
 import (
-	gocontext "context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -32,7 +31,7 @@ type SQLDetails struct {
 // Connects to a db using the specified `driver` and `connectionstring`
 // Performs the test query given in `query`.
 // Gives the single row test query result as result.
-func querySQL(driver string, connection string, query string, timout time.Duration) (SQLDetails, error) {
+func querySQL(ctx *context.Context, driver string, connection string, query string, timout time.Duration) (SQLDetails, error) {
 	var result SQLDetails
 
 	if driver == mysqlCheckType {
@@ -46,9 +45,9 @@ func querySQL(driver string, connection string, query string, timout time.Durati
 		return result, fmt.Errorf("failed to connect to %s db: %w", driver, err)
 	}
 	defer db.Close()
-	ctx, cancel := gocontext.WithTimeout(gocontext.Background(), timout*time.Second)
+	tctx, cancel := ctx.WithTimeout(timout * time.Second)
 	defer cancel()
-	rows, err := db.QueryContext(ctx, query)
+	rows, err := db.QueryContext(tctx, query)
 
 	if err != nil || rows.Err() != nil {
 		return result, fmt.Errorf("failed to query db: %w", err)
@@ -173,7 +172,7 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 		}
 	}
 
-	details, err := querySQL(checker.GetDriver(), connection.URL, query, timout)
+	details, err := querySQL(ctx, checker.GetDriver(), connection.URL, query, timout)
 	result.AddDetails(details)
 
 	if err != nil {
