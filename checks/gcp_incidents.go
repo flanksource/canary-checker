@@ -9,16 +9,14 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/commons/logger"
+	"gocloud.dev/gcp"
 	"gocloud.dev/pubsub"
-	_ "gocloud.dev/pubsub/gcppubsub"
+	"gocloud.dev/pubsub/gcppubsub"
+	"golang.org/x/oauth2"
 )
 
-func Check() error {
-
-	// Pull from topic, and create messages
-	// {
-	_ = `
+/*
+Sample open incident body
 {
   "incident": {
     "condition": {
@@ -85,9 +83,10 @@ func Check() error {
   },
   "version": "1.2"
 }
-	`
 
-	_ = `  "incident": {
+Sample closed incident body
+{
+  "incident": {
     "condition": {
       "conditionThreshold": {
         "aggregations": [
@@ -152,13 +151,8 @@ func Check() error {
   },
   "version": "1.2"
 }
-`
 
-	//for {
-	//m, err := subscription.Receive(ctx)
-	//}
-	return nil
-}
+*/
 
 type GCPIncidentsChecker struct {
 }
@@ -179,13 +173,16 @@ type GCPIncident struct {
 	ID      string `json:"incident_id,omitempty"`
 	Summary string `json:"summary,omitempty"`
 	State   string `json:"state,omitempty"`
+
+	m map[string]any
 }
 
-func (g GCPIncident) ToMapStringAny() map[string]any {
-	b, _ := json.Marshal(g)
-	var m map[string]any
-	_ = json.Unmarshal(b, &m)
-	return m
+func (g *GCPIncident) ToMapStringAny() map[string]any {
+	if g.m == nil {
+		b, _ := json.Marshal(g)
+		_ = json.Unmarshal(b, &g.m)
+	}
+	return g.m
 }
 
 type GCPIncidentPayload struct {
@@ -193,59 +190,85 @@ type GCPIncidentPayload struct {
 }
 
 func (c *GCPIncidentsChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
-	check := extConfig.(v1.GCPIncidents)
+	check := extConfig.(v1.GCPIncidentsCheck)
 	var results pkg.Results
 	result := pkg.Success(check, ctx.Canary)
 	results = append(results, result)
 
-	subscription, err := pubsub.OpenSubscription(ctx, fmt.Sprintf("gcppubsub://projects/%s/subscriptions/%s", check.Project, check.Subscription))
+	var tokenSrc oauth2.TokenSource
+	if check.ConnectionName != "" {
+		err := check.GCPConnection.HydrateConnection(ctx)
+		if err != nil {
+			return results.ErrorMessage(fmt.Errorf("error hydrating connection %s: %w", check.ConnectionName, err))
+		}
+		tokenSrc, err = check.GCPConnection.TokenSource(ctx.Context)
+		if err != nil {
+			return results.ErrorMessage(fmt.Errorf("error getting token source for %s/%s: %w", check.Project, check.Subscription, err))
+		}
+	} else {
+		creds, err := gcp.DefaultCredentials(ctx)
+		if err != nil {
+			return results.ErrorMessage(fmt.Errorf("error creating default creds for %s/%s: %w", check.Project, check.Subscription, err))
+		}
+		tokenSrc = creds.TokenSource
+	}
+
+	conn, cleanup, err := gcppubsub.Dial(ctx, tokenSrc)
+	defer cleanup()
+
+	subClient, err := gcppubsub.SubscriberClient(ctx, conn)
 	if err != nil {
-		return results.WithError(fmt.Errorf("error opening subscription for %s/%s: %w", check.Project, check.Subscription, err))
+		return results.ErrorMessage(fmt.Errorf("error opening subscription for %s/%s: %w", check.Project, check.Subscription, err))
+	}
+	defer subClient.Close()
+
+	subscription, err := gcppubsub.OpenSubscriptionByPath(subClient, fmt.Sprintf("projects/%s/subscriptions/%s", check.Project, check.Subscription), nil)
+	if err != nil {
+		return results.ErrorMessage(fmt.Errorf("error opening subscription for %s/%s: %w", check.Project, check.Subscription, err))
 	}
 	defer subscription.Shutdown(ctx)
 
 	msgs, err := ListenWithTimeout(ctx, subscription, 10*time.Second)
 	if err != nil {
-		panic(err)
+		return results.ErrorMessage(fmt.Errorf("error listening to subscription for %s/%s: %w", check.Project, check.Subscription, err))
 	}
 
-	logger.Infof("%+v", msgs)
+	var incidents GCPIncidentList
 
-	var g GCPIncidentList
-
-	var results2 pkg.Results
+	var checkResults pkg.Results
 	for _, rawMsg := range msgs {
-		var k GCPIncident
-		_ = json.Unmarshal([]byte(rawMsg), &k)
+		var payload GCPIncidentPayload
+		_ = json.Unmarshal([]byte(rawMsg), &payload)
 
+		inc := payload.Incident
 		// We ignore acknowledgement state
-		if k.State == "closed" {
-			g.closed = append(g.closed, k)
-			if err := ctx.DB().Table("check_statuses").Where("detail->'id' = ?", k.ID).UpdateColumn("status", true).Error; err != nil {
-				panic(err)
+		if inc.State == "closed" {
+			// We set the status to true directly in database
+			if ctx.DB() != nil {
+				if err := ctx.DB().Table("check_statuses").Where("details->>'incident_id' = ?", inc.ID).UpdateColumn("status", true).Error; err != nil {
+					return results.ErrorMessage(fmt.Errorf("error updating to subscription for %s/%s: %w", check.Project, check.Subscription, err))
+				}
 			}
-		} else if k.State == "open" {
-			g.Incidents = append(g.Incidents, k)
-			rr := pkg.New(check, ctx.Canary)
-			rr.Name = fmt.Sprintf("[%s] - %s", k.ID, k.Summary)
-			rr.Pass = false
-			rr.Data = k.ToMapStringAny()
-			rr.Message = k.Summary
-			rr.Detail = k.ToMapStringAny()
-			results2 = append(results2, rr)
+		} else if inc.State == "open" {
+			incidents.Incidents = append(incidents.Incidents, inc)
+			result := pkg.New(check, ctx.Canary)
+			result.Name = fmt.Sprintf("[%s] - %s", inc.ID, inc.Summary)
+			result.Pass = false
+			result.Data = inc.ToMapStringAny()
+			result.Message = inc.Summary
+			result.Detail = inc.ToMapStringAny()
+			checkResults = append(checkResults, result)
 		}
 	}
 
-	return results2
+	return checkResults
 }
 
 type GCPIncidentList struct {
 	Incidents []GCPIncident `json:"incidents,omitempty"`
-	closed    []GCPIncident
 }
 
 func ListenWithTimeout(ctx *context.Context, subscription *pubsub.Subscription, timeout time.Duration) ([]string, error) {
-	// Create a channel for timeout
 	timeoutCh := make(chan bool, 1)
 	messageCh := make(chan string, 1)
 	errorCh := make(chan error, 1)
@@ -253,21 +276,18 @@ func ListenWithTimeout(ctx *context.Context, subscription *pubsub.Subscription, 
 	var messages []string
 
 	for {
-		// Reset timer for each iteration
+		// Reset after each iteration
 		timer := time.AfterFunc(timeout, func() {
-			logger.Infof("Timeout")
 			timeoutCh <- true
 		})
 
-		// Start a goroutine to listen for messages
+		// Isten for messages in a goroutine
 		go func() {
-			logger.Infof("Waiting to receive")
 			msg, err := subscription.Receive(ctx)
 			if err != nil {
 				errorCh <- err
 				return
 			}
-			logger.Infof("Got something %s", string(msg.Body))
 			messageCh <- string(msg.Body)
 			msg.Ack()
 		}()
@@ -284,7 +304,6 @@ func ListenWithTimeout(ctx *context.Context, subscription *pubsub.Subscription, 
 			timer.Stop()
 			return messages, err
 		case <-timeoutCh:
-			logger.Infof("Timeout done")
 			return messages, nil
 		}
 	}

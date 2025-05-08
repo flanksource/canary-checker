@@ -591,6 +591,12 @@
           },
           "type": "array"
         },
+        "gcp_incidents": {
+          "items": {
+            "$ref": "#/$defs/GCPIncidentsCheck"
+          },
+          "type": "array"
+        },
         "github": {
           "items": {
             "$ref": "#/$defs/GitHubCheck"
@@ -1746,6 +1752,68 @@
         "instance"
       ]
     },
+    "GCPIncidentsCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "subscription": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "subscription",
+        "project"
+      ]
+    },
     "GCSConnection": {
       "properties": {
         "connection": {
@@ -2679,6 +2747,12 @@
         "cloudwatch": {
           "items": {
             "$ref": "#/$defs/CloudWatchCheck"
+          },
+          "type": "array"
+        },
+        "gcp_incidents": {
+          "items": {
+            "$ref": "#/$defs/GCPIncidentsCheck"
           },
           "type": "array"
         },

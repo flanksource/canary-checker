@@ -1575,6 +1575,7 @@ var AllChecks = []external.Check{
 	FolderCheck{},
 	GitHubCheck{},
 	GitProtocolCheck{},
+	GCPIncidentsCheck{},
 	HelmCheck{},
 	HTTPCheck{},
 	ICMPCheck{},
