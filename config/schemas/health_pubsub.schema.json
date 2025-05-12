@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/flanksource/canary-checker/api/v1/mongo-db-check",
-  "$ref": "#/$defs/MongoDBCheck",
+  "$id": "https://github.com/flanksource/canary-checker/api/v1/pub-sub-check",
+  "$ref": "#/$defs/PubSubCheck",
   "$defs": {
     "ConfigMapKeySelector": {
       "properties": {
@@ -50,6 +50,34 @@
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "GCPIncident": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "subscription": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "subscription",
+        "project"
+      ]
     },
     "HelmRefKeySelector": {
       "properties": {
@@ -114,7 +142,7 @@
       "additionalProperties": false,
       "type": "object"
     },
-    "MongoDBCheck": {
+    "PubSubCheck": {
       "properties": {
         "description": {
           "type": "string"
@@ -143,23 +171,27 @@
         "result_lookup": {
           "type": "string"
         },
-        "connection": {
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "gcp_incidents": {
+          "$ref": "#/$defs/GCPIncident"
+        },
+        "type": {
           "type": "string"
-        },
-        "url": {
-          "type": "string"
-        },
-        "username": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "password": {
-          "$ref": "#/$defs/EnvVar"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name"
+        "name",
+        "type"
       ]
     },
     "SecretKeySelector": {
@@ -176,6 +208,24 @@
       "required": [
         "key"
       ]
+    },
+    "Template": {
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "jsonPath": {
+          "type": "string"
+        },
+        "expr": {
+          "type": "string"
+        },
+        "javascript": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     }
   }
 }

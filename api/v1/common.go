@@ -400,6 +400,8 @@ type Description struct {
 	// https://canarychecker.io/concepts/metrics-exporter
 	// +kubebuilder:validation:XPreserveUnknownFields
 	Metrics []external.Metrics `json:"metrics,omitempty" yaml:"metrics,omitempty"`
+
+	ResultLookup string `json:"result_lookup,omitempty" yaml:"result_lookup,omitempty"`
 }
 
 func (d Description) String() string {

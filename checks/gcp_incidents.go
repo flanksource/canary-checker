@@ -10,7 +10,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"gocloud.dev/gcp"
-	"gocloud.dev/pubsub"
 	"gocloud.dev/pubsub/gcppubsub"
 	"golang.org/x/oauth2"
 )
@@ -154,25 +153,11 @@ Sample closed incident body
 
 */
 
-type GCPIncidentsChecker struct {
-}
-
-func (c *GCPIncidentsChecker) Type() string {
-	return "gcp_incidents"
-}
-
-func (c *GCPIncidentsChecker) Run(ctx *context.Context) pkg.Results {
-	var results pkg.Results
-	for _, conf := range ctx.Canary.Spec.GCPIncidents {
-		results = append(results, c.Check(ctx, conf)...)
-	}
-	return results
-}
-
 type GCPIncident struct {
-	ID      string `json:"incident_id,omitempty"`
-	Summary string `json:"summary,omitempty"`
-	State   string `json:"state,omitempty"`
+	ID           string `json:"incident_id,omitempty"`
+	Summary      string `json:"summary,omitempty"`
+	State        string `json:"state,omitempty"`
+	ResourceName string `json:"resource_name,omitempty"`
 
 	m map[string]any
 }
@@ -185,14 +170,19 @@ func (g *GCPIncident) ToMapStringAny() map[string]any {
 	return g.m
 }
 
+type GCPIncidentList struct {
+	Incidents []GCPIncident `json:"incidents,omitempty"`
+}
+
 type GCPIncidentPayload struct {
 	Incident GCPIncident `json:"incident,omitempty"`
 }
 
-func (c *GCPIncidentsChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
-	check := extConfig.(v1.GCPIncidentsCheck)
+func CheckGCPIncidents(ctx *context.Context, extConfig external.Check) pkg.Results {
 	var results pkg.Results
-	result := pkg.Success(check, ctx.Canary)
+	pubSubCheck := extConfig.(v1.PubSubCheck)
+	check := pubSubCheck.GCPIncidents
+	result := pkg.Success(pubSubCheck, ctx.Canary)
 	results = append(results, result)
 
 	var tokenSrc oauth2.TokenSource
@@ -214,6 +204,9 @@ func (c *GCPIncidentsChecker) Check(ctx *context.Context, extConfig external.Che
 	}
 
 	conn, cleanup, err := gcppubsub.Dial(ctx, tokenSrc)
+	if err != nil {
+		return results.ErrorMessage(fmt.Errorf("error connecting to GCP: %w", err))
+	}
 	defer cleanup()
 
 	subClient, err := gcppubsub.SubscriberClient(ctx, conn)
@@ -226,6 +219,7 @@ func (c *GCPIncidentsChecker) Check(ctx *context.Context, extConfig external.Che
 	if err != nil {
 		return results.ErrorMessage(fmt.Errorf("error opening subscription for %s/%s: %w", check.Project, check.Subscription, err))
 	}
+	//nolint:errcheck
 	defer subscription.Shutdown(ctx)
 
 	msgs, err := ListenWithTimeout(ctx, subscription, 10*time.Second)
@@ -233,9 +227,7 @@ func (c *GCPIncidentsChecker) Check(ctx *context.Context, extConfig external.Che
 		return results.ErrorMessage(fmt.Errorf("error listening to subscription for %s/%s: %w", check.Project, check.Subscription, err))
 	}
 
-	var incidents GCPIncidentList
-
-	var checkResults pkg.Results
+	var pubSubResult PubSubResults
 	for _, rawMsg := range msgs {
 		var payload GCPIncidentPayload
 		_ = json.Unmarshal([]byte(rawMsg), &payload)
@@ -245,66 +237,19 @@ func (c *GCPIncidentsChecker) Check(ctx *context.Context, extConfig external.Che
 		if inc.State == "closed" {
 			// We set the status to true directly in database
 			if ctx.DB() != nil {
-				if err := ctx.DB().Table("check_statuses").Where("details->>'incident_id' = ?", inc.ID).UpdateColumn("status", true).Error; err != nil {
+				if pubSubCheck.ResultLookup == "" {
+					pubSubCheck.ResultLookup = `'$.incident_id'`
+				}
+				whereClause := fmt.Sprintf(`trim('"' FROM jsonb_path_query_first(details, '%s')::text) = ?`, pubSubCheck.ResultLookup)
+				if err := ctx.DB().Table("check_statuses").Where(whereClause, inc.ID).UpdateColumn("status", true).Error; err != nil {
 					return results.ErrorMessage(fmt.Errorf("error updating to subscription for %s/%s: %w", check.Project, check.Subscription, err))
 				}
 			}
 		} else if inc.State == "open" {
-			incidents.Incidents = append(incidents.Incidents, inc)
-			result := pkg.New(check, ctx.Canary)
-			result.Name = fmt.Sprintf("[%s] - %s", inc.ID, inc.Summary)
-			result.Pass = false
-			result.Data = inc.ToMapStringAny()
-			result.Message = inc.Summary
-			result.Detail = inc.ToMapStringAny()
-			checkResults = append(checkResults, result)
+			pubSubResult.GCPIncidents = append(pubSubResult.GCPIncidents, inc)
 		}
 	}
 
-	return checkResults
-}
-
-type GCPIncidentList struct {
-	Incidents []GCPIncident `json:"incidents,omitempty"`
-}
-
-func ListenWithTimeout(ctx *context.Context, subscription *pubsub.Subscription, timeout time.Duration) ([]string, error) {
-	timeoutCh := make(chan bool, 1)
-	messageCh := make(chan string, 1)
-	errorCh := make(chan error, 1)
-
-	var messages []string
-
-	for {
-		// Reset after each iteration
-		timer := time.AfterFunc(timeout, func() {
-			timeoutCh <- true
-		})
-
-		// Isten for messages in a goroutine
-		go func() {
-			msg, err := subscription.Receive(ctx)
-			if err != nil {
-				errorCh <- err
-				return
-			}
-			messageCh <- string(msg.Body)
-			msg.Ack()
-		}()
-
-		// Wait for either a message, error, or timeout
-		select {
-		case <-ctx.Done():
-			return messages, nil
-		case msg := <-messageCh:
-			// Stop the timer since we got a message
-			timer.Stop()
-			messages = append(messages, msg)
-		case err := <-errorCh:
-			timer.Stop()
-			return messages, err
-		case <-timeoutCh:
-			return messages, nil
-		}
-	}
+	result.AddDetails(pubSubResult)
+	return results
 }

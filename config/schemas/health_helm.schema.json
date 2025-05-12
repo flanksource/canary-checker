@@ -107,6 +107,9 @@
           },
           "type": "array"
         },
+        "result_lookup": {
+          "type": "string"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },

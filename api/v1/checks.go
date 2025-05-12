@@ -698,20 +698,30 @@ func (c DNSCheck) GetType() string {
 	return "dns"
 }
 
-type GCPIncidentsCheck struct {
-	Description              `yaml:",inline" json:",inline"`
-	Templatable              `yaml:",inline" json:",inline"`
+type GCPIncident struct {
 	connection.GCPConnection `yaml:",inline" json:",inline"`
 	Subscription             string `yaml:"subscription" json:"subscription"`
 	Project                  string `yaml:"project" json:"project"`
 }
 
-func (c GCPIncidentsCheck) GetEndpoint() string {
-	return fmt.Sprintf("gcppubsub://projects/%s/subscriptions/%s", c.Project, c.Subscription)
+type PubSubCheck struct {
+	Description  `yaml:",inline" json:",inline"`
+	Templatable  `yaml:",inline" json:",inline"`
+	GCPIncidents GCPIncident `yaml:"gcp_incidents,omitempty" json:"gcp_incidents,omitempty"`
+
+	// TODO: Add one of
+	Type string `yaml:"type" json:"type"`
 }
 
-func (c GCPIncidentsCheck) GetType() string {
-	return "gcp_incidents"
+func (c PubSubCheck) GetEndpoint() string {
+	if c.Type == "gcp_incidents" {
+		return fmt.Sprintf("gcppubsub://projects/%s/subscriptions/%s", c.GCPIncidents.Project, c.GCPIncidents.Subscription)
+	}
+	return ""
+}
+
+func (c PubSubCheck) GetType() string {
+	return "pubsub"
 }
 
 type HelmCheck struct {
@@ -1373,7 +1383,7 @@ This check pulls GCP Incidents from a Pub/Sub Subscription
 [include:datasources/gcp_incidents.yaml]
 */
 type GCPIncidents struct {
-	GCPIncidentsCheck `yaml:",inline" json:"inline"`
+	PubSubCheck `yaml:",inline" json:"inline"`
 }
 
 /*
@@ -1575,7 +1585,7 @@ var AllChecks = []external.Check{
 	FolderCheck{},
 	GitHubCheck{},
 	GitProtocolCheck{},
-	GCPIncidentsCheck{},
+	PubSubCheck{},
 	HelmCheck{},
 	HTTPCheck{},
 	ICMPCheck{},
