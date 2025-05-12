@@ -271,7 +271,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 			if err != nil {
 				r.ErrorMessage(ctx.Oops().With(contextMapToSlice(r.GetContext())...).Wrap(err))
 			} else {
-				r.ResultMessage(message)
+				r.ResultMessage("%s", message)
 			}
 		}
 	}

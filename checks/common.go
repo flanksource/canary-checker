@@ -227,7 +227,7 @@ func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) Ju
 		} else {
 			testSuite.Failed++
 			test.Status = "failed"
-			test.Error = fmt.Errorf(result.Error)
+			test.Error = fmt.Errorf("%s", result.Error)
 		}
 		testSuite.Duration += float64(result.Duration) / 1000
 		testSuite.Tests = append(testSuite.Tests, test)

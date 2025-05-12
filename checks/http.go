@@ -275,7 +275,7 @@ func crawl(ctx *context.Context, check v1.HTTPCheck, results *pkg.Results) {
 
 	ctx.Tracef("%s %s depth=%d, parallelism=%d, delay=%v", console.Greenf("CRAWL"), check.URL, c.MaxDepth, rule.Parallelism, rule.Delay)
 	if err := c.Limit(&rule); err != nil {
-		results.Invalidf(err.Error())
+		results.Invalidf("%v", err.Error())
 		return
 	}
 
@@ -335,7 +335,7 @@ func crawl(ctx *context.Context, check v1.HTTPCheck, results *pkg.Results) {
 	})
 
 	if err := c.Visit(check.URL); err != nil {
-		results.Failf(err.Error())
+		results.Failf("%v", err.Error())
 		return
 	}
 
@@ -352,9 +352,9 @@ func crawl(ctx *context.Context, check v1.HTTPCheck, results *pkg.Results) {
 	(*results)[0].AddDataStruct(data)
 	if len(data.Missing) > 0 {
 		msg += fmt.Sprintf(", Missing: %d", len(data.Missing))
-		results.Failf(msg)
+		results.Failf("%s", msg)
 	} else {
-		(*results)[0].ResultMessage(msg)
+		(*results)[0].ResultMessage("%s", msg)
 	}
 }
 
@@ -385,7 +385,7 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		}
 	}
 
-	ctx.Tracef("%s	%s", console.Greenf(check.GetMethod()), check.URL)
+	ctx.Tracef("%s	%s", console.Greenf("%s", check.GetMethod()), check.URL)
 
 	response, err := request.Do(check.GetMethod(), check.URL)
 	if err != nil {

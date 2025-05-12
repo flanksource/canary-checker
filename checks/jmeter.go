@@ -65,7 +65,7 @@ func (c *JmeterChecker) Check(ctx *context.Context, extConfig external.Check) pk
 		port = "-P " + string(check.Port)
 	}
 	jmeterCmd := fmt.Sprintf("jmeter -n %s %s -t %s %s %s -l %s", getProperties(check.Properties), getSystemProperties(check.SystemProperties), testPlanFilename, host, port, logFilename)
-	_, ok := exec.SafeExec(jmeterCmd)
+	_, ok := exec.SafeExec("%s", jmeterCmd)
 	defer os.Remove(logFilename) // nolint: errcheck
 	if !ok {
 		return results.Failf("error running the jmeter command: %v", jmeterCmd)

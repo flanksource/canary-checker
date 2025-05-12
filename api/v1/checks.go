@@ -1379,10 +1379,10 @@ type MsSQL struct {
 }
 
 /*
-This check pulls GCP Incidents from a Pub/Sub Subscription
+This check pulls data from a Pub/Sub Subscription
 [include:datasources/gcp_incidents.yaml]
 */
-type GCPIncidents struct {
+type PubSub struct {
 	PubSubCheck `yaml:",inline" json:"inline"`
 }
 
