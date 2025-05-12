@@ -212,10 +212,8 @@ func AddCheckStatuses(ctx context.Context, ids []string, status models.CheckHeal
 	if status == "" || !utils.Contains(models.CheckHealthStatuses, status) {
 		return fmt.Errorf("invalid check health status: %s", status)
 	}
-	checkStatus := false
-	if status == models.CheckStatusHealthy {
-		checkStatus = true
-	}
+
+	checkStatus := status == models.CheckStatusHealthy
 
 	var objs []*models.CheckStatus
 	for _, id := range ids {

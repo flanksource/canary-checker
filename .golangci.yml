@@ -36,6 +36,10 @@ linters:
       - third_party$
       - builtin$
       - examples$
+    rules:
+      - linters:
+          - staticcheck
+        text: 'QF1008:'
 formatters:
   enable:
     - gofmt

@@ -32,6 +32,8 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 )
 
+const trueString = "true"
+
 var (
 	responseStatus = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -182,9 +184,9 @@ func hydrate(ctx *context.Context, check v1.HTTPCheck) (*v1.HTTPCheck, *models.C
 	}
 
 	if ntlm, ok := connection.Properties["ntlm"]; ok {
-		check.NTLM = ntlm == "true"
+		check.NTLM = ntlm == trueString
 	} else if ntlm, ok := connection.Properties["ntlmv2"]; ok {
-		check.NTLMv2 = ntlm == "true"
+		check.NTLMv2 = ntlm == trueString
 	}
 
 	templateEnv := map[string]any{}

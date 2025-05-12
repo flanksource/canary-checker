@@ -234,7 +234,8 @@ func CheckGCPIncidents(ctx *context.Context, extConfig external.Check) pkg.Resul
 
 		inc := payload.Incident
 		// We ignore acknowledgement state
-		if inc.State == "closed" {
+		switch inc.State {
+		case "closed":
 			// We set the status to true directly in database
 			if ctx.DB() != nil {
 				if pubSubCheck.ResultLookup == "" {
@@ -245,7 +246,7 @@ func CheckGCPIncidents(ctx *context.Context, extConfig external.Check) pkg.Resul
 					return results.ErrorMessage(fmt.Errorf("error updating to subscription for %s/%s: %w", check.Project, check.Subscription, err))
 				}
 			}
-		} else if inc.State == "open" {
+		case "open":
 			pubSubResult.GCPIncidents = append(pubSubResult.GCPIncidents, inc)
 		}
 	}
