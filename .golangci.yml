@@ -1,38 +1,48 @@
+version: "2"
 run:
-  # timeout for analysis, e.g. 30s, 5m, default is 1m
-  timeout: 20m
   tests: false
-
 linters:
-  # please, do not use `enable-all`: it's deprecated and will be removed soon.
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
-  disable-all: true
+  default: none
   enable:
     - bodyclose
     - dogsled
     - errcheck
-    - reassign
-    - nosprintfhostport
     - goconst
-    - gofmt
-    - goimports
     - goprintffuncname
-    - gosimple
     - govet
     - ineffassign
     - misspell
     - nakedret
+    - nosprintfhostport
+    - reassign
     - rowserrcheck
     - staticcheck
-    - stylecheck
     - unconvert
     - unparam
     - unused
     - whitespace
-
-linters-settings:
-  govet:
-    disable:
-      # printf: non-constant format string in call to fmt.Errorf (govet)
-      # showing up since golangci-lint version 1.60.1
-      - printf
+  settings:
+    govet:
+      disable:
+        - printf
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
