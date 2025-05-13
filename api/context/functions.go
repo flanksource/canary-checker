@@ -2,9 +2,13 @@ package context
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/flanksource/commons/logger"
+	"github.com/google/cel-go/cel"
+	"github.com/google/cel-go/common/types"
+	"github.com/google/cel-go/common/types/ref"
 )
 
 func (ctx *Context) GetContextualFunctions() map[string]any {
@@ -84,4 +88,47 @@ func (ctx *Context) GetContextualFunctions() map[string]any {
 		}
 	}
 	return funcs
+}
+
+var CelFuncs []cel.EnvOption
+
+func gcpIncidentToCheckResult(fnName string) cel.EnvOption {
+	f := func(in any) map[string]any {
+		var obj map[string]any
+		switch v := in.(type) {
+		case string:
+			if err := json.Unmarshal([]byte(v), &obj); err != nil {
+				return nil
+			}
+		case map[string]any:
+			obj = v
+		default:
+			return nil
+		}
+
+		checkResult := map[string]any{
+			"name":        fmt.Sprintf("[%s] %s", obj["incident_id"], obj["summary"]),
+			"pass":        false,
+			"detail":      obj,
+			"description": obj["summary"],
+			"message":     fmt.Sprintf("[%s] %s", obj["incident_id"], obj["summary"]),
+		}
+		return checkResult
+	}
+
+	return cel.Function(fnName,
+		cel.Overload(fnName+"_overload",
+			[]*cel.Type{cel.AnyType},
+			cel.AnyType,
+			cel.UnaryBinding(func(obj ref.Val) ref.Val {
+				return types.NewDynamicMap(types.DefaultTypeAdapter, f(obj.Value()))
+			}),
+		),
+	)
+}
+
+func init() {
+	CelFuncs = append(CelFuncs,
+		gcpIncidentToCheckResult("gcp.incidents.toCheckResult"),
+	)
 }

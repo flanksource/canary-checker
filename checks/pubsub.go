@@ -35,7 +35,7 @@ func (c *PubSubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 }
 
 type PubSubResults struct {
-	GCPIncidents []GCPIncident `json:"gcp_incidents,omitempty"`
+	GCPIncidents []GCPIncident `json:"gcp_incidents"`
 }
 
 func ListenWithTimeout(ctx *context.Context, subscription *pubsub.Subscription, timeout time.Duration) ([]string, error) {

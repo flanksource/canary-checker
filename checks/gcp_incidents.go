@@ -239,7 +239,7 @@ func CheckGCPIncidents(ctx *context.Context, extConfig external.Check) pkg.Resul
 			// We set the status to true directly in database
 			if ctx.DB() != nil {
 				if pubSubCheck.ResultLookup == "" {
-					pubSubCheck.ResultLookup = `'$.incident_id'`
+					pubSubCheck.ResultLookup = `$.incident_id`
 				}
 				whereClause := fmt.Sprintf(`trim('"' FROM jsonb_path_query_first(details, '%s')::text) = ?`, pubSubCheck.ResultLookup)
 				if err := ctx.DB().Table("check_statuses").Where(whereClause, inc.ID).UpdateColumn("status", true).Error; err != nil {

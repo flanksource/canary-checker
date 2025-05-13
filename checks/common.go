@@ -71,13 +71,15 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		tpl.Functions[k] = v
 	}
 
+	tpl.CelEnvs = append(tpl.CelEnvs, context.CelFuncs...)
+
 	return ctx.RunTemplate(tpl, ctx.Environment)
 }
 
 func getDefaultTransformer(check external.Check) v1.Template {
-	if check.GetType() == "pub_sub" && strings.HasPrefix(check.GetEndpoint(), "gcppubsub://") {
+	if check.GetType() == "pubsub" && strings.HasPrefix(check.GetEndpoint(), "gcppubsub://") {
 		return v1.Template{
-			Expression: `dyn(results.gcp_incidents).map(r, gcp.incidents.toCheckResult(r))`,
+			Expression: `results.gcp_incidents.map(r, gcp.incidents.toCheckResult(r)).toJSON()`,
 		}
 	}
 	return v1.Template{}
