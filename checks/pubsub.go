@@ -1,13 +1,15 @@
 package checks
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
-	"gocloud.dev/pubsub"
+	"github.com/flanksource/duty/pubsub"
+	gocloudpubsub "gocloud.dev/pubsub"
 )
 
 type PubSubChecker struct {
@@ -26,19 +28,32 @@ func (c *PubSubChecker) Run(ctx *context.Context) pkg.Results {
 }
 
 func (c *PubSubChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+	var results pkg.Results
 	check := extConfig.(v1.PubSubCheck)
-	switch check.Type {
-	case "gcp_incidents":
-		return CheckGCPIncidents(ctx, check)
+	result := pkg.Success(check, ctx.Canary)
+	results = append(results, result)
+
+	subscription, err := pubsub.Subscribe(ctx.Context, check.QueueConfig)
+	if err != nil {
+		return results.ErrorMessage(fmt.Errorf("error opening subscription for %s: %w", check.GetQueue()))
 	}
-	return pkg.Results{}
+
+	defer subscription.Shutdown(ctx) //nolint:errcheck
+
+	msgs, err := ListenWithTimeout(ctx, subscription, 10*time.Second)
+	if err != nil {
+		return results.ErrorMessage(fmt.Errorf("error listening to subscription %s: %w", check.GetQueue(), err))
+	}
+
+	result.AddDetails(PubSubResults{Messages: msgs})
+	return results
 }
 
 type PubSubResults struct {
-	GCPIncidents []GCPIncident `json:"gcp_incidents"`
+	Messages []string `json:"messages"`
 }
 
-func ListenWithTimeout(ctx *context.Context, subscription *pubsub.Subscription, timeout time.Duration) ([]string, error) {
+func ListenWithTimeout(ctx *context.Context, subscription *gocloudpubsub.Subscription, timeout time.Duration) ([]string, error) {
 	timeoutCh := make(chan bool, 1)
 	messageCh := make(chan string, 1)
 	errorCh := make(chan error, 1)

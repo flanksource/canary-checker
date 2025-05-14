@@ -51,34 +51,6 @@
       "additionalProperties": false,
       "type": "object"
     },
-    "GCPIncident": {
-      "properties": {
-        "connection": {
-          "type": "string"
-        },
-        "endpoint": {
-          "type": "string"
-        },
-        "credentials": {
-          "$ref": "#/$defs/EnvVar"
-        },
-        "skipTLSVerify": {
-          "type": "boolean"
-        },
-        "subscription": {
-          "type": "string"
-        },
-        "project": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object",
-      "required": [
-        "subscription",
-        "project"
-      ]
-    },
     "HelmRefKeySelector": {
       "properties": {
         "name": {
@@ -94,11 +66,46 @@
         "key"
       ]
     },
+    "KafkaConfig": {
+      "properties": {
+        "brokers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "topic": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "brokers",
+        "topic",
+        "group"
+      ]
+    },
     "Labels": {
       "additionalProperties": {
         "type": "string"
       },
       "type": "object"
+    },
+    "MemoryConfig": {
+      "properties": {
+        "queue": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "queue"
+      ]
     },
     "MetricLabel": {
       "properties": {
@@ -142,6 +149,24 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "NATSConfig": {
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "queue": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "subject"
+      ]
+    },
     "PubSubCheck": {
       "properties": {
         "description": {
@@ -180,18 +205,128 @@
         "transform": {
           "$ref": "#/$defs/Template"
         },
-        "gcp_incidents": {
-          "$ref": "#/$defs/GCPIncident"
+        "sqs": {
+          "$ref": "#/$defs/SQSConfig"
         },
-        "type": {
+        "pubsub": {
+          "$ref": "#/$defs/PubSubConfig"
+        },
+        "rabbitmq": {
+          "$ref": "#/$defs/RabbitConfig"
+        },
+        "memory": {
+          "$ref": "#/$defs/MemoryConfig"
+        },
+        "kafka": {
+          "$ref": "#/$defs/KafkaConfig"
+        },
+        "nats": {
+          "$ref": "#/$defs/NATSConfig"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "PubSubConfig": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "subscription": {
+          "type": "string"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "project_id",
+        "subscription"
+      ]
+    },
+    "RabbitConfig": {
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "queue": {
           "type": "string"
         }
       },
       "additionalProperties": false,
       "type": "object",
       "required": [
-        "name",
-        "type"
+        "host",
+        "port",
+        "username",
+        "password",
+        "queue"
+      ]
+    },
+    "SQSConfig": {
+      "properties": {
+        "queue": {
+          "type": "string"
+        },
+        "raw": {
+          "type": "boolean"
+        },
+        "waitTime": {
+          "type": "integer"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "assumeRole": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "queue",
+        "raw"
       ]
     },
     "SecretKeySelector": {

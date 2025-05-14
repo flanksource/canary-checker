@@ -3,14 +3,13 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
+
 	"time"
 
 	_ "github.com/robertkrimen/otto/underscore"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/flanksource/canary-checker/api/context"
-	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
@@ -76,15 +75,6 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 	return ctx.RunTemplate(tpl, ctx.Environment)
 }
 
-func getDefaultTransformer(check external.Check) v1.Template {
-	if check.GetType() == "pubsub" && strings.HasPrefix(check.GetEndpoint(), "gcppubsub://") {
-		return v1.Template{
-			Expression: `results.gcp_incidents.map(r, gcp.incidents.toCheckResult(r)).toJSON()`,
-		}
-	}
-	return v1.Template{}
-}
-
 // transform generates new checks from the transformation template of the parent check
 func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, bool, error) {
 	var tpl v1.Template
@@ -94,11 +84,7 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 	}
 
 	if tpl.IsEmpty() {
-		defTpl := getDefaultTransformer(in.Check)
-		if defTpl.IsEmpty() {
-			return []*pkg.CheckResult{in}, false, nil
-		}
-		tpl = defTpl
+		return []*pkg.CheckResult{in}, false, nil
 	}
 
 	hasTransformer := true

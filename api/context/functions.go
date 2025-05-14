@@ -9,6 +9,7 @@ import (
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/common/types/ref"
+	"github.com/google/uuid"
 )
 
 func (ctx *Context) GetContextualFunctions() map[string]any {
@@ -106,12 +107,18 @@ func gcpIncidentToCheckResult(fnName string) cel.EnvOption {
 			return nil
 		}
 
+		inc, ok := obj["incident"].(map[string]any)
+		if !ok {
+			return map[string]any{}
+		}
+
 		checkResult := map[string]any{
-			"name":        fmt.Sprintf("[%s] %s", obj["incident_id"], obj["summary"]),
-			"pass":        false,
-			"detail":      obj,
-			"description": obj["summary"],
-			"message":     fmt.Sprintf("[%s] %s", obj["incident_id"], obj["summary"]),
+			"id":          uuid.NewSHA1(uuid.NameSpaceOID, []byte(inc["incident_id"].(string))).String(),
+			"name":        fmt.Sprintf("[%s] %s", inc["incident_id"], inc["summary"]),
+			"pass":        fmt.Sprint(inc["state"]) == "closed",
+			"detail":      inc,
+			"description": inc["summary"],
+			"message":     fmt.Sprintf("[%s] %s", inc["incident_id"], inc["summary"]),
 		}
 		return checkResult
 	}

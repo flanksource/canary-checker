@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/pubsub"
 	"github.com/flanksource/duty/shell"
 	"github.com/flanksource/duty/types"
 	"github.com/samber/lo"
@@ -705,19 +706,13 @@ type GCPIncident struct {
 }
 
 type PubSubCheck struct {
-	Description  `yaml:",inline" json:",inline"`
-	Templatable  `yaml:",inline" json:",inline"`
-	GCPIncidents GCPIncident `yaml:"gcp_incidents,omitempty" json:"gcp_incidents,omitempty"`
-
-	// TODO: Add one of
-	Type string `yaml:"type" json:"type"`
+	Description        `yaml:",inline" json:",inline"`
+	Templatable        `yaml:",inline" json:",inline"`
+	pubsub.QueueConfig `json:",inline"`
 }
 
 func (c PubSubCheck) GetEndpoint() string {
-	if c.Type == "gcp_incidents" {
-		return fmt.Sprintf("gcppubsub://projects/%s/subscriptions/%s", c.GCPIncidents.Project, c.GCPIncidents.Subscription)
-	}
-	return ""
+	return c.GetQueue().String()
 }
 
 func (c PubSubCheck) GetType() string {

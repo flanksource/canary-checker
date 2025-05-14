@@ -7597,7 +7597,77 @@ spec:
                           template:
                             type: string
                         type: object
-                      gcp_incidents:
+                      icon:
+                        type: string
+                      kafka:
+                        properties:
+                          brokers:
+                            items:
+                              type: string
+                            type: array
+                          group:
+                            type: string
+                          topic:
+                            type: string
+                        required:
+                          - brokers
+                          - group
+                          - topic
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
+                      memory:
+                        properties:
+                          queue:
+                            type: string
+                        required:
+                          - queue
+                        type: object
+                      metrics:
+                        items:
+                          properties:
+                            labels:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
+                            name:
+                              type: string
+                            type:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                        x-kubernetes-preserve-unknown-fields: true
+                      name:
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
+                      nats:
+                        properties:
+                          queue:
+                            type: string
+                          subject:
+                            type: string
+                          url:
+                            type: string
+                        required:
+                          - subject
+                        type: object
+                      pubsub:
                         properties:
                           connection:
                             description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
@@ -7645,7 +7715,7 @@ spec:
                             type: object
                           endpoint:
                             type: string
-                          project:
+                          project_id:
                             type: string
                           skipTLSVerify:
                             description: Skip TLS verify
@@ -7653,48 +7723,178 @@ spec:
                           subscription:
                             type: string
                         required:
-                          - project
+                          - project_id
                           - subscription
                         type: object
-                      icon:
-                        type: string
-                      labels:
-                        additionalProperties:
-                          type: string
-                        description: Labels for the check
+                      rabbitmq:
+                        properties:
+                          host:
+                            type: string
+                          password:
+                            type: string
+                          port:
+                            type: integer
+                          queue:
+                            type: string
+                          username:
+                            type: string
+                        required:
+                          - host
+                          - password
+                          - port
+                          - queue
+                          - username
                         type: object
-                      metrics:
-                        items:
-                          properties:
-                            labels:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                  value:
-                                    type: string
-                                  valueExpr:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                            name:
-                              type: string
-                            type:
-                              type: string
-                            value:
-                              type: string
-                          type: object
-                        type: array
-                        x-kubernetes-preserve-unknown-fields: true
-                      name:
-                        type: string
-                      namespace:
-                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
-                        type: string
                       result_lookup:
                         type: string
+                      sqs:
+                        properties:
+                          accessKey:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
+                                type: object
+                            type: object
+                          assumeRole:
+                            type: string
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                            type: string
+                          endpoint:
+                            type: string
+                          queue:
+                            type: string
+                          raw:
+                            type: boolean
+                          region:
+                            type: string
+                          secretKey:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
+                                type: object
+                            type: object
+                          sessionToken:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
+                                type: object
+                            type: object
+                          skipTLSVerify:
+                            description: Skip TLS verify when connecting to aws
+                            type: boolean
+                          waitTime:
+                            description: Time in seconds to long-poll for messages, Default to 15, max is 20
+                            type: integer
+                        required:
+                          - queue
+                          - raw
+                        type: object
                       test:
                         properties:
                           expr:
@@ -7719,11 +7919,8 @@ spec:
                         type: object
                       transformDeleteStrategy:
                         type: string
-                      type:
-                        type: string
                     required:
                       - name
-                      - type
                     type: object
                   type: array
                 redis:
