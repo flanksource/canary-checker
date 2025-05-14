@@ -50,7 +50,7 @@ func AddCheckFromStatus(ctx context.Context, check pkg.Check, status pkg.CheckSt
 		return uuid.Nil, nil
 	}
 
-	if check.ID != uuid.Nil && check.Transformed == false {
+	if check.ID != uuid.Nil && !check.Transformed {
 		return check.ID, nil
 	}
 

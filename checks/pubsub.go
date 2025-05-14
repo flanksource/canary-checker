@@ -35,7 +35,7 @@ func (c *PubSubChecker) Check(ctx *context.Context, extConfig external.Check) pk
 
 	subscription, err := pubsub.Subscribe(ctx.Context, check.QueueConfig)
 	if err != nil {
-		return results.ErrorMessage(fmt.Errorf("error opening subscription for %s: %w", check.GetQueue()))
+		return results.ErrorMessage(fmt.Errorf("error opening subscription for %s: %w", check.GetQueue(), err))
 	}
 
 	defer subscription.Shutdown(ctx) //nolint:errcheck
