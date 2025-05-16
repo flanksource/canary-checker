@@ -50,6 +50,7 @@ var All = []Checker{
 	&OpenSearchChecker{},
 	&PostgresChecker{},
 	&PrometheusChecker{},
+	&PubSubChecker{},
 	&RedisChecker{},
 	&ResticChecker{},
 	&S3Checker{},

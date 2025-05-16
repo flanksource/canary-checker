@@ -216,9 +216,9 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 			ctx.Error(err, "failed to get pod fail message")
 		}
 		if podFailMessage != "" {
-			return results.Failf(message + " " + podFailMessage)
+			return results.Failf("%s", message+" "+podFailMessage)
 		}
-		return results.Failf(message)
+		return results.Failf("%s", message)
 	}
 
 	deletion := NewTimer()
@@ -226,7 +226,7 @@ func (c *PodChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 		return results.Failf("failed to delete pod: %v", err)
 	}
 
-	result.ResultMessage(message)
+	result.ResultMessage("%s", message)
 
 	result.Metrics = []pkg.Metric{
 		{

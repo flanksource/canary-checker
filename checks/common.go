@@ -3,6 +3,7 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
+
 	"time"
 
 	_ "github.com/robertkrimen/otto/underscore"
@@ -68,6 +69,8 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 	for k, v := range ctx.GetContextualFunctions() {
 		tpl.Functions[k] = v
 	}
+
+	tpl.CelEnvs = append(tpl.CelEnvs, context.CelFuncs...)
 
 	return ctx.RunTemplate(tpl, ctx.Environment)
 }
@@ -212,7 +215,7 @@ func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) Ju
 		} else {
 			testSuite.Failed++
 			test.Status = "failed"
-			test.Error = fmt.Errorf(result.Error)
+			test.Error = fmt.Errorf("%s", result.Error)
 		}
 		testSuite.Duration += float64(result.Duration) / 1000
 		testSuite.Tests = append(testSuite.Tests, test)

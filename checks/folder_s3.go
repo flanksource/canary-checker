@@ -54,7 +54,7 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	result.AddDetails(folders)
 
 	if test := folders.Test(check.FolderTest); test != "" {
-		return results.Failf(test)
+		return results.Failf("%s", test)
 	}
 
 	return results

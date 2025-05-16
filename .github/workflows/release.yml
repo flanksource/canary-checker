@@ -79,7 +79,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
-          go-version: v1.23.x
+          go-version: v1.24.x
 
       - run: make ${{matrix.os}} compress
         env:

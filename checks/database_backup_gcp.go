@@ -118,7 +118,7 @@ func GCPDatabaseBackupCheck(ctx *context.Context, check v1.DatabaseBackupCheck) 
 	if err != nil {
 		result.ResultMessage("Could not output raw backup data")
 	}
-	result.ResultMessage(string(backupRaw))
+	result.ResultMessage("%s", string(backupRaw))
 
 	return results
 }

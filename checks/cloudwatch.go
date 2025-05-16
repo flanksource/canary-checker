@@ -78,7 +78,7 @@ func (c *CloudWatchChecker) Check(ctx *context.Context, check v1.CloudWatchCheck
 		}
 	}
 	if len(firing) > 0 {
-		return results.Failf(strings.Join(firing, ","))
+		return results.Failf("%s", strings.Join(firing, ","))
 	}
 	return results
 }

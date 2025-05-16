@@ -177,5 +177,5 @@ func init() {
 
 func CleanupFilename(fileName string) string {
 	removeSuffix := fileName[:len(fileName)-len(filepath.Ext(fileName))]
-	return strings.Replace(removeSuffix, "_", "", -1)
+	return strings.ReplaceAll(removeSuffix, "_", "")
 }

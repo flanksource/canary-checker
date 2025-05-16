@@ -249,7 +249,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 		// we don't exit early as junit files may have been generated in addition to a failing exit code
 		result.Failf("process exited with: %s:\n%s", exitCode, getLogs(ctx, k8s, *pod))
 	}
-	files, ok := podExecf(ctx, k8s, *pod, results, fmt.Sprintf("find %v -name \\*.xml -type f", mountPath))
+	files, ok := podExecf(ctx, k8s, *pod, results, "find %v -name \\*.xml -type f", mountPath)
 	if !ok {
 		return results
 	}
@@ -273,7 +273,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	result.Duration = int64(suites.Duration * 1000)
 	if check.Test.IsEmpty() && suites.Failed > 0 {
 		if check.Display.IsEmpty() {
-			return results.Failf(suites.Totals.String())
+			return results.Failf("%s", suites.Totals.String())
 		}
 		return results.Failf("")
 	}

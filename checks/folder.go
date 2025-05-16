@@ -109,7 +109,7 @@ func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	}
 
 	if test := folders.Test(check.FolderTest); test != "" {
-		return results.Failf(test)
+		return results.Failf("%s", test)
 	}
 	return results
 }
