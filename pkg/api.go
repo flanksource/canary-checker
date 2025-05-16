@@ -215,7 +215,7 @@ func CheckStatusFromResult(result CheckResult) CheckStatus {
 	cs := CheckStatus{
 		Status:  result.Pass,
 		Invalid: result.Invalid,
-		Time:    time.Now().UTC().Format(time.RFC3339Nano),
+		Time:    time.Now().UTC().Format(time.RFC3339),
 		Message: TruncateMessage(result.Message),
 		Error:   TruncateError(result.Error),
 		Detail:  result.Detail,

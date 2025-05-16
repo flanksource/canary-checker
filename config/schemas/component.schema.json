@@ -59,9 +59,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -167,9 +164,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -245,9 +239,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -353,9 +344,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -729,9 +717,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -798,9 +783,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "connection": {
           "type": "string"
@@ -1240,9 +1222,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1291,9 +1270,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -1389,9 +1365,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1454,9 +1427,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1527,9 +1497,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1579,9 +1546,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1628,9 +1592,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1724,9 +1685,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1827,9 +1785,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1928,9 +1883,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2200,9 +2152,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2257,9 +2206,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2320,9 +2266,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2438,9 +2381,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -2503,9 +2443,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -2577,9 +2514,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -2640,9 +2574,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "testResults": {
           "type": "string"
@@ -2726,9 +2657,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2832,9 +2760,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3230,9 +3155,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -3441,9 +3363,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "connection": {
           "type": "string"
         },
@@ -3488,9 +3407,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3557,9 +3473,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3644,9 +3557,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -3877,9 +3787,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -3996,9 +3903,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -4089,9 +3993,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -4157,9 +4058,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -4318,9 +4216,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -4436,9 +4331,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -4563,9 +4455,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -4631,9 +4520,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -4897,9 +4783,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -5015,9 +4898,6 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
-        },
-        "result_lookup": {
-          "type": "string"
         },
         "test": {
           "$ref": "#/$defs/Template"

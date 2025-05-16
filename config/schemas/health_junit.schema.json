@@ -59,9 +59,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "testResults": {
           "type": "string"
         },

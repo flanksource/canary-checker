@@ -239,9 +239,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "test": {
           "$ref": "#/$defs/Template"
         },

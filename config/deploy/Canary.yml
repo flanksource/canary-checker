@@ -186,8 +186,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       test:
                         properties:
                           expr:
@@ -370,8 +368,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       secretKey:
                         properties:
                           name:
@@ -602,8 +598,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       rules:
                         description: Specify one or more Config rule names to filter the results by rule.
                         items:
@@ -831,8 +825,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       test:
                         properties:
                           expr:
@@ -931,8 +923,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       selector:
                         items:
                           properties:
@@ -1135,8 +1125,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       secretKey:
                         properties:
                           name:
@@ -1387,8 +1375,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       transformDeleteStrategy:
                         type: string
                     required:
@@ -1443,8 +1429,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       transformDeleteStrategy:
                         type: string
                       username:
@@ -1574,8 +1558,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       test:
                         properties:
                           expr:
@@ -1661,8 +1643,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       server:
                         type: string
                       thresholdMillis:
@@ -1810,8 +1790,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       transformDeleteStrategy:
                         type: string
                     required:
@@ -1949,8 +1927,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       transformDeleteStrategy:
                         type: string
                     required:
@@ -2059,8 +2035,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       scheme:
                         type: string
                       test:
@@ -2195,8 +2169,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       results:
                         type: integer
                       test:
@@ -3203,8 +3175,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       script:
                         description: |-
                           Script can be a inline script or a path to a script that needs to be executed
@@ -3539,8 +3509,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       sftpConnection:
                         properties:
                           connection:
@@ -3862,8 +3830,6 @@ spec:
                         x-kubernetes-preserve-unknown-fields: true
                       repository:
                         type: string
-                      result_lookup:
-                        type: string
                       test:
                         properties:
                           expr:
@@ -4038,8 +4004,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       test:
                         properties:
                           expr:
@@ -4203,8 +4167,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       transformDeleteStrategy:
                         type: string
                     required:
@@ -4487,8 +4449,6 @@ spec:
                           - path
                           - value
                         type: object
-                      result_lookup:
-                        type: string
                       templateBody:
                         description: Template the request body
                         type: boolean
@@ -4757,8 +4717,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       thresholdMillis:
                         format: int64
                         type: integer
@@ -4876,8 +4834,6 @@ spec:
                       responseDuration:
                         description: ResponseDuration under which the all the test should pass
                         type: string
-                      result_lookup:
-                        type: string
                       systemProperties:
                         description: SystemProperties defines the java system property
                         items:
@@ -4959,8 +4915,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       spec:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
@@ -5411,8 +5365,6 @@ spec:
                           search:
                             type: string
                         type: object
-                      result_lookup:
-                        type: string
                       test:
                         properties:
                           expr:
@@ -5849,8 +5801,6 @@ spec:
                           Resources are kubernetes resources that are created & cleared
                           after every check run.
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       staticResources:
                         description: |-
                           StaticResources are kubernetes resources that are created & only
@@ -6001,8 +5951,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       skipTLSVerify:
                         type: boolean
                       transformDeleteStrategy:
@@ -6144,8 +6092,6 @@ spec:
                                 type: string
                             type: object
                         type: object
-                      result_lookup:
-                        type: string
                       transformDeleteStrategy:
                         type: string
                       url:
@@ -6298,8 +6244,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       results:
                         description: Number rows to check for
                         type: integer
@@ -6479,8 +6423,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       results:
                         description: Number rows to check for
                         type: integer
@@ -6649,8 +6591,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       schedule_timeout:
                         format: int64
                         type: integer
@@ -6765,8 +6705,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       results:
                         format: int64
                         type: integer
@@ -6926,8 +6864,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       roundRobinNodes:
                         type: boolean
                       scheduleTimeout:
@@ -7043,8 +6979,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       results:
                         description: Number rows to check for
                         type: integer
@@ -7369,8 +7303,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       test:
                         properties:
                           expr:
@@ -7745,8 +7677,6 @@ spec:
                           - queue
                           - username
                         type: object
-                      result_lookup:
-                        type: string
                       sqs:
                         properties:
                           accessKey:
@@ -8017,8 +7947,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       transformDeleteStrategy:
                         type: string
                       url:
@@ -8220,8 +8148,6 @@ spec:
                       repository:
                         description: 'Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name'
                         type: string
-                      result_lookup:
-                        type: string
                       secretKey:
                         description: SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss
                         properties:
@@ -8377,8 +8303,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       secretKey:
                         properties:
                           name:
@@ -8529,8 +8453,6 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
-                      result_lookup:
-                        type: string
                       thresholdMillis:
                         format: int64
                         type: integer
@@ -8782,8 +8704,6 @@ spec:
                             type: object
                           type: array
                       type: object
-                    result_lookup:
-                      type: string
                     test:
                       properties:
                         expr:

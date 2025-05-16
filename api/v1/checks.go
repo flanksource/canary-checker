@@ -699,12 +699,6 @@ func (c DNSCheck) GetType() string {
 	return "dns"
 }
 
-type GCPIncident struct {
-	connection.GCPConnection `yaml:",inline" json:",inline"`
-	Subscription             string `yaml:"subscription" json:"subscription"`
-	Project                  string `yaml:"project" json:"project"`
-}
-
 type PubSubCheck struct {
 	Description        `yaml:",inline" json:",inline"`
 	Templatable        `yaml:",inline" json:",inline"`

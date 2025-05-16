@@ -140,9 +140,6 @@
           },
           "type": "array"
         },
-        "result_lookup": {
-          "type": "string"
-        },
         "connection": {
           "type": "string"
         },
