@@ -335,7 +335,7 @@ func fmtRawDoc(rawDoc string) string {
 	// postDoc = strings.Replace(postDoc, "\\\"", "\"", -1) // replace user's \" to "
 	// postDoc = strings.Replace(postDoc, "\"", "\\\"", -1) // Escape "
 	// postDoc = strings.Replace(postDoc, "\n", "\\n", -1)
-	postDoc = strings.Replace(postDoc, "\t", "  ", -1)
+	postDoc = strings.ReplaceAll(postDoc, "\t", "  ")
 	// postDoc = strings.Replace(postDoc, "|", "\\|", -1)
 
 	return postDoc
@@ -399,9 +399,9 @@ func fieldRequired(field *ast.Field) bool {
 	return false
 }
 
-// nolint: gosimple
+// nolint
 func fieldID(typ ast.Expr) string {
-	switch typ.(type) {
+	switch v := typ.(type) {
 	case *ast.Ident:
 		return typ.(*ast.Ident).Name
 	case *ast.StarExpr:
@@ -412,7 +412,7 @@ func fieldID(typ ast.Expr) string {
 		t := e.Sel
 		return pkg.Name + "." + t.Name
 	case *ast.ArrayType:
-		return "[]" + fieldType(typ.(*ast.ArrayType).Elt)
+		return "[]" + fieldType(v.Elt)
 	case *ast.MapType:
 		mapType := typ.(*ast.MapType)
 		return "map[" + fieldType(mapType.Key) + "]" + fieldType(mapType.Value)
@@ -423,20 +423,20 @@ func fieldID(typ ast.Expr) string {
 }
 
 func fieldType(typ ast.Expr) string {
-	switch typ.(type) { // nolint: gosimple
+	switch v := typ.(type) {
 	case *ast.Ident:
-		return toLink(typ.(*ast.Ident).Name) // nolint: gosimple
+		return toLink(v.Name)
 	case *ast.StarExpr:
-		return "*" + toLink(fieldType(typ.(*ast.StarExpr).X)) // nolint: gosimple
+		return "*" + toLink(fieldType(v.X))
 	case *ast.SelectorExpr:
 		e := typ.(*ast.SelectorExpr)
 		pkg := e.X.(*ast.Ident)
 		t := e.Sel
 		return toLink(pkg.Name + "." + t.Name)
 	case *ast.ArrayType:
-		return "\\[\\]" + toLink(fieldType(typ.(*ast.ArrayType).Elt)) // nolint: gosimple
+		return "\\[\\]" + toLink(fieldType(v.Elt))
 	case *ast.MapType:
-		mapType := typ.(*ast.MapType) // nolint: gosimple
+		mapType := v
 		return "map[" + toLink(fieldType(mapType.Key)) + "]" + toLink(fieldType(mapType.Value))
 	default:
 		logger.Infof("%s is unknown", typ)

@@ -570,6 +570,12 @@
           },
           "type": "array"
         },
+        "pubsub": {
+          "items": {
+            "$ref": "#/$defs/PubSubCheck"
+          },
+          "type": "array"
+        },
         "github": {
           "items": {
             "$ref": "#/$defs/GitHubCheck"
@@ -2603,6 +2609,29 @@
         "spec"
       ]
     },
+    "KafkaConfig": {
+      "properties": {
+        "brokers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "topic": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "brokers",
+        "topic",
+        "group"
+      ]
+    },
     "KubernetesCheck": {
       "properties": {
         "description": {
@@ -2979,6 +3008,12 @@
           },
           "type": "array"
         },
+        "pubsub": {
+          "items": {
+            "$ref": "#/$defs/PubSubCheck"
+          },
+          "type": "array"
+        },
         "github": {
           "items": {
             "$ref": "#/$defs/GitHubCheck"
@@ -3248,6 +3283,18 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "MemoryConfig": {
+      "properties": {
+        "queue": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "queue"
+      ]
+    },
     "MetricLabel": {
       "properties": {
         "name": {
@@ -3465,6 +3512,24 @@
       "type": "object",
       "required": [
         "name"
+      ]
+    },
+    "NATSConfig": {
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "queue": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "subject"
       ]
     },
     "NamespaceCheck": {
@@ -4125,6 +4190,122 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "PubSubCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "sqs": {
+          "$ref": "#/$defs/SQSConfig"
+        },
+        "pubsub": {
+          "$ref": "#/$defs/PubSubConfig"
+        },
+        "rabbitmq": {
+          "$ref": "#/$defs/RabbitConfig"
+        },
+        "memory": {
+          "$ref": "#/$defs/MemoryConfig"
+        },
+        "kafka": {
+          "$ref": "#/$defs/KafkaConfig"
+        },
+        "nats": {
+          "$ref": "#/$defs/NATSConfig"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "PubSubConfig": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "subscription": {
+          "type": "string"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "project_id",
+        "subscription"
+      ]
+    },
+    "RabbitConfig": {
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "queue": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "host",
+        "port",
+        "username",
+        "password",
+        "queue"
+      ]
+    },
     "RedisCheck": {
       "properties": {
         "description": {
@@ -4472,6 +4653,49 @@
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "SQSConfig": {
+      "properties": {
+        "queue": {
+          "type": "string"
+        },
+        "raw": {
+          "type": "boolean"
+        },
+        "waitTime": {
+          "type": "integer"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "assumeRole": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "queue",
+        "raw"
+      ]
     },
     "SecretKeySelector": {
       "properties": {

@@ -236,6 +236,10 @@ func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Che
 	canaryID, _ := uuid.Parse(canary.GetPersistedID())
 	checkID, _ := uuid.Parse(canary.GetCheckID(check.GetName()))
 
+	if customID := check.GetCustomUUID(); customID != uuid.Nil {
+		checkID = customID
+	}
+
 	c := Check{
 		ID:       checkID,
 		Owner:    canary.Spec.Owner,
@@ -424,11 +428,15 @@ type GenericCheck struct {
 	v1.Description `yaml:",inline" json:",inline"`
 	Type           string
 	Endpoint       string
-	Labels         map[string]string
+	CustomID       uuid.UUID
 }
 
 func (generic GenericCheck) GetType() string {
 	return generic.Type
+}
+
+func (generic GenericCheck) GetCustomUUID() uuid.UUID {
+	return generic.CustomID
 }
 
 func (generic GenericCheck) GetEndpoint() string {
@@ -436,6 +444,7 @@ func (generic GenericCheck) GetEndpoint() string {
 }
 
 type TransformedCheckResult struct {
+	ID                      uuid.UUID              `json:"id,omitempty"`
 	Start                   *time.Time             `json:"start,omitempty"`
 	Pass                    *bool                  `json:"pass,omitempty"`
 	Invalid                 *bool                  `json:"invalid,omitempty"`
@@ -484,6 +493,7 @@ func (t TransformedCheckResult) ToCheckResult() CheckResult {
 			},
 			Type:     t.Type,
 			Endpoint: t.Endpoint,
+			CustomID: t.ID,
 		},
 	}
 }

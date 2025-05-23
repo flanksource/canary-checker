@@ -50,7 +50,7 @@ func AddCheckFromStatus(ctx context.Context, check pkg.Check, status pkg.CheckSt
 		return uuid.Nil, nil
 	}
 
-	if check.ID != uuid.Nil {
+	if check.ID != uuid.Nil && !check.Transformed {
 		return check.ID, nil
 	}
 
@@ -69,10 +69,23 @@ func (c *postgresCache) AddCheckStatus(conn *gorm.DB, check pkg.Check, status pk
 		nextRuntime, _ = check.Canary.NextRuntime(time.Now())
 	}
 
-	if conn.Model(&checks).
-		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}}).
-		Where("canary_id = ? AND type = ? AND name = ?", check.CanaryID, check.Type, check.GetName()).
-		Updates(map[string]any{"status": check.Status, "labels": check.Labels, "last_runtime": status.Time, "next_runtime": nextRuntime}).Error != nil {
+	columnUpdates := map[string]any{
+		"status":       check.Status,
+		"labels":       check.Labels,
+		"last_runtime": status.Time,
+		"next_runtime": nextRuntime,
+	}
+
+	q := conn.Model(&checks).
+		Clauses(clause.Returning{Columns: []clause.Column{{Name: "id"}}})
+
+	if check.ID != uuid.Nil {
+		q = q.Where("id = ?", check.ID)
+	} else {
+		q = q.Where("canary_id = ? AND type = ? AND name = ?", check.CanaryID, check.Type, check.GetName())
+	}
+
+	if err := q.Updates(columnUpdates).Error; err != nil {
 		return fmt.Errorf("error updating check: %w", err)
 	}
 

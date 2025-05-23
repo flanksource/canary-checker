@@ -110,12 +110,24 @@ func PersistCheck(db *gorm.DB, check pkg.Check, canaryID uuid.UUID) (uuid.UUID, 
 		assignments["deleted_at"] = check.DeletedAt
 	}
 
-	if err := db.Clauses(
-		clause.OnConflict{
-			Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
-			DoUpdates: clause.Assignments(assignments),
-		},
-	).Create(&check).Error; err != nil {
+	onConflict := clause.OnConflict{
+		Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
+		DoUpdates: clause.Assignments(assignments),
+	}
+
+	// If transformed check has an id assigned, we do not know if it exists
+	// In case it exists, we update on conflict handling on ID
+	if check.ID != uuid.Nil && check.Transformed {
+		var count int64
+		if err := db.Model(&models.Check{}).Where("id = ?", check.ID).Count(&count).Error; err != nil {
+			return uuid.Nil, err
+		}
+		if count == 1 {
+			onConflict.Columns = []clause.Column{{Name: "id"}}
+		}
+	}
+
+	if err := db.Clauses(onConflict).Create(&check).Error; err != nil {
 		return uuid.Nil, err
 	}
 
@@ -212,10 +224,8 @@ func AddCheckStatuses(ctx context.Context, ids []string, status models.CheckHeal
 	if status == "" || !utils.Contains(models.CheckHealthStatuses, status) {
 		return fmt.Errorf("invalid check health status: %s", status)
 	}
-	checkStatus := false
-	if status == models.CheckStatusHealthy {
-		checkStatus = true
-	}
+
+	checkStatus := status == models.CheckStatusHealthy
 
 	var objs []*models.CheckStatus
 	for _, id := range ids {

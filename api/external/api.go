@@ -1,5 +1,7 @@
 package external
 
+import "github.com/google/uuid"
+
 type Endpointer interface {
 	GetEndpoint() string
 }
@@ -12,6 +14,7 @@ type Describable interface {
 	GetLabels() map[string]string
 	GetTransformDeleteStrategy() string
 	GetMetricsSpec() []Metrics
+	GetCustomUUID() uuid.UUID
 }
 
 type WithType interface {

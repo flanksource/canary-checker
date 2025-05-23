@@ -68,6 +68,7 @@ type CanarySpec struct {
 	Prometheus         []PrometheusCheck         `yaml:"prometheus,omitempty" json:"prometheus,omitempty"`
 	MongoDB            []MongoDBCheck            `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
 	CloudWatch         []CloudWatchCheck         `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
+	PubSub             []PubSubCheck             `yaml:"pubsub,omitempty" json:"pubsub,omitempty"`
 	GitHub             []GitHubCheck             `yaml:"github,omitempty" json:"github,omitempty"`
 	GitProtocol        []GitProtocolCheck        `yaml:"gitProtocol,omitempty" json:"gitProtocol,omitempty"`
 	Kubernetes         []KubernetesCheck         `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
@@ -164,6 +165,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.CloudWatch {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.PubSub {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.GitHub {
@@ -284,6 +288,9 @@ func (spec CanarySpec) KeepOnly(names ...string) CanarySpec {
 		return lo.Contains(names, c.GetName())
 	})
 	spec.CloudWatch = lo.Filter(spec.CloudWatch, func(c CloudWatchCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.PubSub = lo.Filter(spec.PubSub, func(c PubSubCheck, _ int) bool {
 		return lo.Contains(names, c.GetName())
 	})
 	spec.GitHub = lo.Filter(spec.GitHub, func(c GitHubCheck, _ int) bool {
