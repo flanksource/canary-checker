@@ -1369,7 +1369,7 @@ type MsSQL struct {
 
 /*
 This check pulls data from a Pub/Sub Subscription
-[include:datasources/gcp_incidents.yaml]
+[include:external/pubsub-gcp.yaml]
 */
 type PubSub struct {
 	PubSubCheck `yaml:",inline" json:"inline"`
