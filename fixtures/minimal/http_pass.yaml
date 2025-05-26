@@ -7,10 +7,10 @@ metadata:
 spec:
   schedule: "@every 5m"
   http:
-    - url: https://httpbin.org/status/200
+    - url: https://httpbin.flanksource.com/status/200
       name: http-deprecated-endpoint
     - name: http-minimal-check
-      url: https://httpbin.org/status/200
+      url: https://httpbin.flanksource.com/status/200
       metrics:
         - name: httpbin_2xx_count
           type: counter
@@ -23,20 +23,20 @@ spec:
             - name: status_class
               valueExpr: string(code).charAt(0)
     - name: http-param-tests
-      url: https://httpbin.org/status/200
+      url: https://httpbin.flanksource.com/status/200
       responseCodes: [201, 200, 301]
       responseContent: ""
       maxSSLExpiry: 7
     - name: http-expr-tests
-      url: https://httpbin.org/status/200
+      url: https://httpbin.flanksource.com/status/200
       test:
         expr: "code in [200,201,301] && sslAge > Duration('7d')"
       display:
         template: "code={{.code}}, age={{.sslAge}}"
     - name: http-headers
-      url: https://httpbin.org/headers
+      url: https://httpbin.flanksource.com/headers
       test:
         expr: json.headers["User-Agent"].startsWith("canary-checker/")
     - name: http-body
-      url: https://httpbin.org/html
+      url: https://httpbin.flanksource.com/html
       responseContent: Herman Melville

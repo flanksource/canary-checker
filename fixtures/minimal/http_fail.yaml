@@ -7,10 +7,10 @@ metadata:
 spec:
   schedule: "@every 5m"
   http:
-    - url: https://httpbin.org/status/500
+    - url: https://httpbin.flanksource.com/status/500
       name: http fail response code check
       responseCodes: [200]
-    - url: https://httpbin.org/status/200
+    - url: https://httpbin.flanksource.com/status/200
       name: http fail test expr check
       display:
         expr: string(code) + " should be 500"

@@ -6,14 +6,14 @@ spec:
   resultMode: "junit"
   schedule: "@every 5m"
   http:
-    - url: https://httpbin.org/status/200
+    - url: https://httpbin.flanksource.com/status/200
       name: http pass response 200 status code
       thresholdMillis: 30000
       responseCodes: [201, 301, 200]
       responseContent: ""
       maxSSLExpiry: 7
       description: "HTTP dummy test 2"
-    - url: https://httpbin.org/status/201
+    - url: https://httpbin.flanksource.com/status/201
       name: http pass response 201 status code
       thresholdMillis: 30000
       responseCodes: [201]

@@ -6,7 +6,7 @@ spec:
   schedule: "@every 30s"
   http:
     - name: http pass response 200 status code
-      url: https://httpbin.org/status/200
+      url: https://httpbin.flanksource.com/status/200
       tlsConfig:
         ca:
           valueFrom:

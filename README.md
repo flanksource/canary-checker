@@ -59,9 +59,9 @@ spec:
   interval: 30
   http:
     - name: basic-check
-      url: https://httpbin.org/status/200
+      url: https://httpbin.flanksource.com/status/200
     - name: failing-check
-      url: https://httpbin.org/status/500
+      url: https://httpbin.flanksource.com/status/500
 ```
 
 2a. Run the check locally (Optional)
@@ -252,7 +252,7 @@ metadata:
   name: http-basic-auth-configmap
 spec:
   http:
-    - url: https://httpbin.org/basic-auth/john/doe
+    - url: https://httpbin.flanksource.com/basic-auth/john/doe
       username:
         valueFrom:
           secretKeyRef:

@@ -14,14 +14,14 @@ spec:
       - name: error_percentage_lookup
         lookup:
           http:
-          - url: https://httpbin.org/status/200
+          - url: https://httpbin.flanksource.com/status/200
             name: error_percentage_lookup_max
             display:
               expr: |
                 [
                   {'name': 'error_percentage', 'max': 100}
                 ].toJSON()
-          - url: https://httpbin.org/status/200
+          - url: https://httpbin.flanksource.com/status/200
             name: error_percentage_lookup_value
             display:
               expr: |

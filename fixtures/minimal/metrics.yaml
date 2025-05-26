@@ -6,7 +6,7 @@ spec:
   schedule: "@every 5m"
   http:
     - name: http-minimal-check
-      url: https://httpbin.org/status/200
+      url: https://httpbin.flanksource.com/status/200
       metrics:
         - name: httpbin_count
           type: counter

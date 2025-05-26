@@ -10,7 +10,7 @@ spec:
     icon: server
     lookup:
       http:
-        - url: https://httpbin.org/status/200
+        - url: https://httpbin.flanksource.com/status/200
           name: http-lookup
           display:
             expr: |
@@ -36,7 +36,7 @@ spec:
       - name: error_percentage
         lookup:
           http:
-          - url: https://httpbin.org/status/200
+          - url: https://httpbin.flanksource.com/status/200
             name: error_percentage_lookup
             display:
               expr: |
@@ -58,7 +58,7 @@ spec:
       - name: owner
         lookup:
           http:
-          - url: https://httpbin.org/status/200
+          - url: https://httpbin.flanksource.com/status/200
             name: owner_lookup
             display:
               expr: |
@@ -80,7 +80,7 @@ spec:
       - name: generic
         lookup:
           http:
-          - url: https://httpbin.org/status/200
+          - url: https://httpbin.flanksource.com/status/200
             name: generic_lookup
             display:
               expr: |
@@ -92,7 +92,7 @@ spec:
       - name: key
         lookup:
           http:
-          - url: https://httpbin.org/status/200
+          - url: https://httpbin.flanksource.com/status/200
             name: value_lookup
             display:
               expr: '"value"'
