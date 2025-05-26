@@ -8,4 +8,4 @@ spec:
   schedule: "@every 30s"
   http:
     - name: headers check
-      url: https://httpbin.demo.aws.flanksource.com/headers
+      url: https://httpbin.org/headers

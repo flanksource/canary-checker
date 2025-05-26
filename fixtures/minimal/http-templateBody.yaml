@@ -6,7 +6,7 @@ spec:
   schedule: "@every 5m"
   http:
     - name: template body
-      url: https://httpbin.demo.aws.flanksource.com/post
+      url: https://httpbin.org/post
       method: POST
       templateBody: true
       body: |

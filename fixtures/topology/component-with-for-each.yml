@@ -10,7 +10,7 @@ spec:
     icon: server
     lookup:
       http:
-        - url: https://httpbin.demo.aws.flanksource.com/status/200
+        - url: https://httpbin.org/status/200
           name: http-lookup
           display:
             expr: |
@@ -43,7 +43,7 @@ spec:
         - name: processor
           lookup:
             http:
-            - url: https://httpbin.demo.aws.flanksource.com/status/200
+            - url: https://httpbin.org/status/200
               name: processor_lookup
               display:
                 expr: |
@@ -65,7 +65,7 @@ spec:
         - name: generic
           lookup:
             http:
-            - url: https://httpbin.demo.aws.flanksource.com/status/200
+            - url: https://httpbin.org/status/200
               name: generic_lookup
               display:
                 expr: |

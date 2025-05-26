@@ -17,7 +17,7 @@ spec:
         - labelSelector: "canary=http-check"
         - inline:
             - http:
-                url: https://httpbin.demo.aws.flanksource.com/status/200
+                url: https://httpbin.org/status/200
                 test:
                   expr: "code == 200"
       name: selector

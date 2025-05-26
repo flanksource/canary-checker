@@ -5,6 +5,6 @@ metadata:
 spec:
   http:
     - name: http-no-auth
-      url: https://httpbin.demo.aws.flanksource.com/headers
+      url: https://httpbin.org/headers
       test:
         expr: "! ('Authorization' in json.headers.keys())"
