@@ -94,7 +94,6 @@ func (ctx *Context) GetContextualFunctions() map[string]any {
 var CelFuncs []cel.EnvOption
 
 func gcpIncidentToCheckResult(fnName string) cel.EnvOption {
-
 	/*
 	   Sample open incident body
 	   {
