@@ -5,10 +5,10 @@ metadata:
 spec:
   http:
     - name: "basic auth fail"
-      url: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
+      url: https://httpbin.flanksource.com/basic-auth/hello/world
       responseCodes: [401]
     - name: "basic auth pass"
-      url: https://httpbin.demo.aws.flanksource.com/basic-auth/hello/world
+      url: https://httpbin.flanksource.com/basic-auth/hello/world
       responseCodes: [200]
       username:
         value: hello

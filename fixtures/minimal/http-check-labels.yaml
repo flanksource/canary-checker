@@ -7,13 +7,13 @@ metadata:
 spec:
   schedule: "@every 5m"
   http:
-    - url: https://httpbin.demo.aws.flanksource.com/status/200
+    - url: https://httpbin.flanksource.com/status/200
       name: http-pass-single
       labels:
         check: http-200
       responseCodes: [201, 200, 301]
       responseContent: ""
-    - url: https://httpbin.demo.aws.flanksource.com/status/202
+    - url: https://httpbin.flanksource.com/status/202
       name: http-pass-multiple
       labels:
         check: http-202
