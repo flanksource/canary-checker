@@ -6,7 +6,7 @@ spec:
   schedule: "@daily"
   http:
     - name: docs
-      url: http://httpbin.demo.aws.flanksource.com/
+      url: http://httpbin.org/
       display:
         expr: missing.join("\n")
       crawl:

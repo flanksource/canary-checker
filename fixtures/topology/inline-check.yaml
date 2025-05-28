@@ -11,7 +11,7 @@ spec:
         - inline:
             http:
               - name: inline-check
-                url: https://httpbin.demo.aws.flanksource.com/status/202
+                url: https://httpbin.flanksource.com/status/202
                 responseCodes:
                   - 202
       name: inline-canary
