@@ -3117,6 +3117,7 @@ func (in *TCP) DeepCopy() *TCP {
 func (in *TCPCheck) DeepCopyInto(out *TCPCheck) {
 	*out = *in
 	in.Description.DeepCopyInto(&out.Description)
+	out.Templatable = in.Templatable
 	in.Relatable.DeepCopyInto(&out.Relatable)
 }
 

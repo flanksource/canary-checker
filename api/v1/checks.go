@@ -165,6 +165,7 @@ func (c HTTPCheck) GetMethod() string {
 
 type TCPCheck struct {
 	Description     `yaml:",inline" json:",inline"`
+	Templatable     `yaml:",inline" json:",inline"`
 	Relatable       `yaml:",inline" json:",inline"`
 	Endpoint        string `yaml:"endpoint" json:"endpoint,omitempty"`
 	ThresholdMillis int64  `yaml:"thresholdMillis,omitempty" json:"thresholdMillis,omitempty"`

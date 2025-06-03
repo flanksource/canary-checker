@@ -4783,6 +4783,15 @@
           },
           "type": "array"
         },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
