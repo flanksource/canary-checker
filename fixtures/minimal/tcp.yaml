@@ -6,5 +6,8 @@ spec:
   schedule: "*/1 * * * *"
   tcp:
     - name: "flanksource website"
-      endpoint: www.flanksource.com:80
+      endpoint: www.flanksource.com:443
+      icon: https://flanksource.com/docs/img/flanksource-icon.png
       thresholdMillis: 1200
+      display:
+        template: Success

@@ -8410,6 +8410,17 @@ spec:
                     properties:
                       description:
                         type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       endpoint:
                         type: string
                       icon:
@@ -8452,9 +8463,31 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       thresholdMillis:
                         format: int64
                         type: integer
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       transformDeleteStrategy:
                         type: string
                     required:

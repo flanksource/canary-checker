@@ -1,4 +1,3 @@
-
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= ""
 NAME=canary-checker
@@ -235,7 +234,7 @@ bin: .bin .bin/wait4x .bin/karina $(RELEASE_DIR)
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources
-resources: fmt  generate static
+resources: fmt static
 
 .PHONY: chart
 chart:
