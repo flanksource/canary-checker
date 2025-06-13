@@ -19,8 +19,8 @@ require (
 	github.com/eko/gocache/store/bigcache/v4 v4.2.1
 	github.com/elastic/go-elasticsearch/v8 v8.13.1
 	github.com/flanksource/artifacts v1.0.15
-	github.com/flanksource/commons v1.37.0
-	github.com/flanksource/duty v1.0.951
+	github.com/flanksource/commons v1.39.0
+	github.com/flanksource/duty v1.0.956
 	github.com/flanksource/gomplate/v3 v3.24.57
 	github.com/flanksource/is-healthy v1.0.74
 	github.com/flanksource/kommons v0.31.6
