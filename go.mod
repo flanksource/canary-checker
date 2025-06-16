@@ -22,7 +22,7 @@ require (
 	github.com/flanksource/commons v1.37.0
 	github.com/flanksource/duty v1.0.951
 	github.com/flanksource/gomplate/v3 v3.24.57
-	github.com/flanksource/is-healthy v1.0.74
+	github.com/flanksource/is-healthy v1.0.76
 	github.com/flanksource/kommons v0.31.6
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-git/go-git/v5 v5.13.0
