@@ -59,6 +59,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "testResults": {
           "type": "string"
         },
