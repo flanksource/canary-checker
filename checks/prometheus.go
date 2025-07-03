@@ -82,7 +82,7 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	}
 
 	if len(prometheusResults) == 0 && check.ShouldMarkFailOnEmpty() {
-		results.Failf("query has returned empty result")
+		return results.Failf("query has returned empty result")
 	}
 
 	if len(prometheusResults) != 0 {
