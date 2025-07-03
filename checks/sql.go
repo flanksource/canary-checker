@@ -179,6 +179,10 @@ func CheckSQL(ctx *context.Context, checker SQLChecker) pkg.Results { // nolint:
 		return results.ErrorMessage(err)
 	}
 
+	if details.Count == 0 && check.ShouldMarkFailOnEmpty() {
+		return results.Failf("Query returned empty result")
+	}
+
 	if details.Count < check.Result {
 		return results.Failf("Query returned %d rows, expected %d", details.Count, check.Result)
 	}

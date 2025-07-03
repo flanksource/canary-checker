@@ -439,6 +439,15 @@ func (generic GenericCheck) GetCustomUUID() uuid.UUID {
 	return generic.CustomID
 }
 
+func (generic GenericCheck) ShouldMarkFailOnEmpty() bool {
+	return generic.MarkFailOnEmpty
+}
+
+func (generic GenericCheck) GetHash() string {
+	h, _ := utils.GenerateJSONMD5Hash(generic)
+	return h
+}
+
 func (generic GenericCheck) GetEndpoint() string {
 	return generic.Endpoint
 }

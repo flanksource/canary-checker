@@ -84,6 +84,9 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 	}
 
 	if tpl.IsEmpty() {
+		if in.Check.ShouldMarkFailOnEmpty() {
+			in.Failf("empty result returned")
+		}
 		return []*pkg.CheckResult{in}, false, nil
 	}
 

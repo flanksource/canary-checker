@@ -76,6 +76,10 @@ func (t *OpenSearchChecker) check(ctx *context.Context, check v1.OpenSearchCheck
 		return results.Failf("error parsing the response body: %s", err)
 	}
 
+	if response.Hits.Total.Value == 0 && check.ShouldMarkFailOnEmpty() {
+		return results.Failf("Query has returned empty value")
+	}
+
 	if response.Hits.Total.Value != check.Results {
 		return results.Failf("Query returned %d rows, expected %d", response.Hits.Total.Value, check.Results)
 	}
