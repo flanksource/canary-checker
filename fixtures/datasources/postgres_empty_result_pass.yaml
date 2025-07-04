@@ -1,9 +1,7 @@
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: postgres-fail-empty-result
-  labels:
-    "Expected-Fail": "true"
+  name: postgres-empty-result-pass
 spec:
   schedule: "@every 5m"
   postgres:
@@ -13,8 +11,4 @@ spec:
         value: postgresadmin
       password:
         value: admin123
-      query: SELECT 1 as name LIMIT 0
-      markFailOnEmpty: true
-      transform:
-        expr: |
-          dyn(results.rows).map(r, {'name': 'check', "pass": true}).toJSON()
+      query: SELECT 1 LIMIT 0
