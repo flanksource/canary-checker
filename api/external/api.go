@@ -15,6 +15,8 @@ type Describable interface {
 	GetTransformDeleteStrategy() string
 	GetMetricsSpec() []Metrics
 	GetCustomUUID() uuid.UUID
+	GetHash() string
+	ShouldMarkFailOnEmpty() bool
 }
 
 type WithType interface {

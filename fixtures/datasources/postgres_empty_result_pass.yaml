@@ -1,0 +1,14 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: postgres-empty-result-pass
+spec:
+  schedule: "@every 5m"
+  postgres:
+    - url: "postgres://$(username):$(password)@postgres.canaries.svc.cluster.local:5432/postgres?sslmode=disable"
+      name: postgres schemas check
+      username:
+        value: postgresadmin
+      password:
+        value: admin123
+      query: SELECT 1 LIMIT 0

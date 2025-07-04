@@ -80,6 +80,11 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 			prometheusResults = append(prometheusResults, val)
 		}
 	}
+
+	if len(prometheusResults) == 0 && check.ShouldMarkFailOnEmpty() {
+		return results.Failf("query has returned empty result")
+	}
+
 	if len(prometheusResults) != 0 {
 		check.Labels = check.Labels.AddLabels(data["firstResult"].(map[string]interface{}))
 	}

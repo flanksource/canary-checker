@@ -53,7 +53,7 @@ echo "Started operator with PID $PROC_ID"
 sleep 120
 
 
-./wait-for-it.sh 0.0.0.0:8080 --timeout=120;
+./wait-for-it.sh 0.0.0.0:8080 --timeout=300;
 
 echo "Server is ready now"
 

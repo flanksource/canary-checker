@@ -59,6 +59,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -164,6 +167,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -239,6 +245,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -344,6 +353,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -717,6 +729,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -783,6 +798,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "connection": {
           "type": "string"
@@ -1192,6 +1210,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1240,6 +1261,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -1335,6 +1359,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1397,6 +1424,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1467,6 +1497,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1516,6 +1549,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1562,6 +1598,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1655,6 +1694,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1755,6 +1797,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1853,6 +1898,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2122,6 +2170,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2176,6 +2227,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2236,6 +2290,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2387,6 +2444,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -2449,6 +2509,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -2520,6 +2583,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -2580,6 +2646,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "testResults": {
           "type": "string"
@@ -2663,6 +2732,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2766,6 +2838,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3161,6 +3236,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -3369,6 +3447,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "connection": {
           "type": "string"
         },
@@ -3413,6 +3494,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3479,6 +3563,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3563,6 +3650,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -3793,6 +3883,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -3909,6 +4002,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -3999,6 +4095,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -4064,6 +4163,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -4222,6 +4324,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -4337,6 +4442,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -4461,6 +4569,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -4526,6 +4637,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -4789,6 +4903,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -5021,6 +5138,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"

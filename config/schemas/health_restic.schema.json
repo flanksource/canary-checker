@@ -206,6 +206,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },

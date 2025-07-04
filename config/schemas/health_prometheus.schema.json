@@ -200,6 +200,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
