@@ -84,12 +84,8 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 	}
 
 	if tpl.IsEmpty() {
-		if in.Check.ShouldMarkFailOnEmpty() {
-			in.Failf("empty result returned")
-		}
 		return []*pkg.CheckResult{in}, false, nil
 	}
-
 	hasTransformer := true
 
 	out, err := template(ctx, tpl)
@@ -108,6 +104,10 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 
 	var results []*pkg.CheckResult
 	if len(transformed) == 0 {
+		if in.Check.ShouldMarkFailOnEmpty() {
+			in.Failf("empty result returned from transformation")
+			return []*pkg.CheckResult{in}, false, nil
+		}
 		ctx.Tracef("transformation returned empty array")
 		return nil, hasTransformer, nil
 	}
