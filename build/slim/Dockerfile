@@ -53,9 +53,6 @@ USER canary:canary
 
 COPY --from=builder /app/.bin/canary-checker /app
 
-RUN if [ "$TARGETARCH" = "amd64" ]; then \
-  # This Docker image is built on an amd64 host
-    /app/canary-checker go-offline; \
-  fi
+RUN /app/canary-checker go-offline
 
 ENTRYPOINT ["/app/canary-checker"]
