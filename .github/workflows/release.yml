@@ -195,23 +195,24 @@ jobs:
         with:
           registry-type: public
 
-      - name: Publish Image to Dockerhub & ECR Public
+      - name: Publish image to Dockerhub & ECR Public
+        uses: docker/build-push-action@v6
         env:
           REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
           REGISTRY_ALIAS: k4y9r6y5
           REPOSITORY: canary-checker
           IMAGE_TAG: "v${{ env.RELEASE_VERSION }}"
-        run: |
-          docker buildx create --use
-          docker buildx build \
-            --cache-from=docker.io/flanksource/$REPOSITORY:latest \
-            --platform linux/amd64,linux/arm64 \
-            -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG-full \
-            -t docker.io/flanksource/$REPOSITORY:$IMAGE_TAG-full \
-            -t docker.io/flanksource/$REPOSITORY:latest-full \
-            -f build/full/Dockerfile \
-            --push \
-            .
+        with:
+          context: .
+          file: build/full/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_ALIAS }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}-full
+            docker.io/flanksource/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}-full
+            docker.io/flanksource/${{ env.REPOSITORY }}:latest-full
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   docker-slim:
     needs: semantic-release
