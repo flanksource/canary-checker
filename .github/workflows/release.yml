@@ -259,6 +259,7 @@ jobs:
           registry-type: public
 
       - name: Publish Image to Dockerhub & ECR Public
+        uses: docker/build-push-action@v6
         env:
           REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
           REGISTRY_ALIAS: k4y9r6y5
@@ -278,7 +279,7 @@ jobs:
 
   helm:
     runs-on: ubuntu-latest
-    needs: [semantic-release, docker]
+    needs: [semantic-release, docker, docker-slim, docker-full]
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - name: Download yq
