@@ -137,22 +137,24 @@ jobs:
           registry-type: public
 
       - name: Publish Minimal Image to Dockerhub & ECR Public
+        uses: docker/build-push-action@v6
         env:
           REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
           REGISTRY_ALIAS: k4y9r6y5
           REPOSITORY: canary-checker
           IMAGE_TAG: "v${{ env.RELEASE_VERSION }}"
-        run: |
-          docker buildx create --use
-          docker buildx build \
-            --cache-from=docker.io/flanksource/$REPOSITORY:latest \
-            --platform linux/amd64,linux/arm64 \
-            -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG \
-            -t docker.io/flanksource/$REPOSITORY:$IMAGE_TAG \
-            -t docker.io/flanksource/$REPOSITORY:latest \
-            -f build/minimal/Dockerfile \
-            --push \
-            .
+        with:
+          context: .
+          file: build/minimal/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_ALIAS }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+            docker.io/flanksource/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+            docker.io/flanksource/${{ env.REPOSITORY }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   docker-full:
     needs: semantic-release
     runs-on: ubuntu-latest
@@ -262,17 +264,17 @@ jobs:
           REGISTRY_ALIAS: k4y9r6y5
           REPOSITORY: canary-checker
           IMAGE_TAG: "v${{ env.RELEASE_VERSION }}"
-        run: |
-          docker buildx create --use
-          docker buildx build \
-            --cache-from=docker.io/flanksource/$REPOSITORY:latest \
-            --platform linux/amd64,linux/arm64 \
-            -t $REGISTRY/$REGISTRY_ALIAS/$REPOSITORY:$IMAGE_TAG-slim \
-            -t docker.io/flanksource/$REPOSITORY:$IMAGE_TAG-slim \
-            -t docker.io/flanksource/$REPOSITORY:latest-slim \
-            -f build/slim/Dockerfile \
-            --push \
-            .
+        with:
+          context: .
+          file: build/slim/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.REGISTRY_ALIAS }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}-slim
+            docker.io/flanksource/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}-slim
+            docker.io/flanksource/${{ env.REPOSITORY }}:latest-slim
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   helm:
     runs-on: ubuntu-latest
