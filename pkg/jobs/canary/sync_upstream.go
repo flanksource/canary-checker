@@ -40,7 +40,8 @@ var ReconcileCanaries = &job.Job{
 		ctx.History.ResourceType = job.ResourceTypeUpstream
 		ctx.History.ResourceID = UpstreamConf.Host
 		tablesToReconcile := []string{"canaries", "checks", "check_statuses", "check_config_relationships"}
-		summary := upstream.ReconcileSome(ctx.Context, UpstreamConf, ReconcilePageSize, tablesToReconcile...)
+		upstreamClient := upstream.NewUpstreamClient(UpstreamConf)
+		summary := upstream.ReconcileSome(ctx.Context, upstreamClient, ReconcilePageSize, tablesToReconcile...)
 		ctx.History.AddDetails("summary", summary)
 		ctx.History.SuccessCount, ctx.History.ErrorCount = summary.GetSuccessFailure()
 		if summary.Error() != nil {
