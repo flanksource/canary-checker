@@ -249,6 +249,9 @@
         },
         "skipTLSVerify": {
           "type": "boolean"
+        },
+        "project": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
