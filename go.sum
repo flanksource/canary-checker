@@ -976,8 +976,8 @@ github.com/flanksource/artifacts v1.0.15 h1:3ImJr2y0ZCXw/QrMhfJJktAT7pYD3sMZR5ix
 github.com/flanksource/artifacts v1.0.15/go.mod h1:qHVCnQu5k50aWNJ5UhpcAKEl7pAzqUrFFKGSm147G70=
 github.com/flanksource/commons v1.40.1 h1:WoUkrY68kOMqrA0Q/qL3r+01lQQUgbjgriIahZuKo+w=
 github.com/flanksource/commons v1.40.1/go.mod h1:u14gMIiatT3pwmlwhSB3ZfNN9B/D062jofGv0WjBwFM=
-github.com/flanksource/duty v1.0.1002 h1:ICLaen7yMR2YF5+RelfN0v8zH9YIiKdmwL2GsxhIJGA=
-github.com/flanksource/duty v1.0.1002/go.mod h1:7Tewas4OjyImCBhiJpRva03jig1EfW7rGDkdK8Bwzf0=
+github.com/flanksource/duty v1.0.1003 h1:+GsRLtBnQOoPDWx0dvcnObzIV4MizSXpuv+6Cs8WOms=
+github.com/flanksource/duty v1.0.1003/go.mod h1:7Tewas4OjyImCBhiJpRva03jig1EfW7rGDkdK8Bwzf0=
 github.com/flanksource/gomplate/v3 v3.20.4/go.mod h1:27BNWhzzSjDed1z8YShO6W+z6G9oZXuxfNFGd/iGSdc=
 github.com/flanksource/gomplate/v3 v3.24.58 h1:4FNysw90fT9zrw84TQ/qj/CFND79IfCZT2QxnA80XtY=
 github.com/flanksource/gomplate/v3 v3.24.58/go.mod h1:hGEObNtnOQs8rNUX8sM8aJTAhnt4ehjyOw1MvDhl6AU=

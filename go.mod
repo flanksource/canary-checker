@@ -20,7 +20,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.13.1
 	github.com/flanksource/artifacts v1.0.15
 	github.com/flanksource/commons v1.40.1
-	github.com/flanksource/duty v1.0.1002
+	github.com/flanksource/duty v1.0.1003
 	github.com/flanksource/gomplate/v3 v3.24.58
 	github.com/flanksource/is-healthy v1.0.77
 	github.com/flanksource/kommons v0.31.6
