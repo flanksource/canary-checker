@@ -230,6 +230,17 @@ func ServerFlags(flags *pflag.FlagSet) {
 		os.Getenv("UPSTREAM_INSECURE_SKIP_VERIFY") == "true",
 		"Skip TLS verification on the upstream servers certificate",
 	)
+	flags.StringVar(
+		&checks.JunitContainerImageName,
+		"junit-results-container-image-name",
+		"ubuntu:latest",
+		"Sets the container image name for the junit results container sidecar",
+	)
+	flags.Var(
+		&checks.JunitContainerImagePullPolicy,
+		"junit-results-container-image-pull-policy",
+		fmt.Sprintf("Sets the junit results container sidecar pull policy. Allowed values: %v", checks.AllowedCorePullPolicyValues),
+	)
 
 	duty.BindPFlags(flags, duty.SkipMigrationByDefaultMode)
 
