@@ -7,11 +7,12 @@ import (
 	"os"
 	"sync"
 
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/timer"
 	"github.com/flanksource/duty"
+	"github.com/flanksource/duty/query"
 	"github.com/flanksource/duty/shutdown"
 	"github.com/google/uuid"
-
 	"github.com/spf13/cobra"
 
 	apicontext "github.com/flanksource/canary-checker/api/context"
@@ -19,7 +20,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	configSync "github.com/flanksource/canary-checker/pkg/sync"
 	"github.com/flanksource/canary-checker/pkg/topology"
-	"github.com/flanksource/commons/logger"
 )
 
 var topologyRunNamespace string
@@ -40,7 +40,7 @@ var QueryTopology = &cobra.Command{
 			logger.Fatalf("Database object not found, might have to specify --db or DB_URL env")
 		}
 
-		results, err := topology.Query(apicontext.DefaultContext, queryParams)
+		results, err := query.Topology(apicontext.DefaultContext, queryParams)
 		if err != nil {
 			logger.Fatalf("Failed to query topology: %v", err)
 		}
