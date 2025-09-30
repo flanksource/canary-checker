@@ -193,7 +193,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
 	github.com/geoffgarside/ber v1.1.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/glebarez/go-sqlite v1.20.3 // indirect
 	github.com/glebarez/sqlite v1.7.0 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.6 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
@@ -437,3 +436,5 @@ require (
 // replace github.com/flanksource/gomplate/v3 => ../gomplate
 
 // replace github.com/flanksource/commons => /Users/moshe/go/src/github.com/flanksource/commons
+
+replace github.com/glebarez/sqlite => github.com/clarkmcc/gorm-sqlite v0.0.0-20240426202654-00ed082c0311
