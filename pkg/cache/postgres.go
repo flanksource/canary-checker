@@ -10,7 +10,6 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/query"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"gorm.io/gorm"
@@ -18,8 +17,6 @@ import (
 )
 
 var PostgresCache = &postgresCache{}
-
-type SummaryOptions query.CheckSummaryOptions
 
 type postgresCache struct {
 	context.Context

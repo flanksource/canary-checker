@@ -7,6 +7,7 @@ import (
 	"slices"
 
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/canary"
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/topology"
 	"github.com/labstack/echo-contrib/echoprometheus"
@@ -53,8 +54,8 @@ func New(ctx context.Context) *echo.Echo {
 		}
 	})
 
-	e.GET("/api/summary", api.HealthSummary) // Deprecated: Use Post request for filtering
-	e.POST("/api/summary", api.HealthSummary)
+	e.GET("/api/summary", canary.SummaryHandler) // Deprecated: Use Post request for filtering
+	e.POST("/api/summary", canary.SummaryHandler)
 	e.GET("/about", api.About)
 	e.GET("/api/graph", api.CheckDetails)
 	e.POST("/api/push", api.PushHandler)
