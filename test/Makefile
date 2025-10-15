@@ -9,5 +9,5 @@ endif
 
 .PHONY: build
 build:
-	ginkgo build -r  ./ -c $(LD_FLAGS)
+	ginkgo build -r ./ -- $(LD_FLAGS)
 
