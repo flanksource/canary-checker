@@ -30,3 +30,4 @@ junit-report.xml
 canary-checker.properties
 *.code-workspace
 .windsurfrules
+.envrc

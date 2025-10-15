@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/models"
@@ -19,6 +18,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8sTypes "k8s.io/apimachinery/pkg/types"
+
+	"github.com/flanksource/canary-checker/api/external"
 )
 
 // List of additional check label keys that should be included in the check metrics.
@@ -1597,3 +1598,7 @@ var AllChecks = []external.Check{
 	TCPCheck{},
 	WebhookCheck{},
 }
+
+var AllCheckTypes = lo.Map(AllChecks, func(item external.Check, index int) string {
+	return item.GetType()
+})
