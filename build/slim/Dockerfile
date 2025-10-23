@@ -39,11 +39,11 @@ RUN apt-get update && apt-get upgrade -y && \
   apt-get clean
 
 
-# stern, jq, yq
-RUN curl -sLS https://get.arkade.dev | sh && \
-  arkade get jq yq  --path /usr/bin && \
-  chmod +x /usr/bin/jq /usr/bin/yq && \
-  rm -Rf /usr/bin/arkade
+# Install jq and yq directly with pinned versions
+RUN curl -sL https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64 -o /usr/bin/jq && \
+  chmod +x /usr/bin/jq && \
+  curl -sL https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -o /usr/bin/yq && \
+  chmod +x /usr/bin/yq
 
 RUN mkdir /opt/database && groupadd --gid 1000 canary && \
   useradd canary --uid 1000 -g canary -m -d /var/lib/canary && \

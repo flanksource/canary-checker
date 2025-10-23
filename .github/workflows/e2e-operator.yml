@@ -32,7 +32,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
 
-      - uses: actions/cache@v4.2.0
+      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.2.0
         with:
           path: |
             ~/go/pkg/mod

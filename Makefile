@@ -211,10 +211,10 @@ ginkgo:
 	GOBIN=$(PWD)/.bin GOFLAGS="-mod=mod"  go install github.com/jstemmer/go-junit-report
 
 .bin/jmeter:
-	curl -L https://mirrors.estointernet.in/apache//jmeter/binaries/apache-jmeter-5.4.3.tgz -o apache-jmeter-5.4.3.tgz && \
-    tar xf apache-jmeter-5.4.3.tgz -C .bin/ && \
-    rm apache-jmeter-5.4.3.tgz && \
-		ln -s apache-jmeter-5.4.3/bin/jmeter .bin/jmeter
+	curl -L https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz -o apache-jmeter-5.6.3.tgz && \
+    tar xf apache-jmeter-5.6.3.tgz -C .bin/ && \
+    rm apache-jmeter-5.6.3.tgz && \
+		ln -s apache-jmeter-5.6.3/bin/jmeter .bin/jmeter
 
 .bin/wait4x:
 	wget -nv https://github.com/atkrad/wait4x/releases/download/v0.3.0/wait4x-$(OS)-$(ARCH) -O .bin/wait4x && \
