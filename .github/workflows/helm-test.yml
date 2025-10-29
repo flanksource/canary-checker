@@ -18,10 +18,10 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Kubernetes KinD Cluster
-        uses: container-tools/kind-action@v2
+        uses: container-tools/kind-action@0ad70e2299366b0e1552c7240f4e4567148f723e # v2.0.4
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
           file: ./build/full/Dockerfile
@@ -30,7 +30,7 @@ jobs:
           cache-from: type=registry,ref=docker.io/flanksource/canary-checker
 
       - name: Update canary-checker image in helm chart
-        uses: mikefarah/yq@master
+        uses: mikefarah/yq@0ecdce24e83f0fa127940334be98c86b07b0c488 # v4.48.1
         with:
           cmd: yq -i e '.global.imageRegistry = "kind-registry:5000"' chart/values.yaml
 
