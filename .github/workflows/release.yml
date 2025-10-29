@@ -51,7 +51,7 @@ jobs:
           fi
           echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
           cat $GITHUB_ENV
-      - uses: cycjimmy/semantic-release-action@9cc899c47e6841430bbaedb43de1560a568dfd16 # v5.0.0
+      - uses: cycjimmy/semantic-release-action@ba330626c4750c19d8299de843f05c7aa5574f62 # v5.0.2
         if: ${{ ! env.TAG }}
         id: semantic
         with:
@@ -320,7 +320,7 @@ jobs:
           cp ../canary-checker-*.tgz ./
           helm repo index --merge index.yaml .
       - name: Push changes to chart repo
-        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6.0.1
+        uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
         with:
           commit_message: "Release ${{ needs.semantic-release.outputs.release-version }} of ${{ github.repository }}"
           branch: gh-pages
@@ -354,7 +354,7 @@ jobs:
           yq eval-all -i  '(.dependencies[] | select(.name == "canary-checker")) ref $d | $d.version = "${{ env.RELEASE_VERSION }}"' chart/Chart.yaml
           yq eval-all -i  '(.dependencies[] | select(.name == "canary-checker")) ref $d | $d.version = "${{ env.RELEASE_VERSION }}"' agent-chart/Chart.yaml
       - name: Push changes to chart repo
-        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6.0.1
+        uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
         with:
           commit_message: "chore: update canary-checker chart dependency to ${{ env.RELEASE_VERSION }}"
           repository: ./incident-commander-chart
