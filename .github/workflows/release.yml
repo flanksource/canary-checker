@@ -19,6 +19,10 @@ on:
           - stable
           - rc
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   semantic-release:
     runs-on: ubuntu-latest
