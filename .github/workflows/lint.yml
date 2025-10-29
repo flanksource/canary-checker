@@ -23,8 +23,6 @@ jobs:
       - run: make resources
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.1
 
       - name: setup node
         uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
