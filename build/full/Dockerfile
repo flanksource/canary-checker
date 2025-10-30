@@ -15,7 +15,7 @@ RUN go mod download
 COPY ./ ./
 RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM flanksource/base-image-canary-checker:0.5.18
+FROM flanksource/base-image-canary-checker:0.5.18@sha256:034e86687f230c4c8056aa6e1924ba3eac698de0968edebbebc56844a18cf61c
 ARG TARGETARCH
 
 WORKDIR /app
