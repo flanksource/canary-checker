@@ -40,10 +40,13 @@ RUN apt-get update && apt-get upgrade -y && \
 
 
 # stern, jq, yq
-RUN curl -sLS https://get.arkade.dev | sh && \
-  arkade get jq yq  --path /usr/bin && \
+# Install arkade version 0.11.36
+RUN curl -sLS https://github.com/alexellis/arkade/releases/download/0.11.36/arkade -o /usr/local/bin/arkade && \
+  echo "90f91dfba8fdc2ced936a52e40e6c8090e2e51e7ab14b81d27e1a9c2dadd9e1e  /usr/local/bin/arkade" | sha256sum -c - && \
+  chmod +x /usr/local/bin/arkade && \
+  arkade get jq yq --path /usr/bin && \
   chmod +x /usr/bin/jq /usr/bin/yq && \
-  rm -Rf /usr/bin/arkade
+  rm -Rf /usr/local/bin/arkade
 
 RUN mkdir /opt/database && groupadd --gid 1000 canary && \
   useradd canary --uid 1000 -g canary -m -d /var/lib/canary && \
