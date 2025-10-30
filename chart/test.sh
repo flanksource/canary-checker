@@ -4,6 +4,8 @@ ns="-n $1"
 
 kubectl apply -f fixtures/minimal/exec_pass.yaml $ns
 
+kubectl get pods --all-namespaces
+
 function get_unused_port() {
   for port in $(seq 4444 65000);
   do
@@ -26,9 +28,14 @@ trap cleanup EXIT
 sleep 60
 
 status=$(kubectl get  $ns canaries.canaries.flanksource.com exec-pass -o yaml | yq .status.status)
-echo $status
+echo "Status=$status"
 if [[ $status != "Passed" ]]; then
   exit 1
+fi
+
+if ! curl -vv --fail "http://localhost:$PORT/health"; then
+  # "we don't really care about the results as long as it is sucessful"
+  echo "Call to health failed"
 fi
 
 if ! curl -vv --fail "http://localhost:$PORT/db/checks"; then
@@ -36,5 +43,3 @@ if ! curl -vv --fail "http://localhost:$PORT/db/checks"; then
   echo "Call to postgrest failed"
   exit 1
 fi
-
-
