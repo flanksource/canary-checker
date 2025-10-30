@@ -554,8 +554,8 @@ cloud.google.com/go/storage v1.23.0/go.mod h1:vOEEDNFnciUMhBeT6hsJIn3ieU5cFRmzeL
 cloud.google.com/go/storage v1.27.0/go.mod h1:x9DOL8TK/ygDUMieqwfhdpQryTeEkhGKMi80i/iqR2s=
 cloud.google.com/go/storage v1.28.1/go.mod h1:Qnisd4CqDdo6BGs2AD5LLnEsmSQ80wQ5ogcBBKhU86Y=
 cloud.google.com/go/storage v1.29.0/go.mod h1:4puEjyTKnku6gfKoTfNOU/W+a9JyuVNxjpS5GBrB8h4=
-cloud.google.com/go/storage v1.57.0 h1:4g7NB7Ta7KetVbOMpCqy89C+Vg5VE8scqlSHUPm7Rds=
-cloud.google.com/go/storage v1.57.0/go.mod h1:329cwlpzALLgJuu8beyJ/uvQznDHpa2U5lGjWednkzg=
+cloud.google.com/go/storage v1.57.1 h1:gzao6odNJ7dR3XXYvAgPK+Iw4fVPPznEPPyNjbaVkq8=
+cloud.google.com/go/storage v1.57.1/go.mod h1:329cwlpzALLgJuu8beyJ/uvQznDHpa2U5lGjWednkzg=
 cloud.google.com/go/storagetransfer v1.5.0/go.mod h1:dxNzUopWy7RQevYFHewchb29POFv3/AaBgnhqzqiK0w=
 cloud.google.com/go/storagetransfer v1.6.0/go.mod h1:y77xm4CQV/ZhFZH75PLEXY0ROiS7Gh6pSKrM8dJyg6I=
 cloud.google.com/go/storagetransfer v1.7.0/go.mod h1:8Giuj1QNb1kfLAiWM1bN6dHzfdlDAVC9rv9abHot2W4=
@@ -977,8 +977,8 @@ github.com/fergusstrange/embedded-postgres v1.32.0 h1:kh2ozEvAx2A0LoIJZEGNwHmoFT
 github.com/fergusstrange/embedded-postgres v1.32.0/go.mod h1:w0YvnCgf19o6tskInrOOACtnqfVlOvluz3hlNLY7tRk=
 github.com/flanksource/artifacts v1.0.18 h1:A2S9TIwIB6Nd2X4P9+Oe9Pa9lL9od5FQnQ+rf1KSvBI=
 github.com/flanksource/artifacts v1.0.18/go.mod h1:NK64zX1gxYcl7uwcysFtljT1uKIkhH9Kxf7Yco2FNrY=
-github.com/flanksource/commons v1.43.1 h1:nYnlY+hNBBbH+v66ey4Kd7ayGQ+9kg5PlrYVAxeRv/I=
-github.com/flanksource/commons v1.43.1/go.mod h1:xEBCobwaM0+EHn2SvFpqiCBJCVk1803An1kZleXFR9Y=
+github.com/flanksource/commons v1.43.2 h1:1UrE1lcx1iQ90ZL/JHAPLMbWdlO+iRT+xVajx99JiaE=
+github.com/flanksource/commons v1.43.2/go.mod h1:xEBCobwaM0+EHn2SvFpqiCBJCVk1803An1kZleXFR9Y=
 github.com/flanksource/duty v1.0.1079 h1:+tg8/ZXRM3fz9HN12xos2r9cKGIU3QAe401h4zd5gnE=
 github.com/flanksource/duty v1.0.1079/go.mod h1:ziICQiJryWEmpH8ZGm+SEP8ZLFMY1WvODgNP0rMPTMI=
 github.com/flanksource/gomplate/v3 v3.20.4/go.mod h1:27BNWhzzSjDed1z8YShO6W+z6G9oZXuxfNFGd/iGSdc=

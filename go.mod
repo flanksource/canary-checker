@@ -5,7 +5,7 @@ go 1.25.1
 godebug x509negativeserial=1
 
 require (
-	cloud.google.com/go/storage v1.57.0
+	cloud.google.com/go/storage v1.57.1
 	github.com/allegro/bigcache v1.2.1
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.51.4
@@ -17,7 +17,7 @@ require (
 	github.com/eko/gocache/store/bigcache/v4 v4.2.3
 	github.com/elastic/go-elasticsearch/v8 v8.19.0
 	github.com/flanksource/artifacts v1.0.18
-	github.com/flanksource/commons v1.43.1
+	github.com/flanksource/commons v1.43.2
 	github.com/flanksource/duty v1.0.1079
 	github.com/flanksource/gomplate/v3 v3.24.60
 	github.com/flanksource/is-healthy v1.0.80
