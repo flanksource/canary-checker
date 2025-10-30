@@ -27,7 +27,8 @@ jobs:
           file: ./build/full/Dockerfile
           push: true
           tags: localhost:5000/flanksource/canary-checker:latest
-          cache-from: type=registry,ref=docker.io/flanksource/canary-checker
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Update canary-checker image in helm chart
         uses: mikefarah/yq@0ecdce24e83f0fa127940334be98c86b07b0c488 # v4.48.1
