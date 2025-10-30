@@ -38,6 +38,16 @@ if ! curl -vv --fail "http://localhost:$PORT/health"; then
   echo "Call to health failed"
 fi
 
+if ! curl -vv --fail "http://localhost:$PORT/db/"; then
+  # "we don't really care about the results as long as it is sucessful"
+  echo "Call to /db/ failed"
+fi
+
+if ! curl -vv --fail "http://localhost:$PORT/db/canaries"; then
+  # "we don't really care about the results as long as it is sucessful"
+  echo "Call to canaries failed"
+fi
+
 if ! curl -vv --fail "http://localhost:$PORT/db/checks"; then
   # "we don't really care about the results as long as it is sucessful"
   echo "Call to postgrest failed"
