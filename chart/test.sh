@@ -6,6 +6,8 @@ kubectl apply -f fixtures/minimal/exec_pass.yaml $ns
 
 kubectl get pods --all-namespaces
 
+kubectl logs -n canary-checker deploy/canary-checker
+
 function get_unused_port() {
   for port in $(seq 4444 65000);
   do
