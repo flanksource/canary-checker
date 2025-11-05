@@ -294,3 +294,14 @@ var CleanupDeletedCanaryChecks = &dutyjob.Job{
 		return nil
 	},
 }
+
+var VacuumTables = &dutyjob.Job{
+	Name:       "VacuumTables",
+	Schedule:   "@every 24h",
+	Singleton:  true,
+	JobHistory: true,
+	Retention:  dutyjob.RetentionFew,
+	Fn: func(ctx dutyjob.JobRuntime) error {
+		return ctx.DB().Exec("VACUUM FULL ANALYZE checks").Error
+	},
+}
