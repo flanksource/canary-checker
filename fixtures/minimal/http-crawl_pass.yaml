@@ -13,4 +13,4 @@ spec:
         parallelism: 10
         delay: 1ms
         randomDelay: 1ms
-        depth: 10
+        depth: 4
