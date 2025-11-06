@@ -295,8 +295,8 @@ var CleanupDeletedCanaryChecks = &dutyjob.Job{
 	},
 }
 
-var VacuumTables = &dutyjob.Job{
-	Name:       "VacuumTables",
+var VacuumCanaryTables = &dutyjob.Job{
+	Name:       "VacuumCanaryTables",
 	Schedule:   "@every 24h",
 	Singleton:  true,
 	JobHistory: true,
