@@ -6,11 +6,11 @@ spec:
   schedule: "@daily"
   http:
     - name: docs
-      url: http://httpbin.org/
+      url: https://httpbin.flanksource.com/
       display:
         expr: missing.join("\n")
       crawl:
-        parallelism: 10
-        delay: 1ms
-        randomDelay: 1ms
-        depth: 4
+        parallelism: 2
+        delay: 100ms
+        randomDelay: 50ms
+        depth: 2
