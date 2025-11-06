@@ -11,6 +11,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/db"
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/collections"
+	"github.com/flanksource/commons/properties"
 	"github.com/flanksource/duty/connection"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
@@ -573,7 +574,7 @@ func (tj *TopologyJob) Run(job job.JobRuntime) error {
 
 	deleteCompIDs := utils.SetDifference(dbCompsIDs, compIDs)
 	if len(deleteCompIDs) != 0 && !skipComponentDeletion {
-		if err := db.DeleteComponentsWithIDs(job.DB(), utils.UUIDsToStrings(deleteCompIDs)); err != nil {
+		if err := db.DeleteComponentsWithIDsInBatches(job.DB(), utils.UUIDsToStrings(deleteCompIDs), properties.Int(100, "components.delete_batch_size")); err != nil {
 			return fmt.Errorf("error deleting components %v", err)
 		}
 	}

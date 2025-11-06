@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	k8sTypes "k8s.io/apimachinery/pkg/types"
@@ -201,6 +202,17 @@ func DeleteComponentsWithIDs(db *gorm.DB, compIDs []string) error {
 
 		if err := DeleteComponentChildren(db, compID); err != nil {
 			logger.Errorf("Error deleting component[%s] children: %v", compID, err)
+		}
+	}
+	return nil
+}
+
+// DeleteComponentsWithIDsInBatches deletes all components with specified ids.
+func DeleteComponentsWithIDsInBatches(db *gorm.DB, compIDs []string, batchSize int) error {
+	batches := lo.Chunk(compIDs, batchSize)
+	for _, batch := range batches {
+		if err := DeleteComponentsWithIDs(db, batch); err != nil {
+			return err
 		}
 	}
 	return nil
