@@ -7,12 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	apiContext "github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/checks"
-	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/metrics"
-	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/diff"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
@@ -24,8 +18,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	apiContext "github.com/flanksource/canary-checker/api/context"
+	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/checks"
+	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/metrics"
+	"github.com/flanksource/canary-checker/pkg/utils"
 )
 
 var PostgresDuplicateKeyError = &pgconn.PgError{Code: "23505"}
@@ -157,8 +159,15 @@ func GetTransformedCheckIDs(ctx context.Context, canaryID string, excludeTypes .
 		Select("id").
 		Where("canary_id = ? AND transformed = true AND deleted_at IS NULL", canaryID)
 
-	if len(excludeTypes) != 0 {
-		query = query.Where("type NOT IN ?", excludeTypes)
+	if len(excludeTypes) == 1 {
+		query = query.Where("type <> ?", excludeTypes[0])
+	} else if len(excludeTypes) > 1 {
+		if needTypes, _ := lo.Difference(v1.AllCheckTypes, excludeTypes); len(needTypes) != 0 {
+			query = query.Where("type IN ?", needTypes)
+		} else {
+			// All types are excluded, so return empty result immediately
+			return []string{}, nil
+		}
 	}
 
 	err := query.Find(&ids).Error
