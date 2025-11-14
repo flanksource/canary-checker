@@ -51,7 +51,7 @@ jobs:
           fi
           echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
           cat $GITHUB_ENV
-      - uses: cycjimmy/semantic-release-action@9cc899c47e6841430bbaedb43de1560a568dfd16 # v5.0.0
+      - uses: cycjimmy/semantic-release-action@ba330626c4750c19d8299de843f05c7aa5574f62 # v5.0.2
         if: ${{ ! env.TAG }}
         id: semantic
         with:
@@ -287,7 +287,7 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Install yq
-        uses: mikefarah/yq@bbdd97482f2d439126582a59689eb1c855944955 # v4.44.3
+        uses: mikefarah/yq@0ecdce24e83f0fa127940334be98c86b07b0c488 # v4.48.1
       - name: Set version
         # Always use git tags as semantic release can fail due to rate limit
         run: |
@@ -318,7 +318,7 @@ jobs:
           cp ../canary-checker-*.tgz ./
           helm repo index --merge index.yaml .
       - name: Push changes to chart repo
-        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6.0.1
+        uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
         with:
           commit_message: "Release ${{ needs.semantic-release.outputs.release-version }} of ${{ github.repository }}"
           branch: gh-pages
@@ -340,14 +340,14 @@ jobs:
           token: ${{ secrets.FLANKBOT }}
           path: ./incident-commander-chart
       - name: Install yq
-        uses: mikefarah/yq@bbdd97482f2d439126582a59689eb1c855944955 # v4.44.3
+        uses: mikefarah/yq@0ecdce24e83f0fa127940334be98c86b07b0c488 # v4.48.1
       - name: Update canary-checker version in Incident-commander-chart
         run: |
           cd ./incident-commander-chart
           yq eval-all -i  '(.dependencies[] | select(.name == "canary-checker")) ref $d | $d.version = "${{ env.RELEASE_VERSION }}"' chart/Chart.yaml
           yq eval-all -i  '(.dependencies[] | select(.name == "canary-checker")) ref $d | $d.version = "${{ env.RELEASE_VERSION }}"' agent-chart/Chart.yaml
       - name: Push changes to chart repo
-        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6.0.1
+        uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
         with:
           commit_message: "chore: update canary-checker chart dependency to ${{ env.RELEASE_VERSION }}"
           repository: ./incident-commander-chart
