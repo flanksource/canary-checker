@@ -81,9 +81,6 @@ func (c *postgresCache) AddCheckStatus(ctx context.Context, check pkg.Check, sta
 		check.ID = checkID
 	}
 
-	iddd := check.Canary.GetCheckID(check.Name)
-	logger.Infof("YASH iddd for check is %s", iddd)
-
 	statusInCache, _ := c.checkStatusCache.Get(ctx, check.ID)
 	if statusInCache == "" || statusInCache != models.CheckHealthStatus(check.Status) {
 		q := ctx.DB().Model(&models.Check{}).
@@ -93,7 +90,7 @@ func (c *postgresCache) AddCheckStatus(ctx context.Context, check pkg.Check, sta
 		if err := q.UpdateColumn("status", check.Status).Error; err != nil {
 			return fmt.Errorf("error updating check: %w", err)
 		}
-		c.checkStatusCache.Set(ctx, check.ID, models.CheckHealthStatus(check.Status))
+		_ = c.checkStatusCache.Set(ctx, check.ID, models.CheckHealthStatus(check.Status))
 	}
 
 	t, _ := status.GetTime()
@@ -104,7 +101,7 @@ func (c *postgresCache) AddCheckStatus(ctx context.Context, check pkg.Check, sta
 		LastRuntime: lo.ToPtr(t),
 		NextRuntime: nextRuntime,
 	}
-	if err := ctx.DB().Save(&up); err != nil {
+	if err := ctx.DB().Save(&up).Error; err != nil {
 		return fmt.Errorf("error updating checks_unlogged: %w", err)
 	}
 
@@ -139,8 +136,8 @@ func (c *postgresCache) AddCheckStatus(ctx context.Context, check pkg.Check, sta
 	return nil
 }
 
-func (c *postgresCache) GetDetails(checkkey string, time string) interface{} {
-	var details interface{}
+func (c *postgresCache) GetDetails(checkkey string, time string) any {
+	var details any
 	row := c.Pool().QueryRow(gocontext.TODO(), `SELECT details from check_statuses where check_id=$1 and time=$2`, checkkey, time)
 	if err := row.Scan(&details); err != nil {
 		logger.Errorf("error fetching details from check_statuses: %v", err)
