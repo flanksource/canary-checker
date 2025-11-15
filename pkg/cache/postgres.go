@@ -16,7 +16,6 @@ import (
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
-	_ "github.com/lib/pq"
 	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
@@ -156,18 +155,18 @@ func (c *postgresCache) GetCheckID(ctx context.Context, canaryID uuid.UUID, chec
 		return val, nil
 	}
 
-	var checkID uuid.UUID
-	err := ctx.DB().Model(&models.Check{}).
+	var check models.Check
+	err := ctx.DB().Model(&models.Check{}).Select("id").
 		Where("canary_id = ? AND type = ? AND name = ? AND agent_id = ?", canaryID, checkType, checkName, uuid.Nil).
-		Pluck("id", &checkID).Error
+		First(&check).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return checkID, fmt.Errorf("check with canary=%s name=%s type=%s not found for local agent", canaryID, checkName, checkType)
+			return check.ID, fmt.Errorf("check with canary=%s name=%s type=%s not found for local agent", canaryID, checkName, checkType)
 		}
-		return checkID, fmt.Errorf("error finding check_id: %w", err)
+		return check.ID, fmt.Errorf("error finding check_id: %w", err)
 	}
 
-	_ = c.checkIDCache.Set(ctx, cacheKey, checkID)
-	return checkID, nil
+	_ = c.checkIDCache.Set(ctx, cacheKey, check.ID)
+	return check.ID, nil
 }
