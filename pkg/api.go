@@ -18,6 +18,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/properties"
 	cUtils "github.com/flanksource/commons/utils"
+	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -148,32 +149,32 @@ func CanaryFromV1(canary v1.Canary) (Canary, error) {
 }
 
 type Check struct {
-	ID                 uuid.UUID           `json:"id" gorm:"default:generate_ulid()"`
-	CanaryID           uuid.UUID           `json:"canary_id"`
-	Spec               types.JSON          `json:"-"`
-	Type               string              `json:"type"`
-	Name               string              `json:"name"`
-	CanaryName         string              `json:"canary_name" gorm:"-"`
-	Namespace          string              `json:"namespace"`
-	Labels             types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap"`
-	Description        string              `json:"description,omitempty"`
-	Status             string              `json:"status,omitempty"`
-	Uptime             types.Uptime        `json:"uptime"  gorm:"-"`
-	Latency            types.Latency       `json:"latency"  gorm:"-"`
-	Statuses           []CheckStatus       `json:"checkStatuses"  gorm:"-"`
-	Owner              string              `json:"owner,omitempty"`
-	Severity           string              `json:"severity,omitempty"`
-	Icon               string              `json:"icon,omitempty"`
-	DisplayType        string              `json:"displayType,omitempty"  gorm:"-"`
-	Transformed        bool                `json:"transformed,omitempty"`
-	LastRuntime        *time.Time          `json:"lastRuntime,omitempty"`
-	LastTransitionTime *time.Time          `json:"lastTransitionTime,omitempty"`
-	NextRuntime        *time.Time          `json:"nextRuntime,omitempty"`
-	UpdatedAt          *time.Time          `json:"updatedAt,omitempty"`
-	CreatedAt          *time.Time          `json:"createdAt,omitempty"`
-	DeletedAt          *time.Time          `json:"deletedAt,omitempty"`
-	SilencedAt         *time.Time          `json:"silencedAt,omitempty"`
-	Canary             *v1.Canary          `json:"-" gorm:"-"`
+	ID                 uuid.UUID                `json:"id" gorm:"default:generate_ulid()"`
+	CanaryID           uuid.UUID                `json:"canary_id"`
+	Spec               types.JSON               `json:"-"`
+	Type               string                   `json:"type"`
+	Name               string                   `json:"name"`
+	CanaryName         string                   `json:"canary_name" gorm:"-"`
+	Namespace          string                   `json:"namespace"`
+	Labels             types.JSONStringMap      `json:"labels" gorm:"type:jsonstringmap"`
+	Description        string                   `json:"description,omitempty"`
+	Status             models.CheckHealthStatus `json:"status,omitempty"`
+	Uptime             types.Uptime             `json:"uptime"  gorm:"-"`
+	Latency            types.Latency            `json:"latency"  gorm:"-"`
+	Statuses           []CheckStatus            `json:"checkStatuses"  gorm:"-"`
+	Owner              string                   `json:"owner,omitempty"`
+	Severity           string                   `json:"severity,omitempty"`
+	Icon               string                   `json:"icon,omitempty"`
+	DisplayType        string                   `json:"displayType,omitempty"  gorm:"-"`
+	Transformed        bool                     `json:"transformed,omitempty"`
+	LastRuntime        *time.Time               `json:"lastRuntime,omitempty"`
+	LastTransitionTime *time.Time               `json:"lastTransitionTime,omitempty"`
+	NextRuntime        *time.Time               `json:"nextRuntime,omitempty"`
+	UpdatedAt          *time.Time               `json:"updatedAt,omitempty"`
+	CreatedAt          *time.Time               `json:"createdAt,omitempty"`
+	DeletedAt          *time.Time               `json:"deletedAt,omitempty"`
+	SilencedAt         *time.Time               `json:"silencedAt,omitempty"`
+	Canary             *v1.Canary               `json:"-" gorm:"-"`
 
 	// These are calculated for the selected date range
 	EarliestRuntime *time.Time `json:"earliestRuntime,omitempty" gorm:"-"`

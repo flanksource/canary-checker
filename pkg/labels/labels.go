@@ -31,7 +31,7 @@ func LoadFromFile(path string) map[string]string {
 	result := make(map[string]string)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		// No label metadata mounted into the operator pod
-		logger.Infof("No label file mounted at %s", path)
+		logger.Tracef("No label file mounted at %s", path)
 		return result
 	}
 	f, err := os.Open(path)
