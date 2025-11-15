@@ -76,7 +76,7 @@ func (c *postgresCache) AddCheckStatus(ctx context.Context, check pkg.Check, sta
 	if check.ID == uuid.Nil {
 		checkID, err := c.GetCheckID(ctx, check.CanaryID, check.Type, check.GetName())
 		if err != nil {
-			return fmt.Errorf("check not found: %w")
+			return fmt.Errorf("check not found: %w", err)
 		}
 		check.ID = checkID
 	}
@@ -156,9 +156,9 @@ func (c *postgresCache) GetCheckID(ctx context.Context, canaryID uuid.UUID, chec
 	}
 
 	var checkID uuid.UUID
-	err := ctx.DB().Model(&models.Check{}).Select("id").
+	err := ctx.DB().Model(&models.Check{}).
 		Where("canary_id = ? AND type = ? AND name = ? AND agent_id = ?", canaryID, checkType, checkName, uuid.Nil).
-		First(&checkID).Error
+		Pluck("id", &checkID).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
