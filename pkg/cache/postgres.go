@@ -16,6 +16,7 @@ import (
 	"github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
+	_ "github.com/lib/pq"
 	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
@@ -82,7 +83,7 @@ func (c *postgresCache) AddCheckStatus(ctx context.Context, check pkg.Check, sta
 	}
 
 	statusInCache, _ := c.checkStatusCache.Get(ctx, check.ID)
-	if statusInCache == "" || statusInCache != models.CheckHealthStatus(check.Status) {
+	if statusInCache == "" || statusInCache != check.Status {
 		q := ctx.DB().Model(&models.Check{}).
 			Where("id = ?", check.ID).
 			Where("status != ?", check.Status)
@@ -90,7 +91,7 @@ func (c *postgresCache) AddCheckStatus(ctx context.Context, check pkg.Check, sta
 		if err := q.UpdateColumn("status", check.Status).Error; err != nil {
 			return fmt.Errorf("error updating check: %w", err)
 		}
-		_ = c.checkStatusCache.Set(ctx, check.ID, models.CheckHealthStatus(check.Status))
+		_ = c.checkStatusCache.Set(ctx, check.ID, check.Status)
 	}
 
 	t, _ := status.GetTime()
