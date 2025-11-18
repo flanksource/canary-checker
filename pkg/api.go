@@ -372,6 +372,8 @@ type CheckResult struct {
 	ErrorObject error          `json:"-"`
 
 	InternalError bool `json:"-"`
+
+	CanaryResult []TransformedCanaryResult
 }
 
 func (result CheckResult) LoggerName() string {
@@ -425,6 +427,10 @@ func (result CheckResult) String() string {
 	return fmt.Sprintf("%s duration=%d %s %s", console.Redf("FAIL"), result.Duration, result.Message, result.Error)
 }
 
+func (r CheckResult) HasCanary() bool {
+	return len(r.CanaryResult) > 0
+}
+
 type GenericCheck struct {
 	v1.Description `yaml:",inline" json:",inline"`
 	Type           string
@@ -474,6 +480,22 @@ type TransformedCheckResult struct {
 	Type                    string                 `json:"type,omitempty"`
 	Endpoint                string                 `json:"endpoint,omitempty"`
 	TransformDeleteStrategy string                 `json:"transformDeleteStrategy,omitempty"`
+}
+
+type TransformedCanaryResult struct {
+	Name      string              `json:"name,omitempty"`
+	Namespace string              `json:"namespace,omitempty"`
+	Spec      types.JSON          `json:"spec,omitempty"`
+	Labels    types.JSONStringMap `json:"labels,omitempty"`
+}
+
+func (c TransformedCanaryResult) ToModel() Canary {
+	return Canary{
+		Name:      c.Name,
+		Namespace: c.Namespace,
+		Spec:      c.Spec,
+		Labels:    c.Labels,
+	}
 }
 
 func (t TransformedCheckResult) ToCheckResult() CheckResult {

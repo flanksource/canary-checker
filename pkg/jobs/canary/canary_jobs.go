@@ -181,6 +181,20 @@ func SaveResults(ctx context.Context, results []*pkg.CheckResult) ([]string, map
 	defer tx.Rollback()
 
 	for _, result := range results {
+		if result.HasCanary() {
+			for _, can := range result.CanaryResult {
+				m := can.ToModel()
+				m.Source = "Check"
+				if checkID, _ := uuid.Parse(result.Canary.GetCheckID(result.Check.GetName())); checkID != uuid.Nil {
+					m.Source = fmt.Sprintf("check=%s", checkID)
+				}
+				if _, _, err := db.PersistCanaryModel(ctx.WithDB(tx, ctx.Pool()), m); err != nil {
+					return nil, nil, fmt.Errorf("error saving canary: %w", err)
+				}
+			}
+			continue
+		}
+
 		transformedChecksAdded, err := cache.PostgresCache.Add(
 			ctx.WithDB(tx, ctx.Pool()),
 			pkg.FromV1(result.Canary, result.Check),

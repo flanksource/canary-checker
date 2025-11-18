@@ -8,7 +8,9 @@ import (
 
 	canaryCtx "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/tests/setup"
 	"github.com/flanksource/duty/types"
@@ -67,5 +69,49 @@ var _ = ginkgo.Describe("Canary Job sync", ginkgo.Ordered, func() {
 		time.Sleep(time.Second * 3)
 		// The job will be called on first schedule and all concurrent jobs would be aborted
 		Expect(requestCount).To(Equal(1))
+	})
+})
+
+var _ = ginkgo.Describe("Transformed Canary", func() {
+	ginkgo.It("Check should create a canary", func() {
+		transformExpr := `'{"name":"transformed-canary","namespace":"default","spec":{"http":[{"name":"http-check","endpoint":"https://example.com"}]}}'`
+		parentCanary := pkg.Canary{
+			ID:        uuid.New(),
+			Name:      "canary-to-create-canary",
+			Namespace: "default",
+			Spec: []byte(fmt.Sprintf(`{
+				"http": [{
+					"name": "http-check",
+					"endpoint": "https://example.com",
+					"transform": {
+						"expr": %q
+					}
+				}]
+			}`, transformExpr)),
+		}
+
+		err := DefaultContext.DB().Save(&parentCanary).Error
+		Expect(err).To(BeNil())
+
+		v1Canary, err := parentCanary.ToV1()
+		Expect(err).To(BeNil())
+
+		c := CanaryJob{
+			Canary:   *v1Canary,
+			DBCanary: parentCanary,
+		}
+
+		j := &job.Job{
+			Name:    "Canary",
+			Context: DefaultContext.WithObject(v1Canary.ObjectMeta).WithAnyValue("canary", v1Canary),
+			Fn:      c.Run,
+		}
+
+		j.Run()
+
+		var count int64
+		err = DefaultContext.DB().Model(&models.Canary{}).Where("name = ? AND namespace = ?", "transformed-canary", "default").Count(&count).Error
+		Expect(err).To(BeNil())
+		Expect(count).To(Equal(int64(1)))
 	})
 })
