@@ -94,10 +94,13 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 		return nil, hasTransformer, err
 	}
 
-	z, _ := gabs.ParseJSON([]byte(out))
+	obj, _ := gabs.ParseJSON([]byte(out))
 
 	// try transforming to canary
-	res, err := transformCanary(ctx, in, z)
+	res, err := transformCanary(in, obj)
+	if err != nil {
+		return nil, hasTransformer, err
+	}
 	if res.HasCanary() {
 		return []*pkg.CheckResult{&res}, true, nil
 	}
@@ -217,7 +220,7 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 	return []*pkg.CheckResult{in}, hasTransformer, nil
 }
 
-func transformCanary(ctx *context.Context, in *pkg.CheckResult, c *gabs.Container) (pkg.CheckResult, error) {
+func transformCanary(in *pkg.CheckResult, c *gabs.Container) (pkg.CheckResult, error) {
 	var t pkg.CheckResult
 	t.Check = in.Check
 	t.Canary = in.Canary
