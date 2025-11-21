@@ -30,7 +30,7 @@ jobs:
       release-version: ${{ env.VERSION  || steps.semantic.outputs.new_release_version }}
       new-release-published: ${{ steps.semantic.outputs.new-release-published }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - name: Set branch variable for semantic release
         run: |
           if [[ "${{ inputs.version }}" != "" ]]; then
@@ -51,7 +51,7 @@ jobs:
           fi
           echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
           cat $GITHUB_ENV
-      - uses: cycjimmy/semantic-release-action@9cc899c47e6841430bbaedb43de1560a568dfd16 # v5.0.0
+      - uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90 # v6.0.0
         if: ${{ ! env.TAG }}
         id: semantic
         with:
@@ -78,10 +78,10 @@ jobs:
       matrix:
         os: [linux, darwin, windows]
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Install Go
-        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version: v1.25.x
 
@@ -90,7 +90,7 @@ jobs:
           VERSION: v${{ needs.semantic-release.outputs.release-version }}
 
       - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@81c65b7cd4de9b2570615ce3aad67a41de5b1a13 # v2
+        uses: svenstaro/upload-release-action@6b7fa9f267e90b50a19fef07b3596790bb941741 # v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./.release/*
@@ -102,7 +102,7 @@ jobs:
     needs: semantic-release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Clear up disk space
         run: |
@@ -163,7 +163,7 @@ jobs:
     needs: semantic-release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Clear up disk space
         run: |
@@ -224,7 +224,7 @@ jobs:
     needs: semantic-release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Clear up disk space
         run: |
@@ -285,9 +285,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [semantic-release, docker, docker-slim, docker-full]
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - name: Install yq
-        uses: mikefarah/yq@bbdd97482f2d439126582a59689eb1c855944955 # v4.44.3
+        uses: mikefarah/yq@796317b885ae219215caa36e9bdacc87c9962c15 # v4.48.2
       - name: Set version
         # Always use git tags as semantic release can fail due to rate limit
         run: |
@@ -307,7 +307,7 @@ jobs:
         run: |
           make chart
       - name: Clone charts repo
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           repository: "${{ github.repository_owner }}/charts"
           path: charts
@@ -318,7 +318,7 @@ jobs:
           cp ../canary-checker-*.tgz ./
           helm repo index --merge index.yaml .
       - name: Push changes to chart repo
-        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6.0.1
+        uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
         with:
           commit_message: "Release ${{ needs.semantic-release.outputs.release-version }} of ${{ github.repository }}"
           branch: gh-pages
@@ -328,26 +328,26 @@ jobs:
     runs-on: ubuntu-latest
     needs: [helm, semantic-release]
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - name: Set version
         # Always use git tags as semantic release can fail due to rate limit
         run: |
           git fetch --prune --unshallow
           echo "RELEASE_VERSION=$(git describe --abbrev=0 --tags | sed -e 's/^v//')" >> $GITHUB_ENV
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           repository: "${{ github.repository_owner }}/incident-commander-chart"
           token: ${{ secrets.FLANKBOT }}
           path: ./incident-commander-chart
       - name: Install yq
-        uses: mikefarah/yq@bbdd97482f2d439126582a59689eb1c855944955 # v4.44.3
+        uses: mikefarah/yq@796317b885ae219215caa36e9bdacc87c9962c15 # v4.48.2
       - name: Update canary-checker version in Incident-commander-chart
         run: |
           cd ./incident-commander-chart
           yq eval-all -i  '(.dependencies[] | select(.name == "canary-checker")) ref $d | $d.version = "${{ env.RELEASE_VERSION }}"' chart/Chart.yaml
           yq eval-all -i  '(.dependencies[] | select(.name == "canary-checker")) ref $d | $d.version = "${{ env.RELEASE_VERSION }}"' agent-chart/Chart.yaml
       - name: Push changes to chart repo
-        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6.0.1
+        uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3 # v7.0.0
         with:
           commit_message: "chore: update canary-checker chart dependency to ${{ env.RELEASE_VERSION }}"
           repository: ./incident-commander-chart
