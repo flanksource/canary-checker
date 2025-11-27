@@ -184,10 +184,15 @@ func SaveResults(ctx context.Context, results []*pkg.CheckResult) ([]string, map
 		if result.HasCanary() {
 			for _, can := range result.CanaryResult {
 				m := can.ToModel()
-				m.Source = "Check"
-				if checkID, _ := uuid.Parse(result.Canary.GetCheckID(result.Check.GetName())); checkID != uuid.Nil {
-					m.Source = fmt.Sprintf("check=%s", checkID)
+				canaryID, err := uuid.Parse(result.Canary.GetPersistedID())
+				if err != nil {
+					return nil, nil, fmt.Errorf("error getting canary_id: %w", err)
 				}
+				checkID, err := cache.PostgresCache.GetCheckID(ctx, canaryID, result.Check.GetType(), result.Check.GetName())
+				if err != nil {
+					return nil, nil, fmt.Errorf("error getting check_id: %w", err)
+				}
+				m.Source = fmt.Sprintf("check=%s", checkID)
 				if _, _, err := db.PersistCanaryModel(ctx.WithDB(tx, ctx.Pool()), m); err != nil {
 					return nil, nil, fmt.Errorf("error saving canary: %w", err)
 				}
@@ -317,5 +322,27 @@ var VacuumCanaryTables = &dutyjob.Job{
 	Retention:  dutyjob.RetentionFew,
 	Fn: func(ctx dutyjob.JobRuntime) error {
 		return ctx.DB().Exec("VACUUM FULL ANALYZE checks").Error
+	},
+}
+
+var DeleteTransformedCanaries = &dutyjob.Job{
+	Name:       "DeleteTransformedCanaries",
+	Schedule:   "@every 12h",
+	Singleton:  true,
+	JobHistory: true,
+	Retention:  dutyjob.RetentionFailed,
+	Fn: func(ctx dutyjob.JobRuntime) error {
+		return ctx.DB().Exec(`
+			UPDATE canaries
+			SET deleted_at = NOW()
+			WHERE deleted_at IS NULL AND
+				(agent_id IS NULL OR agent_id = '00000000-0000-0000-0000-000000000000')
+			  AND source LIKE 'check=%'
+			  AND EXISTS (
+				SELECT 1
+				FROM checks
+				WHERE checks.id = CAST(REPLACE(canaries.source, 'check=', '') AS UUID)
+				  AND checks.deleted_at IS NOT NULL
+			  )`).Error
 	},
 }

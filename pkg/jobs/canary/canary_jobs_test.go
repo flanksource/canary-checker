@@ -72,14 +72,13 @@ var _ = ginkgo.Describe("Canary Job sync", ginkgo.Ordered, func() {
 	})
 })
 
-var _ = ginkgo.Describe("Transformed Canary", func() {
-	ginkgo.It("Check should create a canary", func() {
-		transformExpr := `'{"name":"transformed-canary","namespace":"default","spec":{"http":[{"name":"http-check","endpoint":"https://example.com"}]}}'`
-		parentCanary := pkg.Canary{
-			ID:        uuid.New(),
-			Name:      "canary-to-create-canary",
-			Namespace: "default",
-			Spec: []byte(fmt.Sprintf(`{
+var _ = ginkgo.Describe("Transformed Canary", ginkgo.Ordered, func() {
+	transformExpr := `'{"name":"transformed-canary","namespace":"default","spec":{"http":[{"name":"http-check","endpoint":"https://example.com"}]}}'`
+	parentCanary := pkg.Canary{
+		ID:        uuid.New(),
+		Name:      "canary-to-create-canary",
+		Namespace: "default",
+		Spec: []byte(fmt.Sprintf(`{
 				"http": [{
 					"name": "http-check",
 					"endpoint": "https://example.com",
@@ -88,8 +87,9 @@ var _ = ginkgo.Describe("Transformed Canary", func() {
 					}
 				}]
 			}`, transformExpr)),
-		}
+	}
 
+	ginkgo.It("Check should create a canary", func() {
 		err := DefaultContext.DB().Save(&parentCanary).Error
 		Expect(err).To(BeNil())
 
@@ -109,9 +109,23 @@ var _ = ginkgo.Describe("Transformed Canary", func() {
 
 		j.Run()
 
-		var count int64
-		err = DefaultContext.DB().Model(&models.Canary{}).Where("name = ? AND namespace = ?", "transformed-canary", "default").Count(&count).Error
+		var transformedCanary models.Canary
+		err = DefaultContext.DB().Where("name = ? AND namespace = ?", "transformed-canary", "default").First(&transformedCanary).Error
 		Expect(err).To(BeNil())
-		Expect(count).To(Equal(int64(1)))
+		Expect(transformedCanary.DeletedAt).To(BeNil())
+		Expect(transformedCanary.Source).ToNot(BeEmpty())
+
+	})
+
+	ginkgo.It("should mark transformed canaries as deleted when parent canary is deleted", func() {
+		// Delete the parent canary
+		err := db.DeleteCanary(DefaultContext, parentCanary.ID.String())
+		Expect(err).To(BeNil())
+
+		// Verify transformed canary has deleted_at set
+		var transformedCanary models.Canary
+		err = DefaultContext.DB().Where("name = ? AND namespace = ?", "transformed-canary", "default").First(&transformedCanary).Error
+		Expect(err).To(BeNil())
+		Expect(transformedCanary.DeletedAt).ToNot(BeNil())
 	})
 })
