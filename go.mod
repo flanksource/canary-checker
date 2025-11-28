@@ -6,6 +6,7 @@ godebug x509negativeserial=1
 
 require (
 	cloud.google.com/go/storage v1.57.0
+	github.com/Jeffail/gabs/v2 v2.7.0
 	github.com/allegro/bigcache v1.2.1
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.51.4

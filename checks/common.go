@@ -6,6 +6,7 @@ import (
 
 	"time"
 
+	"github.com/Jeffail/gabs/v2"
 	_ "github.com/robertkrimen/otto/underscore"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -91,6 +92,25 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 	out, err := template(ctx, tpl)
 	if err != nil {
 		return nil, hasTransformer, err
+	}
+
+	obj, _ := gabs.ParseJSON([]byte(out))
+
+	// try transforming to canary
+	res, err := transformCanary(in, obj)
+	if err != nil {
+		return nil, hasTransformer, err
+	}
+	if res.HasCanary() {
+		return []*pkg.CheckResult{&res}, true, nil
+	}
+
+	// Check if it is canary or check
+	var transformedEntity map[string]string
+	if err := json.Unmarshal([]byte(out), &transformedEntity); err == nil {
+		if _, ok := transformedEntity["spec"]; ok {
+			return nil, false, nil
+		}
 	}
 
 	var transformed []pkg.TransformedCheckResult
@@ -198,6 +218,26 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 	}
 
 	return []*pkg.CheckResult{in}, hasTransformer, nil
+}
+
+func transformCanary(in *pkg.CheckResult, c *gabs.Container) (pkg.CheckResult, error) {
+	var t pkg.CheckResult
+	t.Check = in.Check
+	t.Canary = in.Canary
+	if c.Exists("0", "spec") {
+		var tc []pkg.TransformedCanaryResult
+		if err := json.Unmarshal(c.Bytes(), &tc); err != nil {
+			return t, err
+		}
+		t.CanaryResult = tc
+	} else if c.Exists("spec") {
+		var tc pkg.TransformedCanaryResult
+		if err := json.Unmarshal(c.Bytes(), &tc); err != nil {
+			return t, err
+		}
+		t.CanaryResult = []pkg.TransformedCanaryResult{tc}
+	}
+	return t, nil
 }
 
 func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) JunitTestSuite {
