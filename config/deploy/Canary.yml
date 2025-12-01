@@ -8529,7 +8529,8 @@ spec:
                 schedule:
                   description: |-
                     Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
-                     Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.
+                    Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.
+                    If both schedule and interval are empty, the canary will not run
                   type: string
                 severity:
                   type: string
