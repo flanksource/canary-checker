@@ -1,0 +1,25 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: canary-to-create-canary
+  namespace: default
+spec:
+  schedule: "@every 1m"
+  http:
+    - name: http-check-main
+      url: https://example.com
+      transform:
+        expr: |
+          '{
+            "name": "transformed-canary",
+            "namespace": "default",
+            "spec": {
+              "schedule": "@every 1m",
+              "http": [
+                {
+                  "name": "transformed-from-canary-http-check",
+                  "url": "https://example.com"
+                }
+              ]
+            }
+          }'
