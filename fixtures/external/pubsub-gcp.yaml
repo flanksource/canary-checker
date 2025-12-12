@@ -1,0 +1,15 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: pubsub-check
+spec:
+  schedule: "@every 30s"
+  pubsub:
+  - name: gcp-incidents
+    pubsub:
+      project_id: flanksource-sandbox
+      subscription: incident-alerts-sub
+    transform:
+      expr: |
+        results.messages.map(r, gcp.incidents.toCheckResult(r)).toJSON()
+

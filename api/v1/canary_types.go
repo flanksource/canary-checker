@@ -68,6 +68,7 @@ type CanarySpec struct {
 	Prometheus         []PrometheusCheck         `yaml:"prometheus,omitempty" json:"prometheus,omitempty"`
 	MongoDB            []MongoDBCheck            `yaml:"mongodb,omitempty" json:"mongodb,omitempty"`
 	CloudWatch         []CloudWatchCheck         `yaml:"cloudwatch,omitempty" json:"cloudwatch,omitempty"`
+	PubSub             []PubSubCheck             `yaml:"pubsub,omitempty" json:"pubsub,omitempty"`
 	GitHub             []GitHubCheck             `yaml:"github,omitempty" json:"github,omitempty"`
 	GitProtocol        []GitProtocolCheck        `yaml:"gitProtocol,omitempty" json:"gitProtocol,omitempty"`
 	Kubernetes         []KubernetesCheck         `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
@@ -87,7 +88,8 @@ type CanarySpec struct {
 	// interval (in seconds) to run checks on Deprecated in favor of Schedule
 	Interval uint64 `yaml:"interval,omitempty" json:"interval,omitempty"`
 	// Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
-	//  Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.
+	// Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.
+	// If both schedule and interval are empty, the canary will not run
 	Schedule   string     `yaml:"schedule,omitempty" json:"schedule,omitempty"`
 	Icon       string     `yaml:"icon,omitempty" json:"icon,omitempty"`
 	Severity   string     `yaml:"severity,omitempty" json:"severity,omitempty"`
@@ -164,6 +166,9 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.CloudWatch {
+		checks = append(checks, check)
+	}
+	for _, check := range spec.PubSub {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.GitHub {
@@ -284,6 +289,9 @@ func (spec CanarySpec) KeepOnly(names ...string) CanarySpec {
 		return lo.Contains(names, c.GetName())
 	})
 	spec.CloudWatch = lo.Filter(spec.CloudWatch, func(c CloudWatchCheck, _ int) bool {
+		return lo.Contains(names, c.GetName())
+	})
+	spec.PubSub = lo.Filter(spec.PubSub, func(c PubSubCheck, _ int) bool {
 		return lo.Contains(names, c.GetName())
 	})
 	spec.GitHub = lo.Filter(spec.GitHub, func(c GitHubCheck, _ int) bool {

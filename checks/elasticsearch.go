@@ -89,6 +89,10 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 
 	count := int(r["hits"].(map[string]any)["total"].(map[string]any)["value"].(float64))
 
+	if count == 0 && check.ShouldMarkFailOnEmpty() {
+		return results.Failf("Query has returned empty value")
+	}
+
 	if count != check.Results {
 		return results.Failf("Query return %d rows, expected %d", count, check.Results)
 	}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/flanksource/canary-checker/api/context"
 	dutyKubernetes "github.com/flanksource/duty/kubernetes"
+	"github.com/spf13/pflag"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -26,11 +27,38 @@ func init() {
 	//register metrics here
 }
 
+// type alias to implement pflag.Value to allow setting in root.go
+type CorePullPolicy corev1.PullPolicy
+
+var _ pflag.Value = (*CorePullPolicy)(nil)
+var AllowedCorePullPolicyValues = []corev1.PullPolicy{corev1.PullAlways, corev1.PullIfNotPresent, corev1.PullNever}
+
+func (c *CorePullPolicy) Set(s string) error {
+	for _, allowed := range AllowedCorePullPolicyValues {
+		if s == string(allowed) {
+			*c = CorePullPolicy(s)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("PullPolicy '%s' not one of allowed values: %v", s, AllowedCorePullPolicyValues)
+}
+
+func (c *CorePullPolicy) String() string {
+	return string(*c)
+}
+
+func (c *CorePullPolicy) Type() string {
+	return "CorePullPolicy"
+}
+
+var JunitContainerImageName string
+var JunitContainerImagePullPolicy CorePullPolicy = CorePullPolicy(corev1.PullIfNotPresent)
+
 const (
 	volumeName           = "junit-results"
 	mountPath            = "/tmp/junit-results"
 	containerName        = "junit-results"
-	containerImage       = "ubuntu"
 	podKind              = "Pod"
 	junitCheckSelector   = "canary-checker.flanksource.com/check"
 	junitCheckLabelValue = "junit-check"
@@ -83,8 +111,9 @@ func newPod(ctx *context.Context, check v1.JunitCheck) (*corev1.Pod, error) {
 	}
 	pod.Spec.Containers = []corev1.Container{
 		{
-			Name:  containerName,
-			Image: containerImage,
+			Name:            containerName,
+			ImagePullPolicy: corev1.PullPolicy(JunitContainerImagePullPolicy),
+			Image:           JunitContainerImageName,
 			Args: []string{
 				"bash",
 				"-c",
@@ -249,7 +278,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 		// we don't exit early as junit files may have been generated in addition to a failing exit code
 		result.Failf("process exited with: %s:\n%s", exitCode, getLogs(ctx, k8s, *pod))
 	}
-	files, ok := podExecf(ctx, k8s, *pod, results, fmt.Sprintf("find %v -name \\*.xml -type f", mountPath))
+	files, ok := podExecf(ctx, k8s, *pod, results, "find %v -name \\*.xml -type f", mountPath)
 	if !ok {
 		return results
 	}
@@ -273,7 +302,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	result.Duration = int64(suites.Duration * 1000)
 	if check.Test.IsEmpty() && suites.Failed > 0 {
 		if check.Display.IsEmpty() {
-			return results.Failf(suites.Totals.String())
+			return results.Failf("%s", suites.Totals.String())
 		}
 		return results.Failf("")
 	}

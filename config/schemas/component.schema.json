@@ -59,6 +59,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -164,6 +167,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -239,6 +245,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -344,6 +353,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -570,6 +582,12 @@
           },
           "type": "array"
         },
+        "pubsub": {
+          "items": {
+            "$ref": "#/$defs/PubSubCheck"
+          },
+          "type": "array"
+        },
         "github": {
           "items": {
             "$ref": "#/$defs/GitHubCheck"
@@ -711,6 +729,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -777,6 +798,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "connection": {
           "type": "string"
@@ -1216,6 +1240,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1264,6 +1291,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -1359,6 +1389,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1421,6 +1454,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1491,6 +1527,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1540,6 +1579,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1586,6 +1628,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1679,6 +1724,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1779,6 +1827,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1877,6 +1928,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2013,6 +2067,9 @@
         },
         "skipTLSVerify": {
           "type": "boolean"
+        },
+        "project": {
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -2051,6 +2108,9 @@
         "skipTLSVerify": {
           "type": "boolean"
         },
+        "project": {
+          "type": "string"
+        },
         "bucket": {
           "type": "string"
         }
@@ -2071,6 +2131,9 @@
         },
         "skipTLSVerify": {
           "type": "boolean"
+        },
+        "project": {
+          "type": "string"
         },
         "projectID": {
           "type": "string"
@@ -2146,6 +2209,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2200,6 +2266,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2260,6 +2329,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2375,6 +2447,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -2437,6 +2512,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -2508,6 +2586,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -2569,6 +2650,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "testResults": {
           "type": "string"
         },
@@ -2603,6 +2687,29 @@
         "spec"
       ]
     },
+    "KafkaConfig": {
+      "properties": {
+        "brokers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "topic": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "brokers",
+        "topic",
+        "group"
+      ]
+    },
     "KubernetesCheck": {
       "properties": {
         "description": {
@@ -2628,6 +2735,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2731,6 +2841,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2979,6 +3092,12 @@
           },
           "type": "array"
         },
+        "pubsub": {
+          "items": {
+            "$ref": "#/$defs/PubSubCheck"
+          },
+          "type": "array"
+        },
         "github": {
           "items": {
             "$ref": "#/$defs/GitHubCheck"
@@ -3120,6 +3239,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -3248,6 +3370,18 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "MemoryConfig": {
+      "properties": {
+        "queue": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "queue"
+      ]
+    },
     "MetricLabel": {
       "properties": {
         "name": {
@@ -3316,6 +3450,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "connection": {
           "type": "string"
         },
@@ -3360,6 +3497,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3427,6 +3567,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -3467,6 +3610,24 @@
         "name"
       ]
     },
+    "NATSConfig": {
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "queue": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "subject"
+      ]
+    },
     "NamespaceCheck": {
       "properties": {
         "description": {
@@ -3492,6 +3653,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -3722,6 +3886,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -3838,6 +4005,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -3928,6 +4098,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -3993,6 +4166,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -4125,6 +4301,128 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "PubSubCheck": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels"
+        },
+        "transformDeleteStrategy": {
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "sqs": {
+          "$ref": "#/$defs/SQSConfig"
+        },
+        "pubsub": {
+          "$ref": "#/$defs/PubSubConfig"
+        },
+        "rabbitmq": {
+          "$ref": "#/$defs/RabbitConfig"
+        },
+        "memory": {
+          "$ref": "#/$defs/MemoryConfig"
+        },
+        "kafka": {
+          "$ref": "#/$defs/KafkaConfig"
+        },
+        "nats": {
+          "$ref": "#/$defs/NATSConfig"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "PubSubConfig": {
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "subscription": {
+          "type": "string"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "project": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "project_id",
+        "subscription"
+      ]
+    },
+    "RabbitConfig": {
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "queue": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "host",
+        "port",
+        "username",
+        "password",
+        "queue"
+      ]
+    },
     "RedisCheck": {
       "properties": {
         "description": {
@@ -4150,6 +4448,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -4274,6 +4575,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -4339,6 +4643,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -4473,6 +4780,49 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "SQSConfig": {
+      "properties": {
+        "queue": {
+          "type": "string"
+        },
+        "raw": {
+          "type": "boolean"
+        },
+        "waitTime": {
+          "type": "integer"
+        },
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "assumeRole": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "queue",
+        "raw"
+      ]
+    },
     "SecretKeySelector": {
       "properties": {
         "name": {
@@ -4558,6 +4908,18 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -4674,6 +5036,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"

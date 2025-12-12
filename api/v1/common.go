@@ -12,9 +12,11 @@ import (
 
 	"github.com/c2h5oh/datasize"
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/duration"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/gomplate/v3"
+	"github.com/google/uuid"
 	"github.com/invopop/jsonschema"
 	"github.com/samber/lo"
 	"github.com/timberio/go-datemath"
@@ -400,6 +402,9 @@ type Description struct {
 	// https://canarychecker.io/concepts/metrics-exporter
 	// +kubebuilder:validation:XPreserveUnknownFields
 	Metrics []external.Metrics `json:"metrics,omitempty" yaml:"metrics,omitempty"`
+
+	// If check or transformation returns empty, that should be marked as failed
+	MarkFailOnEmpty bool `yaml:"markFailOnEmpty,omitempty" json:"markFailOnEmpty,omitempty"`
 }
 
 func (d Description) String() string {
@@ -423,6 +428,19 @@ func (d Description) GetMetricsSpec() []external.Metrics {
 
 func (d Description) GetName() string {
 	return d.Name
+}
+
+func (d Description) GetCustomUUID() uuid.UUID {
+	return uuid.Nil
+}
+
+func (d Description) ShouldMarkFailOnEmpty() bool {
+	return d.MarkFailOnEmpty
+}
+
+func (d Description) GetHash() string {
+	h, _ := utils.GenerateJSONMD5Hash(d)
+	return h
 }
 
 func (d Description) GetNamespace() string {

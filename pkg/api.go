@@ -18,6 +18,7 @@ import (
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/commons/properties"
 	cUtils "github.com/flanksource/commons/utils"
+	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -63,7 +64,7 @@ type CheckStatus struct {
 }
 
 func (s CheckStatus) GetTime() (time.Time, error) {
-	return time.Parse("2006-01-02 15:04:05", s.Time)
+	return time.Parse(time.RFC3339, s.Time)
 }
 
 type Canary struct {
@@ -148,32 +149,32 @@ func CanaryFromV1(canary v1.Canary) (Canary, error) {
 }
 
 type Check struct {
-	ID                 uuid.UUID           `json:"id" gorm:"default:generate_ulid()"`
-	CanaryID           uuid.UUID           `json:"canary_id"`
-	Spec               types.JSON          `json:"-"`
-	Type               string              `json:"type"`
-	Name               string              `json:"name"`
-	CanaryName         string              `json:"canary_name" gorm:"-"`
-	Namespace          string              `json:"namespace"`
-	Labels             types.JSONStringMap `json:"labels" gorm:"type:jsonstringmap"`
-	Description        string              `json:"description,omitempty"`
-	Status             string              `json:"status,omitempty"`
-	Uptime             types.Uptime        `json:"uptime"  gorm:"-"`
-	Latency            types.Latency       `json:"latency"  gorm:"-"`
-	Statuses           []CheckStatus       `json:"checkStatuses"  gorm:"-"`
-	Owner              string              `json:"owner,omitempty"`
-	Severity           string              `json:"severity,omitempty"`
-	Icon               string              `json:"icon,omitempty"`
-	DisplayType        string              `json:"displayType,omitempty"  gorm:"-"`
-	Transformed        bool                `json:"transformed,omitempty"`
-	LastRuntime        *time.Time          `json:"lastRuntime,omitempty"`
-	LastTransitionTime *time.Time          `json:"lastTransitionTime,omitempty"`
-	NextRuntime        *time.Time          `json:"nextRuntime,omitempty"`
-	UpdatedAt          *time.Time          `json:"updatedAt,omitempty"`
-	CreatedAt          *time.Time          `json:"createdAt,omitempty"`
-	DeletedAt          *time.Time          `json:"deletedAt,omitempty"`
-	SilencedAt         *time.Time          `json:"silencedAt,omitempty"`
-	Canary             *v1.Canary          `json:"-" gorm:"-"`
+	ID                 uuid.UUID                `json:"id" gorm:"default:generate_ulid()"`
+	CanaryID           uuid.UUID                `json:"canary_id"`
+	Spec               types.JSON               `json:"-"`
+	Type               string                   `json:"type"`
+	Name               string                   `json:"name"`
+	CanaryName         string                   `json:"canary_name" gorm:"-"`
+	Namespace          string                   `json:"namespace"`
+	Labels             types.JSONStringMap      `json:"labels" gorm:"type:jsonstringmap"`
+	Description        string                   `json:"description,omitempty"`
+	Status             models.CheckHealthStatus `json:"status,omitempty"`
+	Uptime             types.Uptime             `json:"uptime"  gorm:"-"`
+	Latency            types.Latency            `json:"latency"  gorm:"-"`
+	Statuses           []CheckStatus            `json:"checkStatuses"  gorm:"-"`
+	Owner              string                   `json:"owner,omitempty"`
+	Severity           string                   `json:"severity,omitempty"`
+	Icon               string                   `json:"icon,omitempty"`
+	DisplayType        string                   `json:"displayType,omitempty"  gorm:"-"`
+	Transformed        bool                     `json:"transformed,omitempty"`
+	LastRuntime        *time.Time               `json:"lastRuntime,omitempty"`
+	LastTransitionTime *time.Time               `json:"lastTransitionTime,omitempty"`
+	NextRuntime        *time.Time               `json:"nextRuntime,omitempty"`
+	UpdatedAt          *time.Time               `json:"updatedAt,omitempty"`
+	CreatedAt          *time.Time               `json:"createdAt,omitempty"`
+	DeletedAt          *time.Time               `json:"deletedAt,omitempty"`
+	SilencedAt         *time.Time               `json:"silencedAt,omitempty"`
+	Canary             *v1.Canary               `json:"-" gorm:"-"`
 
 	// These are calculated for the selected date range
 	EarliestRuntime *time.Time `json:"earliestRuntime,omitempty" gorm:"-"`
@@ -235,6 +236,10 @@ func CheckStatusFromResult(result CheckResult) CheckStatus {
 func FromV1(canary v1.Canary, check external.Check, statuses ...CheckStatus) Check {
 	canaryID, _ := uuid.Parse(canary.GetPersistedID())
 	checkID, _ := uuid.Parse(canary.GetCheckID(check.GetName()))
+
+	if customID := check.GetCustomUUID(); customID != uuid.Nil {
+		checkID = customID
+	}
 
 	c := Check{
 		ID:       checkID,
@@ -367,6 +372,8 @@ type CheckResult struct {
 	ErrorObject error          `json:"-"`
 
 	InternalError bool `json:"-"`
+
+	CanaryResult []TransformedCanaryResult
 }
 
 func (result CheckResult) LoggerName() string {
@@ -420,15 +427,32 @@ func (result CheckResult) String() string {
 	return fmt.Sprintf("%s duration=%d %s %s", console.Redf("FAIL"), result.Duration, result.Message, result.Error)
 }
 
+func (r CheckResult) HasCanary() bool {
+	return len(r.CanaryResult) > 0
+}
+
 type GenericCheck struct {
 	v1.Description `yaml:",inline" json:",inline"`
 	Type           string
 	Endpoint       string
-	Labels         map[string]string
+	CustomID       uuid.UUID
 }
 
 func (generic GenericCheck) GetType() string {
 	return generic.Type
+}
+
+func (generic GenericCheck) GetCustomUUID() uuid.UUID {
+	return generic.CustomID
+}
+
+func (generic GenericCheck) ShouldMarkFailOnEmpty() bool {
+	return generic.MarkFailOnEmpty
+}
+
+func (generic GenericCheck) GetHash() string {
+	h, _ := utils.GenerateJSONMD5Hash(generic)
+	return h
 }
 
 func (generic GenericCheck) GetEndpoint() string {
@@ -436,6 +460,7 @@ func (generic GenericCheck) GetEndpoint() string {
 }
 
 type TransformedCheckResult struct {
+	ID                      uuid.UUID              `json:"id,omitempty"`
 	Start                   *time.Time             `json:"start,omitempty"`
 	Pass                    *bool                  `json:"pass,omitempty"`
 	Invalid                 *bool                  `json:"invalid,omitempty"`
@@ -455,6 +480,22 @@ type TransformedCheckResult struct {
 	Type                    string                 `json:"type,omitempty"`
 	Endpoint                string                 `json:"endpoint,omitempty"`
 	TransformDeleteStrategy string                 `json:"transformDeleteStrategy,omitempty"`
+}
+
+type TransformedCanaryResult struct {
+	Name      string              `json:"name,omitempty"`
+	Namespace string              `json:"namespace,omitempty"`
+	Spec      types.JSON          `json:"spec,omitempty"`
+	Labels    types.JSONStringMap `json:"labels,omitempty"`
+}
+
+func (c TransformedCanaryResult) ToModel() Canary {
+	return Canary{
+		Name:      c.Name,
+		Namespace: c.Namespace,
+		Spec:      c.Spec,
+		Labels:    c.Labels,
+	}
 }
 
 func (t TransformedCheckResult) ToCheckResult() CheckResult {
@@ -484,6 +525,7 @@ func (t TransformedCheckResult) ToCheckResult() CheckResult {
 			},
 			Type:     t.Type,
 			Endpoint: t.Endpoint,
+			CustomID: t.ID,
 		},
 	}
 }

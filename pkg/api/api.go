@@ -4,15 +4,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/flanksource/canary-checker/pkg/cache"
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/duty/context"
-	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/query"
 	"github.com/flanksource/duty/types"
 	"github.com/labstack/echo/v4"
-
-	"github.com/flanksource/canary-checker/pkg"
 )
 
 // The number of data points that should be strived for
@@ -36,13 +32,6 @@ var (
 		time.Hour * 24 * 7, // 1w
 	}
 )
-
-type Response struct {
-	Duration      int                   `json:"duration,omitempty"`
-	RunnerName    string                `json:"runnerName"`
-	Checks        pkg.Checks            `json:"checks,omitempty"`
-	ChecksSummary []models.CheckSummary `json:"checks_summary,omitempty"`
-}
 
 type DetailResponse struct {
 	Duration   int                `json:"duration,omitempty"`
@@ -82,28 +71,6 @@ func CheckDetails(c echo.Context) error {
 		Uptime:     uptime,
 	}
 
-	return c.JSON(http.StatusOK, apiResponse)
-}
-
-func HealthSummary(c echo.Context) error {
-	ctx := c.Request().Context().(context.Context)
-
-	var queryOpt cache.SummaryOptions
-	if err := c.Bind(&queryOpt); err != nil {
-		return errorResponse(c, err, http.StatusBadRequest)
-	}
-
-	start := time.Now()
-	results, err := query.CheckSummary(ctx, query.CheckSummaryOptions(queryOpt))
-	if err != nil {
-		return errorResponse(c, err, http.StatusInternalServerError)
-	}
-
-	apiResponse := &Response{
-		RunnerName:    runner.RunnerName,
-		ChecksSummary: results,
-		Duration:      int(time.Since(start).Milliseconds()),
-	}
 	return c.JSON(http.StatusOK, apiResponse)
 }
 

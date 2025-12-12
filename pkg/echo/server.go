@@ -6,15 +6,18 @@ import (
 	"net/url"
 	"slices"
 
-	"github.com/flanksource/canary-checker/pkg/api"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/duty/canary"
 	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/topology"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	prom "github.com/prometheus/client_golang/prometheus"
 	echopprof "github.com/sevennt/echo-pprof"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
+
+	"github.com/flanksource/canary-checker/pkg/api"
 )
 
 var Debug bool
@@ -51,13 +54,13 @@ func New(ctx context.Context) *echo.Echo {
 		}
 	})
 
-	e.GET("/api/summary", api.HealthSummary) // Deprecated: Use Post request for filtering
-	e.POST("/api/summary", api.HealthSummary)
+	e.GET("/api/summary", canary.SummaryHandler) // Deprecated: Use Post request for filtering
+	e.POST("/api/summary", canary.SummaryHandler)
 	e.GET("/about", api.About)
 	e.GET("/api/graph", api.CheckDetails)
 	e.POST("/api/push", api.PushHandler)
 	e.GET("/api/details", api.DetailsHandler)
-	e.GET("/api/topology", api.Topology)
+	e.GET("/api/topology", topology.QueryHandler)
 
 	e.POST("/webhook/:id", api.WebhookHandler)
 

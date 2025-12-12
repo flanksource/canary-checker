@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.23-bookworm@sha256:0ace92a91fb174f5ec759b39ce66ba365237b1b5ee8b35ff311e46659f05ef68 AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.25-bookworm@sha256:ee420c17fa013f71eca6b35c3547b854c838d4f26056a34eb6171bba5bf8ece4 AS builder
 WORKDIR /app
 
 ARG TARGETOS
@@ -28,6 +28,7 @@ RUN apt-get update && \
     unzip  zip  wget gnupg2 bzip2  \
     locales locales-all tzdata \
     apt-transport-https ca-certificates lsb-release git python3-crcmod python3-openssl \
+    jq yq \
     --no-install-recommends  && \
     locale-gen en_US.UTF-8 && \
     update-locale LANG=en_US.UTF-8 && \
@@ -38,13 +39,6 @@ RUN apt-get update && apt-get upgrade -y && \
   rm -Rf /var/lib/apt/lists/* && \
   apt-get clean
 
-
-# stern, jq, yq
-RUN curl -sLS https://get.arkade.dev | sh && \
-  arkade get jq yq  --path /usr/bin && \
-  chmod +x /usr/bin/jq /usr/bin/yq && \
-  rm -Rf /usr/bin/arkade
-
 RUN mkdir /opt/database && groupadd --gid 1000 canary && \
   useradd canary --uid 1000 -g canary -m -d /var/lib/canary && \
   chown -R 1000:1000 /opt/database && chown -R 1000:1000 /app
@@ -53,9 +47,6 @@ USER canary:canary
 
 COPY --from=builder /app/.bin/canary-checker /app
 
-RUN if [ "$TARGETARCH" = "amd64" ]; then \
-  # This Docker image is built on an amd64 host
-    /app/canary-checker go-offline; \
-  fi
+RUN /app/canary-checker go-offline
 
 ENTRYPOINT ["/app/canary-checker"]

@@ -134,10 +134,10 @@ func (c *AwsConfigRuleChecker) Check(ctx *context.Context, extConfig external.Ch
 	}
 
 	if check.Test.IsEmpty() && len(failures) > 0 {
-		result.Failf(strings.Join(failures, ", "))
+		result.Failf("%s", strings.Join(failures, ", "))
 	}
 	if r, err := unstructure(map[string]interface{}{"rules": complianceResults}); err != nil {
-		result.Failf(err.Error())
+		result.Failf("%v", err)
 	} else {
 		result.AddDetails(r)
 	}

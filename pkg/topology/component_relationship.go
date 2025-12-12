@@ -96,7 +96,7 @@ var ComponentStatusSummarySync = &job.Job{
 	Retention:  job.RetentionFew,
 	Singleton:  true,
 	Fn: func(ctx job.JobRuntime) error {
-		topology, err := Query(ctx.Context, duty.TopologyOptions{Depth: 3})
+		topology, err := query.Topology(ctx.Context, duty.TopologyOptions{Depth: 3})
 		if err != nil {
 			return fmt.Errorf("error getting components: %v", err)
 		}

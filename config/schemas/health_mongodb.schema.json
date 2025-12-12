@@ -140,6 +140,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "connection": {
           "type": "string"
         },

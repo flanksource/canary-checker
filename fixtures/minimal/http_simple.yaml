@@ -6,6 +6,6 @@ spec:
   schedule: "@every 30s"
   http:
     - name: basic-check
-      url: https://httpbin.demo.aws.flanksource.com/status/200
+      url: https://httpbin.flanksource.com/status/200
     - name: failing-check
-      url: https://httpbin.demo.aws.flanksource.com/status/500
+      url: https://httpbin.flanksource.com/status/500

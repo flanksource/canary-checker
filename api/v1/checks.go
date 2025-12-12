@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/duty"
 	"github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/pubsub"
 	"github.com/flanksource/duty/shell"
 	"github.com/flanksource/duty/types"
 	"github.com/samber/lo"
@@ -18,6 +18,8 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	k8sTypes "k8s.io/apimachinery/pkg/types"
+
+	"github.com/flanksource/canary-checker/api/external"
 )
 
 // List of additional check label keys that should be included in the check metrics.
@@ -164,6 +166,7 @@ func (c HTTPCheck) GetMethod() string {
 
 type TCPCheck struct {
 	Description     `yaml:",inline" json:",inline"`
+	Templatable     `yaml:",inline" json:",inline"`
 	Relatable       `yaml:",inline" json:",inline"`
 	Endpoint        string `yaml:"endpoint" json:"endpoint,omitempty"`
 	ThresholdMillis int64  `yaml:"thresholdMillis,omitempty" json:"thresholdMillis,omitempty"`
@@ -696,6 +699,20 @@ func (c DNSCheck) GetEndpoint() string {
 
 func (c DNSCheck) GetType() string {
 	return "dns"
+}
+
+type PubSubCheck struct {
+	Description        `yaml:",inline" json:",inline"`
+	Templatable        `yaml:",inline" json:",inline"`
+	pubsub.QueueConfig `json:",inline"`
+}
+
+func (c PubSubCheck) GetEndpoint() string {
+	return c.GetQueue().String()
+}
+
+func (c PubSubCheck) GetType() string {
+	return "pubsub"
 }
 
 type HelmCheck struct {
@@ -1353,6 +1370,14 @@ type MsSQL struct {
 }
 
 /*
+This check pulls data from a Pub/Sub Subscription
+[include:external/pubsub-gcp.yaml]
+*/
+type PubSub struct {
+	PubSubCheck `yaml:",inline" json:"inline"`
+}
+
+/*
 [include:datasources/helm_pass.yaml]
 */
 type Helm struct {
@@ -1551,6 +1576,7 @@ var AllChecks = []external.Check{
 	FolderCheck{},
 	GitHubCheck{},
 	GitProtocolCheck{},
+	PubSubCheck{},
 	HelmCheck{},
 	HTTPCheck{},
 	ICMPCheck{},
@@ -1572,3 +1598,7 @@ var AllChecks = []external.Check{
 	TCPCheck{},
 	WebhookCheck{},
 }
+
+var AllCheckTypes = lo.Map(AllChecks, func(item external.Check, index int) string {
+	return item.GetType()
+})

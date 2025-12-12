@@ -3,8 +3,10 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
+
 	"time"
 
+	"github.com/Jeffail/gabs/v2"
 	_ "github.com/robertkrimen/otto/underscore"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -69,6 +71,8 @@ func template(ctx *context.Context, template v1.Template) (string, error) {
 		tpl.Functions[k] = v
 	}
 
+	tpl.CelEnvs = append(tpl.CelEnvs, context.CelFuncs...)
+
 	return ctx.RunTemplate(tpl, ctx.Environment)
 }
 
@@ -83,12 +87,30 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 	if tpl.IsEmpty() {
 		return []*pkg.CheckResult{in}, false, nil
 	}
-
 	hasTransformer := true
 
 	out, err := template(ctx, tpl)
 	if err != nil {
 		return nil, hasTransformer, err
+	}
+
+	obj, _ := gabs.ParseJSON([]byte(out))
+
+	// try transforming to canary
+	res, err := transformCanary(in, obj)
+	if err != nil {
+		return nil, hasTransformer, err
+	}
+	if res.HasCanary() {
+		return []*pkg.CheckResult{&res}, true, nil
+	}
+
+	// Check if it is canary or check
+	var transformedEntity map[string]string
+	if err := json.Unmarshal([]byte(out), &transformedEntity); err == nil {
+		if _, ok := transformedEntity["spec"]; ok {
+			return nil, false, nil
+		}
 	}
 
 	var transformed []pkg.TransformedCheckResult
@@ -102,6 +124,10 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 
 	var results []*pkg.CheckResult
 	if len(transformed) == 0 {
+		if in.Check.ShouldMarkFailOnEmpty() {
+			in.Failf("empty result returned from transformation")
+			return []*pkg.CheckResult{in}, false, nil
+		}
 		ctx.Tracef("transformation returned empty array")
 		return nil, hasTransformer, nil
 	}
@@ -194,6 +220,26 @@ func transform(ctx *context.Context, in *pkg.CheckResult) ([]*pkg.CheckResult, b
 	return []*pkg.CheckResult{in}, hasTransformer, nil
 }
 
+func transformCanary(in *pkg.CheckResult, c *gabs.Container) (pkg.CheckResult, error) {
+	var t pkg.CheckResult
+	t.Check = in.Check
+	t.Canary = in.Canary
+	if c.Exists("0", "spec") {
+		var tc []pkg.TransformedCanaryResult
+		if err := json.Unmarshal(c.Bytes(), &tc); err != nil {
+			return t, err
+		}
+		t.CanaryResult = tc
+	} else if c.Exists("spec") {
+		var tc pkg.TransformedCanaryResult
+		if err := json.Unmarshal(c.Bytes(), &tc); err != nil {
+			return t, err
+		}
+		t.CanaryResult = []pkg.TransformedCanaryResult{tc}
+	}
+	return t, nil
+}
+
 func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) JunitTestSuite {
 	var testSuite = JunitTestSuite{
 		Name: canaryName,
@@ -212,7 +258,7 @@ func GetJunitReportFromResults(canaryName string, results []*pkg.CheckResult) Ju
 		} else {
 			testSuite.Failed++
 			test.Status = "failed"
-			test.Error = fmt.Errorf(result.Error)
+			test.Error = fmt.Errorf("%s", result.Error)
 		}
 		testSuite.Duration += float64(result.Duration) / 1000
 		testSuite.Tests = append(testSuite.Tests, test)

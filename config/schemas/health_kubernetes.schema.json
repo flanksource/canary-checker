@@ -139,6 +139,9 @@
         "skipTLSVerify": {
           "type": "boolean"
         },
+        "project": {
+          "type": "string"
+        },
         "projectID": {
           "type": "string"
         },
@@ -197,6 +200,9 @@
             "$ref": "#/$defs/Metrics"
           },
           "type": "array"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean"
         },
         "test": {
           "$ref": "#/$defs/Template"

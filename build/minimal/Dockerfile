@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.23-bookworm@sha256:0ace92a91fb174f5ec759b39ce66ba365237b1b5ee8b35ff311e46659f05ef68 AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.25-bookworm@sha256:ee420c17fa013f71eca6b35c3547b854c838d4f26056a34eb6171bba5bf8ece4 AS builder
 WORKDIR /app
 
 ARG TARGETOS
@@ -15,7 +15,7 @@ RUN go mod download
 COPY ./ ./
 RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM --platform=${BUILDPLATFORM:-linux/amd64} flanksource/base-image:0.5.15
+FROM flanksource/base-image:0.5.18@sha256:df7881a6a3b944dca86e0b0485c355b2103ea62e1d218a2476bbdf1240ea8908
 ARG TARGETARCH
 
 WORKDIR /app
@@ -28,9 +28,6 @@ USER canary:canary
 
 COPY --from=builder /app/.bin/canary-checker /app
 
-RUN if [ "$TARGETARCH" = "amd64" ]; then \
-  # This Docker image is built on an amd64 host
-    /app/canary-checker go-offline; \
-  fi
+RUN /app/canary-checker go-offline
 
 ENTRYPOINT ["/app/canary-checker"]

@@ -7,12 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	apiContext "github.com/flanksource/canary-checker/api/context"
-	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/checks"
-	"github.com/flanksource/canary-checker/pkg"
-	"github.com/flanksource/canary-checker/pkg/metrics"
-	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/commons/diff"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty"
@@ -24,8 +18,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	apiContext "github.com/flanksource/canary-checker/api/context"
+	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/checks"
+	"github.com/flanksource/canary-checker/pkg"
+	"github.com/flanksource/canary-checker/pkg/metrics"
+	"github.com/flanksource/canary-checker/pkg/utils"
 )
 
 var PostgresDuplicateKeyError = &pgconn.PgError{Code: "23505"}
@@ -110,12 +112,24 @@ func PersistCheck(db *gorm.DB, check pkg.Check, canaryID uuid.UUID) (uuid.UUID, 
 		assignments["deleted_at"] = check.DeletedAt
 	}
 
-	if err := db.Clauses(
-		clause.OnConflict{
-			Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
-			DoUpdates: clause.Assignments(assignments),
-		},
-	).Create(&check).Error; err != nil {
+	onConflict := clause.OnConflict{
+		Columns:   []clause.Column{{Name: "canary_id"}, {Name: "type"}, {Name: "name"}, {Name: "agent_id"}},
+		DoUpdates: clause.Assignments(assignments),
+	}
+
+	// If transformed check has an id assigned, we do not know if it exists
+	// In case it exists, we update on conflict handling on ID
+	if check.ID != uuid.Nil && check.Transformed {
+		var count int64
+		if err := db.Model(&models.Check{}).Where("id = ?", check.ID).Count(&count).Error; err != nil {
+			return uuid.Nil, err
+		}
+		if count == 1 {
+			onConflict.Columns = []clause.Column{{Name: "id"}}
+		}
+	}
+
+	if err := db.Clauses(onConflict).Create(&check).Error; err != nil {
 		return uuid.Nil, err
 	}
 
@@ -145,8 +159,15 @@ func GetTransformedCheckIDs(ctx context.Context, canaryID string, excludeTypes .
 		Select("id").
 		Where("canary_id = ? AND transformed = true AND deleted_at IS NULL", canaryID)
 
-	if len(excludeTypes) != 0 {
-		query = query.Where("type NOT IN ?", excludeTypes)
+	if len(excludeTypes) == 1 {
+		query = query.Where("type <> ?", excludeTypes[0])
+	} else if len(excludeTypes) > 1 {
+		if needTypes, _ := lo.Difference(v1.AllCheckTypes, excludeTypes); len(needTypes) != 0 {
+			query = query.Where("type IN ?", needTypes)
+		} else {
+			// All types are excluded, so return empty result immediately
+			return []string{}, nil
+		}
 	}
 
 	err := query.Find(&ids).Error
@@ -212,10 +233,8 @@ func AddCheckStatuses(ctx context.Context, ids []string, status models.CheckHeal
 	if status == "" || !utils.Contains(models.CheckHealthStatuses, status) {
 		return fmt.Errorf("invalid check health status: %s", status)
 	}
-	checkStatus := false
-	if status == models.CheckStatusHealthy {
-		checkStatus = true
-	}
+
+	checkStatus := status == models.CheckStatusHealthy
 
 	var objs []*models.CheckStatus
 	for _, id := range ids {

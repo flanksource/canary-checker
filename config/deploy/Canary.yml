@@ -112,6 +112,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -331,6 +334,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -563,6 +569,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -745,6 +754,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -890,6 +902,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -1090,6 +1105,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -1343,6 +1361,8 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
+                      markFailOnEmpty:
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -1395,6 +1415,8 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
+                      markFailOnEmpty:
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -1504,6 +1526,8 @@ spec:
                                 type: object
                               endpoint:
                                 type: string
+                              project:
+                                type: string
                               skipTLSVerify:
                                 description: Skip TLS verify
                                 type: boolean
@@ -1523,6 +1547,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       maxAge:
                         type: string
                       metrics:
@@ -1602,6 +1629,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -1758,6 +1788,8 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
+                      markFailOnEmpty:
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -1895,6 +1927,8 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
+                      markFailOnEmpty:
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -2002,6 +2036,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -2093,6 +2130,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -2746,6 +2786,8 @@ spec:
                                 type: object
                               endpoint:
                                 type: string
+                              project:
+                                type: string
                               skipTLSVerify:
                                 description: Skip TLS verify
                                 type: boolean
@@ -2807,6 +2849,8 @@ spec:
                                             type: object
                                         type: object
                                       endpoint:
+                                        type: string
+                                      project:
                                         type: string
                                       projectID:
                                         type: string
@@ -3020,6 +3064,8 @@ spec:
                                     type: object
                                   endpoint:
                                     type: string
+                                  project:
+                                    type: string
                                   projectID:
                                     type: string
                                   skipTLSVerify:
@@ -3142,6 +3188,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -3439,6 +3488,8 @@ spec:
                             type: object
                           endpoint:
                             type: string
+                          project:
+                            type: string
                           skipTLSVerify:
                             description: Skip TLS verify
                             type: boolean
@@ -3450,6 +3501,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       maxAge:
                         description: MaxAge the latest object should be younger than defined age
                         type: string
@@ -3754,6 +3808,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -3968,6 +4025,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -4133,6 +4193,8 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
+                      markFailOnEmpty:
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -4330,6 +4392,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       maxSSLExpiry:
                         description: Maximum number of days until the SSL Certificate expires.
                         type: integer
@@ -4679,6 +4744,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -4789,6 +4857,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -4882,6 +4953,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -5011,6 +5085,8 @@ spec:
                                     type: object
                                 type: object
                               endpoint:
+                                type: string
+                              project:
                                 type: string
                               projectID:
                                 type: string
@@ -5237,6 +5313,8 @@ spec:
                             type: object
                           endpoint:
                             type: string
+                          project:
+                            type: string
                           projectID:
                             type: string
                           skipTLSVerify:
@@ -5307,6 +5385,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -5478,6 +5559,8 @@ spec:
                                 type: object
                               endpoint:
                                 type: string
+                              project:
+                                type: string
                               projectID:
                                 type: string
                               skipTLSVerify:
@@ -5703,6 +5786,8 @@ spec:
                             type: object
                           endpoint:
                             type: string
+                          project:
+                            type: string
                           projectID:
                             type: string
                           skipTLSVerify:
@@ -5763,6 +5848,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -5877,6 +5965,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -6021,6 +6112,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -6168,6 +6262,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -6347,6 +6444,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -6537,6 +6637,8 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
+                      markFailOnEmpty:
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -6629,6 +6731,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -6822,6 +6927,8 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
+                      markFailOnEmpty:
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -6903,6 +7010,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -7127,6 +7237,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -7513,6 +7626,351 @@ spec:
                       - query
                     type: object
                   type: array
+                pubsub:
+                  items:
+                    properties:
+                      description:
+                        type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      icon:
+                        type: string
+                      kafka:
+                        properties:
+                          brokers:
+                            items:
+                              type: string
+                            type: array
+                          group:
+                            type: string
+                          topic:
+                            type: string
+                        required:
+                          - brokers
+                          - group
+                          - topic
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
+                      memory:
+                        properties:
+                          queue:
+                            type: string
+                        required:
+                          - queue
+                        type: object
+                      metrics:
+                        items:
+                          properties:
+                            labels:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
+                            name:
+                              type: string
+                            type:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                        x-kubernetes-preserve-unknown-fields: true
+                      name:
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
+                      nats:
+                        properties:
+                          queue:
+                            type: string
+                          subject:
+                            type: string
+                          url:
+                            type: string
+                        required:
+                          - subject
+                        type: object
+                      pubsub:
+                        properties:
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint and credentials.
+                            type: string
+                          credentials:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
+                                type: object
+                            type: object
+                          endpoint:
+                            type: string
+                          project:
+                            type: string
+                          project_id:
+                            type: string
+                          skipTLSVerify:
+                            description: Skip TLS verify
+                            type: boolean
+                          subscription:
+                            type: string
+                        required:
+                          - project_id
+                          - subscription
+                        type: object
+                      rabbitmq:
+                        properties:
+                          host:
+                            type: string
+                          password:
+                            type: string
+                          port:
+                            type: integer
+                          queue:
+                            type: string
+                          username:
+                            type: string
+                        required:
+                          - host
+                          - password
+                          - port
+                          - queue
+                          - username
+                        type: object
+                      sqs:
+                        properties:
+                          accessKey:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
+                                type: object
+                            type: object
+                          assumeRole:
+                            type: string
+                          connection:
+                            description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
+                            type: string
+                          endpoint:
+                            type: string
+                          queue:
+                            type: string
+                          raw:
+                            type: boolean
+                          region:
+                            type: string
+                          secretKey:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
+                                type: object
+                            type: object
+                          sessionToken:
+                            properties:
+                              name:
+                                type: string
+                              value:
+                                type: string
+                              valueFrom:
+                                properties:
+                                  configMapKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  helmRef:
+                                    properties:
+                                      key:
+                                        description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  secretKeyRef:
+                                    properties:
+                                      key:
+                                        type: string
+                                      name:
+                                        type: string
+                                    required:
+                                      - key
+                                    type: object
+                                  serviceAccount:
+                                    description: ServiceAccount specifies the service account whose token should be fetched
+                                    type: string
+                                type: object
+                            type: object
+                          skipTLSVerify:
+                            description: Skip TLS verify when connecting to aws
+                            type: boolean
+                          waitTime:
+                            description: Time in seconds to long-poll for messages, Default to 15, max is 20
+                            type: integer
+                        required:
+                          - queue
+                          - raw
+                        type: object
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transformDeleteStrategy:
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  type: array
                 redis:
                   items:
                     properties:
@@ -7533,6 +7991,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -7727,6 +8188,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       maxAge:
                         description: MaxAge for backup freshness
                         type: string
@@ -7925,6 +8389,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -8062,7 +8529,8 @@ spec:
                 schedule:
                   description: |-
                     Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron
-                     Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.
+                    Also supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.
+                    If both schedule and interval are empty, the canary will not run
                   type: string
                 severity:
                   type: string
@@ -8071,6 +8539,17 @@ spec:
                     properties:
                       description:
                         type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       endpoint:
                         type: string
                       icon:
@@ -8080,6 +8559,9 @@ spec:
                           type: string
                         description: Labels for the check
                         type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
                       metrics:
                         items:
                           properties:
@@ -8113,9 +8595,31 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       thresholdMillis:
                         format: int64
                         type: integer
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
                       transformDeleteStrategy:
                         type: string
                     required:
@@ -8146,6 +8650,9 @@ spec:
                         type: string
                       description: Labels for the check
                       type: object
+                    markFailOnEmpty:
+                      description: If check or transformation returns empty, that should be marked as failed
+                      type: boolean
                     metrics:
                       description: |-
                         Metrics to expose from check.

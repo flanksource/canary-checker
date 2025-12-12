@@ -80,7 +80,7 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 				result.ErrorMessage(err)
 			}
 			if !pass {
-				result.Failf(message)
+				result.Failf("%s", message)
 			}
 			resultCh <- result
 		}()
@@ -103,7 +103,7 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 		return results
 	case <-time.After(time.Second * time.Duration(timeout)):
 		result.Duration = result.GetDuration()
-		return results.Failf(fmt.Sprintf("timed out after %d seconds", timeout))
+		return results.Failf("%s", fmt.Sprintf("timed out after %d seconds", timeout))
 	}
 }
 

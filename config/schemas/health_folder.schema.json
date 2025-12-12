@@ -99,6 +99,9 @@
           },
           "type": "array"
         },
+        "markFailOnEmpty": {
+          "type": "boolean"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -201,6 +204,9 @@
         },
         "skipTLSVerify": {
           "type": "boolean"
+        },
+        "project": {
+          "type": "string"
         },
         "bucket": {
           "type": "string"
