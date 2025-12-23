@@ -2122,6 +2122,18 @@
         },
         "crawl": {
           "$ref": "#/$defs/Crawl"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         }
       },
       "additionalProperties": false,
