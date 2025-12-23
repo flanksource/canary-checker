@@ -18,6 +18,7 @@ import (
 	"github.com/flanksource/commons/http/middlewares"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/gomplate/v3"
 	"github.com/gocolly/colly/v2"
 	"github.com/samber/lo"
 	"github.com/samber/oops"
@@ -64,14 +65,138 @@ func (c *HTTPChecker) Type() string {
 	return "http"
 }
 
-// Run: Check every entry from config according to Checker interface
-// Returns check result and metrics
+func sortChecksByDependency(checks []v1.HTTPCheck) ([]v1.HTTPCheck, error) {
+	checkMap := make(map[string]v1.HTTPCheck)
+	for _, check := range checks {
+		if check.Name == "" {
+			continue
+		}
+		checkMap[check.Name] = check
+	}
+
+	inDegree := make(map[string]int)
+	for _, check := range checks {
+		if check.Name != "" {
+			inDegree[check.Name] = 0
+		}
+	}
+
+	for _, check := range checks {
+		for _, dep := range check.DependsOn {
+			if _, exists := checkMap[dep]; !exists {
+				return nil, fmt.Errorf("check '%s' depends on non-existent check '%s'", check.Name, dep)
+			}
+			inDegree[check.Name]++
+		}
+	}
+
+	var queue []string
+	for name, degree := range inDegree {
+		if degree == 0 {
+			queue = append(queue, name)
+		}
+	}
+
+	var unnamedChecks []v1.HTTPCheck
+	for _, check := range checks {
+		if check.Name == "" {
+			unnamedChecks = append(unnamedChecks, check)
+		}
+	}
+
+	var sorted []v1.HTTPCheck
+	visited := make(map[string]bool)
+
+	for len(queue) > 0 {
+		name := queue[0]
+		queue = queue[1:]
+
+		if visited[name] {
+			continue
+		}
+		visited[name] = true
+
+		sorted = append(sorted, checkMap[name])
+
+		for _, check := range checks {
+			if check.Name == "" {
+				continue
+			}
+			for _, dep := range check.DependsOn {
+				if dep == name {
+					inDegree[check.Name]--
+					if inDegree[check.Name] == 0 {
+						queue = append(queue, check.Name)
+					}
+				}
+			}
+		}
+	}
+
+	if len(sorted) != len(checkMap) {
+		return nil, fmt.Errorf("circular dependency detected in HTTP checks")
+	}
+
+	return append(unnamedChecks, sorted...), nil
+}
+
 func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
-	for _, conf := range ctx.Canary.Spec.HTTP {
-		results = append(results, c.Check(ctx, conf)...)
+
+	sortedChecks, err := sortChecksByDependency(ctx.Canary.Spec.HTTP)
+	if err != nil {
+		return pkg.Invalid(v1.HTTPCheck{}, ctx.Canary, fmt.Sprintf("failed to sort HTTP checks: %v", err))
 	}
+
+	responses := make(map[string]map[string]interface{})
+
+	for _, conf := range sortedChecks {
+		checkCtx := ctx
+		if len(responses) > 0 {
+			envWithResponses := make(map[string]any)
+			for k, v := range ctx.Environment {
+				envWithResponses[k] = v
+			}
+			envWithResponses["responses"] = responses
+			checkCtx = ctx.WithEnvValues(envWithResponses)
+		}
+
+		checkResults := c.Check(checkCtx, conf)
+		results = append(results, checkResults...)
+
+		if conf.Name != "" && len(checkResults) > 0 && checkResults[0].Pass {
+			responseData := checkResults[0].Data
+			if responseData != nil {
+				if len(conf.Export) > 0 {
+					exported := make(map[string]interface{})
+					for exportName, expr := range conf.Export {
+						value := extractValue(responseData, expr)
+						exported[exportName] = value
+					}
+					responses[conf.Name] = exported
+				} else {
+					responses[conf.Name] = responseData
+				}
+			}
+		}
+	}
+
 	return results
+}
+
+func extractValue(data map[string]interface{}, path string) interface{} {
+	parts := strings.Split(path, ".")
+	var current interface{} = data
+
+	for _, part := range parts {
+		switch v := current.(type) {
+		case map[string]interface{}:
+			current = v[part]
+		default:
+			return nil
+		}
+	}
+	return current
 }
 
 func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPCheck, connection *models.Connection) (*http.Request, error) {
@@ -81,6 +206,14 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 		value, err := ctx.GetEnvValueFromCache(header, ctx.GetNamespace())
 		if err != nil {
 			return nil, fmt.Errorf("failed getting header (%v): %w", header, err)
+		}
+
+		if strings.Contains(value, "{{") {
+			templatedValue, err := gomplate.RunTemplate(ctx.Environment, gomplate.Template{Template: value})
+			if err != nil {
+				return nil, fmt.Errorf("failed templating header '%s': %w", header.Name, err)
+			}
+			value = templatedValue
 		}
 
 		client.Header(header.Name, value)

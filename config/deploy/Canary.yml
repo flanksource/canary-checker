@@ -4281,6 +4281,11 @@ spec:
                             description: RandomDelay is the extra randomized duration to wait added to Delay before creating a new request, defaults to 100ms
                             type: string
                         type: object
+                      dependsOn:
+                        description: DependsOn specifies checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -4341,6 +4346,11 @@ spec:
                               type: object
                           type: object
                         type: array
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export extracts values from the response for use by dependent checks
+                        type: object
                       headers:
                         description: Header fields to be used in the query
                         items:
