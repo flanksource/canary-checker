@@ -1,0 +1,26 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: ingress-canary
+spec:
+  schedule: "@every 5m"
+  kubernetes:
+    - name: ingress-http-checks
+      kind: Ingress
+      namespaceSelector:
+        name: "*"
+      transform:
+        expr: |
+          {
+            'name': 'ingress-http-checks',
+            'namespace': 'default',
+            'spec': {
+              'schedule': '@every 5m',
+              'http': dyn(results).map(r,
+                r.Object.spec.?rules.orValue([]).map(rule, {
+                  'name': r.Object.metadata.namespace + '/' + r.Object.metadata.name + '/' + rule.host,
+                  'url': (r.Object.spec.?tls.orValue([]).exists(t, rule.host in t.hosts) ? 'https://' : 'http://') + rule.host
+                })
+              ).flatten()
+            }
+          }.toJSON()
