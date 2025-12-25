@@ -1,0 +1,17 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-depends-on
+spec:
+  schedule: "@every 5m"
+  http:
+    - name: first-request
+      url: https://httpbin.flanksource.com/get
+      export:
+        url: json.url
+    - name: second-request
+      url: https://httpbin.flanksource.com/get
+      dependsOn:
+        - first-request
+      test:
+        expr: "code == 200"

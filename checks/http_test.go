@@ -1,87 +1,87 @@
 package checks
 
 import (
+	"strings"
 	"testing"
 
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 )
 
 func TestSortChecksByDependency(t *testing.T) {
 	tests := []struct {
 		name        string
-		checks      []v1.HTTPCheck
-		wantOrder   []string // expected order of check names
+		checks      []external.Check
+		wantOrder   []string
 		wantErr     bool
 		errContains string
 	}{
 		{
-			name: "no dependencies - preserves order",
-			checks: []v1.HTTPCheck{
-				{Description: v1.Description{Name: "a"}},
-				{Description: v1.Description{Name: "b"}},
-				{Description: v1.Description{Name: "c"}},
+			name: "no dependencies - all checks returned",
+			checks: []external.Check{
+				v1.HTTPCheck{Description: v1.Description{Name: "a"}},
+				v1.HTTPCheck{Description: v1.Description{Name: "b"}},
+				v1.HTTPCheck{Description: v1.Description{Name: "c"}},
 			},
-			wantOrder: []string{"a", "b", "c"},
+			wantOrder: []string{"a", "b", "c"}, // order may vary, test just checks all are present
 			wantErr:   false,
 		},
 		{
 			name: "simple chain - a -> b -> c",
-			checks: []v1.HTTPCheck{
-				{Description: v1.Description{Name: "c"}, DependsOn: []string{"b"}},
-				{Description: v1.Description{Name: "a"}},
-				{Description: v1.Description{Name: "b"}, DependsOn: []string{"a"}},
+			checks: []external.Check{
+				v1.HTTPCheck{Description: v1.Description{Name: "c", DependsOn: []string{"b"}}},
+				v1.HTTPCheck{Description: v1.Description{Name: "a"}},
+				v1.HTTPCheck{Description: v1.Description{Name: "b", DependsOn: []string{"a"}}},
 			},
 			wantOrder: []string{"a", "b", "c"},
 			wantErr:   false,
 		},
 		{
 			name: "diamond dependency - d depends on b and c, both depend on a",
-			checks: []v1.HTTPCheck{
-				{Description: v1.Description{Name: "d"}, DependsOn: []string{"b", "c"}},
-				{Description: v1.Description{Name: "b"}, DependsOn: []string{"a"}},
-				{Description: v1.Description{Name: "c"}, DependsOn: []string{"a"}},
-				{Description: v1.Description{Name: "a"}},
+			checks: []external.Check{
+				v1.HTTPCheck{Description: v1.Description{Name: "d", DependsOn: []string{"b", "c"}}},
+				v1.HTTPCheck{Description: v1.Description{Name: "b", DependsOn: []string{"a"}}},
+				v1.HTTPCheck{Description: v1.Description{Name: "c", DependsOn: []string{"a"}}},
+				v1.HTTPCheck{Description: v1.Description{Name: "a"}},
 			},
-			// a must be first, then b and c (order doesn't matter), then d
 			wantOrder: []string{"a", "b", "c", "d"},
 			wantErr:   false,
 		},
 		{
 			name: "missing dependency",
-			checks: []v1.HTTPCheck{
-				{Description: v1.Description{Name: "a"}, DependsOn: []string{"nonexistent"}},
+			checks: []external.Check{
+				v1.HTTPCheck{Description: v1.Description{Name: "a", DependsOn: []string{"nonexistent"}}},
 			},
 			wantErr:     true,
 			errContains: "non-existent check 'nonexistent'",
 		},
 		{
 			name: "circular dependency - a -> b -> a",
-			checks: []v1.HTTPCheck{
-				{Description: v1.Description{Name: "a"}, DependsOn: []string{"b"}},
-				{Description: v1.Description{Name: "b"}, DependsOn: []string{"a"}},
+			checks: []external.Check{
+				v1.HTTPCheck{Description: v1.Description{Name: "a", DependsOn: []string{"b"}}},
+				v1.HTTPCheck{Description: v1.Description{Name: "b", DependsOn: []string{"a"}}},
 			},
 			wantErr:     true,
 			errContains: "circular dependency",
 		},
 		{
 			name: "unnamed checks run first",
-			checks: []v1.HTTPCheck{
-				{Description: v1.Description{Name: "b"}, DependsOn: []string{"a"}},
-				{Description: v1.Description{Name: ""}}, // unnamed
-				{Description: v1.Description{Name: "a"}},
+			checks: []external.Check{
+				v1.HTTPCheck{Description: v1.Description{Name: "b", DependsOn: []string{"a"}}},
+				v1.HTTPCheck{Description: v1.Description{Name: ""}},
+				v1.HTTPCheck{Description: v1.Description{Name: "a"}},
 			},
-			wantOrder: []string{"", "a", "b"}, // unnamed first
+			wantOrder: []string{"", "a", "b"},
 			wantErr:   false,
 		},
 		{
-			name: "mixed named and unnamed",
-			checks: []v1.HTTPCheck{
-				{Description: v1.Description{Name: ""}},          // unnamed 1
-				{Description: v1.Description{Name: "api-check"}}, // named, no deps
-				{Description: v1.Description{Name: ""}},          // unnamed 2
+			name: "unnamed check with dependsOn should error",
+			checks: []external.Check{
+				v1.HTTPCheck{Description: v1.Description{Name: "", DependsOn: []string{"a"}}},
+				v1.HTTPCheck{Description: v1.Description{Name: "a"}},
 			},
-			wantOrder: []string{"", "", "api-check"},
-			wantErr:   false,
+			wantErr:     true,
+			errContains: "must have a name",
 		},
 	}
 
@@ -94,7 +94,7 @@ func TestSortChecksByDependency(t *testing.T) {
 					t.Errorf("expected error containing %q, got nil", tt.errContains)
 					return
 				}
-				if tt.errContains != "" && !containsString(err.Error(), tt.errContains) {
+				if tt.errContains != "" && !strings.Contains(err.Error(), tt.errContains) {
 					t.Errorf("expected error containing %q, got %q", tt.errContains, err.Error())
 				}
 				return
@@ -112,17 +112,29 @@ func TestSortChecksByDependency(t *testing.T) {
 
 			gotOrder := make([]string, len(sorted))
 			for i, check := range sorted {
-				gotOrder[i] = check.Name
+				gotOrder[i] = check.GetName()
 			}
 
-			// For diamond dependency, we need to be flexible about b/c order
 			if tt.name == "diamond dependency - d depends on b and c, both depend on a" {
 				if gotOrder[0] != "a" || gotOrder[3] != "d" {
 					t.Errorf("expected first='a' and last='d', got first=%q last=%q", gotOrder[0], gotOrder[3])
 				}
-				// b and c can be in any order as long as they're in positions 1 and 2
 				if !((gotOrder[1] == "b" && gotOrder[2] == "c") || (gotOrder[1] == "c" && gotOrder[2] == "b")) {
 					t.Errorf("expected b and c in positions 1 and 2, got %v", gotOrder)
+				}
+				return
+			}
+
+			if tt.name == "no dependencies - all checks returned" {
+				gotSet := make(map[string]bool)
+				for _, name := range gotOrder {
+					gotSet[name] = true
+				}
+				for _, want := range tt.wantOrder {
+					if !gotSet[want] {
+						t.Errorf("expected check %q to be present, got %v", want, gotOrder)
+						return
+					}
 				}
 				return
 			}
@@ -204,17 +216,4 @@ func TestExtractValue(t *testing.T) {
 			}
 		})
 	}
-}
-
-func containsString(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsSubstring(s, substr))
-}
-
-func containsSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

@@ -80,6 +80,11 @@ spec:
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -96,6 +101,11 @@ spec:
                       exclude_filters:
                         additionalProperties:
                           type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       filters:
                         additionalProperties:
@@ -312,6 +322,11 @@ spec:
                       connection:
                         description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -327,6 +342,11 @@ spec:
                         type: object
                       endpoint:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       icon:
                         type: string
                       labels:
@@ -542,6 +562,11 @@ spec:
                       connection:
                         description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -557,6 +582,11 @@ spec:
                         type: object
                       endpoint:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       icon:
                         type: string
                       ignoreRules:
@@ -734,6 +764,11 @@ spec:
                         type: array
                       connection:
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -746,6 +781,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -882,6 +922,11 @@ spec:
                 catalog:
                   items:
                     properties:
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -894,6 +939,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -1083,6 +1133,11 @@ spec:
                       connection:
                         description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -1098,6 +1153,11 @@ spec:
                         type: object
                       endpoint:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       icon:
                         type: string
                       labels:
@@ -1346,6 +1406,10 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      dependsOn:
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       expectedDigest:
@@ -1353,6 +1417,10 @@ spec:
                       expectedSize:
                         format: int64
                         type: integer
+                      export:
+                        additionalProperties:
+                          type: string
+                        type: object
                       icon:
                         type: string
                       image:
@@ -1405,8 +1473,16 @@ spec:
                 containerdPush:
                   items:
                     properties:
+                      dependsOn:
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        type: object
                       icon:
                         type: string
                       image:
@@ -1463,6 +1539,11 @@ spec:
                 databaseBackup:
                   items:
                     properties:
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -1475,6 +1556,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       gcp:
                         properties:
@@ -1616,12 +1702,22 @@ spec:
                 dns:
                   items:
                     properties:
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       exactreply:
                         items:
                           type: string
                         type: array
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       icon:
                         type: string
                       labels:
@@ -1773,6 +1869,10 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      dependsOn:
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       expectedDigest:
@@ -1780,6 +1880,10 @@ spec:
                       expectedSize:
                         format: int64
                         type: integer
+                      export:
+                        additionalProperties:
+                          type: string
+                        type: object
                       icon:
                         type: string
                       image:
@@ -1917,8 +2021,16 @@ spec:
                                 type: object
                             type: object
                         type: object
+                      dependsOn:
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        type: object
                       icon:
                         type: string
                       image:
@@ -2014,6 +2126,11 @@ spec:
                         type: object
                       connection:
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -2026,6 +2143,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       host:
                         type: string
@@ -2108,6 +2230,11 @@ spec:
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -2120,6 +2247,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -3124,6 +3256,11 @@ spec:
                             description: ServiceAccount when enabled will allow access to KUBERNETES env vars
                             type: boolean
                         type: object
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -3181,6 +3318,11 @@ spec:
                               type: object
                           type: object
                         type: array
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       icon:
                         type: string
                       labels:
@@ -3410,6 +3552,11 @@ spec:
                             description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                             type: boolean
                         type: object
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -3422,6 +3569,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       filter:
                         properties:
@@ -3786,6 +3938,11 @@ spec:
                 gitProtocol:
                   items:
                     properties:
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -3798,6 +3955,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       filename:
                         type: string
@@ -3964,6 +4126,11 @@ spec:
                     properties:
                       connection:
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -3976,6 +4143,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       githubToken:
                         properties:
@@ -4185,8 +4357,16 @@ spec:
                         type: string
                       chartmuseum:
                         type: string
+                      dependsOn:
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        type: object
                       icon:
                         type: string
                       labels:
@@ -4282,7 +4462,7 @@ spec:
                             type: string
                         type: object
                       dependsOn:
-                        description: DependsOn specifies checks that must complete before this one runs
+                        description: DependsOn lists the checks that must complete before this one runs
                         items:
                           type: string
                         type: array
@@ -4349,7 +4529,7 @@ spec:
                       export:
                         additionalProperties:
                           type: string
-                        description: Export extracts values from the response for use by dependent checks
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       headers:
                         description: Header fields to be used in the query
@@ -4743,10 +4923,20 @@ spec:
                 icmp:
                   items:
                     properties:
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       endpoint:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       icon:
                         type: string
                       labels:
@@ -4813,8 +5003,18 @@ spec:
                 jmeter:
                   items:
                     properties:
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       host:
                         description: Host is the server against which test plan needs to be executed
                         type: string
@@ -4943,6 +5143,11 @@ spec:
                             - path
                           type: object
                         type: array
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -4955,6 +5160,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -5118,6 +5328,11 @@ spec:
                       connection:
                         description: Connection name to populate kubeconfig
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -5272,6 +5487,11 @@ spec:
                             type: boolean
                         required:
                           - cluster
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       gke:
                         properties:
@@ -5591,6 +5811,11 @@ spec:
                       connection:
                         description: Connection name to populate kubeconfig
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -5745,6 +5970,11 @@ spec:
                             type: boolean
                         required:
                           - cluster
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       gke:
                         properties:
@@ -5966,8 +6196,18 @@ spec:
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       icon:
                         type: string
                       labels:
@@ -6113,8 +6353,18 @@ spec:
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       icon:
                         type: string
                       labels:
@@ -6252,6 +6502,11 @@ spec:
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -6264,6 +6519,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -6434,6 +6694,11 @@ spec:
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -6446,6 +6711,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -6619,6 +6889,10 @@ spec:
                       deleteTimeout:
                         format: int64
                         type: integer
+                      dependsOn:
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       expectedContent:
@@ -6628,6 +6902,10 @@ spec:
                           format: int64
                           type: integer
                         type: array
+                      export:
+                        additionalProperties:
+                          type: string
+                        type: object
                       httpRetryInterval:
                         format: int64
                         type: integer
@@ -6719,6 +6997,11 @@ spec:
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -6731,6 +7014,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -6908,6 +7196,10 @@ spec:
                       deleteTimeout:
                         format: int64
                         type: integer
+                      dependsOn:
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       expectedContent:
@@ -6916,6 +7208,10 @@ spec:
                         items:
                           type: integer
                         type: array
+                      export:
+                        additionalProperties:
+                          type: string
+                        type: object
                       httpRetryInterval:
                         format: int64
                         type: integer
@@ -7000,6 +7296,11 @@ spec:
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -7012,6 +7313,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -7222,6 +7528,11 @@ spec:
                         type: object
                       connection:
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       digest:
@@ -7236,6 +7547,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       host:
                         description: 'Deprecated: use `url` instead'
@@ -7639,6 +7955,11 @@ spec:
                 pubsub:
                   items:
                     properties:
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -7651,6 +7972,11 @@ spec:
                             type: string
                           template:
                             type: string
+                        type: object
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -7992,8 +8318,18 @@ spec:
                         type: string
                       db:
                         type: integer
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       icon:
                         type: string
                       labels:
@@ -8189,8 +8525,18 @@ spec:
                       connection:
                         description: Name of the connection used to derive restic password.
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       icon:
                         type: string
                       labels:
@@ -8388,10 +8734,20 @@ spec:
                       connection:
                         description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       endpoint:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       icon:
                         type: string
                       labels:
@@ -8547,6 +8903,11 @@ spec:
                 tcp:
                   items:
                     properties:
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
                       description:
                         type: string
                       display:
@@ -8562,6 +8923,11 @@ spec:
                         type: object
                       endpoint:
                         type: string
+                      export:
+                        additionalProperties:
+                          type: string
+                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
+                        type: object
                       icon:
                         type: string
                       labels:
@@ -8638,6 +9004,11 @@ spec:
                   type: array
                 webhook:
                   properties:
+                    dependsOn:
+                      description: DependsOn lists the checks that must complete before this one runs
+                      items:
+                        type: string
+                      type: array
                     description:
                       description: Description for the check
                       type: string
@@ -8651,6 +9022,11 @@ spec:
                           type: string
                         template:
                           type: string
+                      type: object
+                    export:
+                      additionalProperties:
+                        type: string
+                      description: Export values from the check result, accessible via outputs.<checkName>.<key>
                       type: object
                     icon:
                       description: Icon for overwriting default icon on the dashboard

@@ -22,6 +22,7 @@ type Context struct {
 	Canary      v1.Canary
 	Environment map[string]interface{}
 	cache       map[string]any
+	Outputs     map[string]*pkg.CheckResult
 	dutyCtx.Context
 }
 
@@ -172,6 +173,7 @@ func New(ctx dutyCtx.Context, canary v1.Canary) *Context {
 		Namespace:   canary.Namespace,
 		Canary:      canary,
 		Environment: make(map[string]interface{}),
+		Outputs:     make(map[string]*pkg.CheckResult),
 	}
 
 	if c.Logger.IsLevelEnabled(4) || c.IsTrace() {
@@ -180,6 +182,33 @@ func New(ctx dutyCtx.Context, canary v1.Canary) *Context {
 		c.Logger.SetMinLogLevel(1)
 	}
 	return c
+}
+
+func (ctx *Context) SetOutput(name string, result *pkg.CheckResult) {
+	if ctx.Outputs == nil {
+		ctx.Outputs = make(map[string]*pkg.CheckResult)
+	}
+	ctx.Outputs[name] = result
+}
+
+func (ctx *Context) GetOutputs() map[string]any {
+	outputs := make(map[string]any)
+	for name, result := range ctx.Outputs {
+		if result == nil {
+			continue
+		}
+		checkOutput := make(map[string]any)
+		checkOutput["pass"] = result.Pass
+		checkOutput["message"] = result.Message
+		checkOutput["duration"] = result.Duration
+		if result.Data != nil {
+			for k, v := range result.Data {
+				checkOutput[k] = v
+			}
+		}
+		outputs[name] = checkOutput
+	}
+	return outputs
 }
 
 func (ctx *Context) IsDebug() bool {
@@ -256,5 +285,6 @@ func (ctx *Context) New(name string, environment map[string]interface{}) *Contex
 		Namespace:   ctx.Namespace,
 		Canary:      ctx.Canary,
 		Environment: environment,
+		Outputs:     ctx.Outputs,
 	}
 }

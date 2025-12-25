@@ -62,6 +62,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -170,6 +182,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -248,6 +272,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -356,6 +392,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -804,6 +852,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -897,6 +957,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "connection": {
           "type": "string"
@@ -1003,6 +1075,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1054,6 +1138,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -1152,6 +1248,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1218,6 +1326,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1272,6 +1392,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1324,6 +1456,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1373,6 +1517,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1469,6 +1625,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1572,6 +1740,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1673,6 +1853,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1921,6 +2113,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1978,6 +2182,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2041,6 +2257,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2122,18 +2350,6 @@
         },
         "crawl": {
           "$ref": "#/$defs/Crawl"
-        },
-        "dependsOn": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "export": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object"
         }
       },
       "additionalProperties": false,
@@ -2170,6 +2386,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -2236,6 +2464,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -2304,6 +2544,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -2367,6 +2619,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "testResults": {
           "type": "string"
@@ -2453,6 +2717,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2559,6 +2835,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2957,6 +3245,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -3120,6 +3420,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "connection": {
           "type": "string"
         },
@@ -3167,6 +3479,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3236,6 +3560,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3323,6 +3659,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -3556,6 +3904,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -3657,6 +4017,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -3750,6 +4122,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -3818,6 +4202,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3903,6 +4299,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -4026,6 +4434,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -4140,6 +4560,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -4208,6 +4640,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -4432,6 +4876,18 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -4559,6 +5015,18 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "export": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
         },
         "test": {
           "$ref": "#/$defs/Template"

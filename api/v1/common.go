@@ -405,6 +405,11 @@ type Description struct {
 
 	// If check or transformation returns empty, that should be marked as failed
 	MarkFailOnEmpty bool `yaml:"markFailOnEmpty,omitempty" json:"markFailOnEmpty,omitempty"`
+
+	// DependsOn lists the checks that must complete before this one runs
+	DependsOn []string `yaml:"dependsOn,omitempty" json:"dependsOn,omitempty"`
+	// Export values from the check result, accessible via outputs.<checkName>.<key>
+	Export map[string]string `yaml:"export,omitempty" json:"export,omitempty"`
 }
 
 func (d Description) String() string {
@@ -464,6 +469,14 @@ func (d Description) GetLabels() map[string]string {
 
 func (d Description) GetTransformDeleteStrategy() string {
 	return d.TransformDeleteStrategy
+}
+
+func (d Description) GetDependsOn() []string {
+	return d.DependsOn
+}
+
+func (d Description) GetExport() map[string]string {
+	return d.Export
 }
 
 type Connection struct {

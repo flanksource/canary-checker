@@ -151,10 +151,6 @@ type HTTPCheck struct {
 	TLSConfig *TLSConfig `yaml:"tlsConfig,omitempty" json:"tlsConfig,omitempty"`
 	// Crawl site and verify links
 	Crawl *Crawl `yaml:"crawl,omitempty" json:"crawl,omitempty"`
-	// DependsOn specifies checks that must complete before this one runs
-	DependsOn []string `yaml:"dependsOn,omitempty" json:"dependsOn,omitempty"`
-	// Export extracts values from the response for use by dependent checks
-	Export map[string]string `yaml:"export,omitempty" json:"export,omitempty"`
 }
 
 func (c HTTPCheck) GetType() string {

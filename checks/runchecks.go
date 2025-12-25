@@ -10,6 +10,7 @@ import (
 
 	"github.com/flanksource/artifacts"
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
@@ -59,6 +60,124 @@ func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
 	return result, nil
 }
 
+func getCheckerForType(checkType string) Checker {
+	for _, c := range All {
+		if c.Type() == checkType {
+			return c
+		}
+	}
+	return nil
+}
+
+func sortChecksByDependency(checks []external.Check) ([]external.Check, error) {
+	checkMap := make(map[string]external.Check)
+	for _, check := range checks {
+		name := check.GetName()
+		if name == "" {
+			continue
+		}
+		checkMap[name] = check
+	}
+
+	inDegree := make(map[string]int)
+	for _, check := range checks {
+		name := check.GetName()
+		if name != "" {
+			inDegree[name] = 0
+		}
+	}
+
+	for _, check := range checks {
+		name := check.GetName()
+		if name == "" && len(check.GetDependsOn()) > 0 {
+			return nil, fmt.Errorf("check with dependsOn must have a name")
+		}
+		for _, dep := range check.GetDependsOn() {
+			if _, exists := checkMap[dep]; !exists {
+				return nil, fmt.Errorf("check '%s' depends on non-existent check '%s'", name, dep)
+			}
+			inDegree[name]++
+		}
+	}
+
+	var queue []string
+	for name, degree := range inDegree {
+		if degree == 0 {
+			queue = append(queue, name)
+		}
+	}
+
+	var unnamedChecks []external.Check
+	for _, check := range checks {
+		if check.GetName() == "" {
+			unnamedChecks = append(unnamedChecks, check)
+		}
+	}
+
+	var sorted []external.Check
+	visited := make(map[string]bool)
+
+	for len(queue) > 0 {
+		name := queue[0]
+		queue = queue[1:]
+
+		if visited[name] {
+			continue
+		}
+		visited[name] = true
+
+		sorted = append(sorted, checkMap[name])
+
+		for _, check := range checks {
+			if check.GetName() == "" {
+				continue
+			}
+			for _, dep := range check.GetDependsOn() {
+				if dep == name {
+					inDegree[check.GetName()]--
+					if inDegree[check.GetName()] == 0 {
+						queue = append(queue, check.GetName())
+					}
+				}
+			}
+		}
+	}
+
+	if len(sorted) != len(checkMap) {
+		return nil, fmt.Errorf("circular dependency detected in checks")
+	}
+
+	return append(unnamedChecks, sorted...), nil
+}
+
+func extractExportedValues(result *pkg.CheckResult, exportDef map[string]string) map[string]any {
+	if result == nil || result.Data == nil || len(exportDef) == 0 {
+		return nil
+	}
+
+	exported := make(map[string]any)
+	for key, path := range exportDef {
+		value := extractValue(result.Data, path)
+		exported[key] = value
+	}
+	return exported
+}
+
+func extractValue(data map[string]interface{}, path string) interface{} {
+	parts := strings.Split(path, ".")
+	var current interface{} = data
+
+	for _, part := range parts {
+		switch v := current.(type) {
+		case map[string]interface{}:
+			current = v[part]
+		default:
+			return nil
+		}
+	}
+	return current
+}
+
 // Exec runs the actions specified and returns the results, without saving artifacts
 func Exec(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	var results []*pkg.CheckResult
@@ -89,6 +208,15 @@ func Exec(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	return results, nil
 }
 
+func hasDependencies(checks []external.Check) bool {
+	for _, check := range checks {
+		if len(check.GetDependsOn()) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
 func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	var results []*pkg.CheckResult
 	disabledChecks, err := getDisabledChecks(ctx)
@@ -111,23 +239,55 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 
 	checks := ctx.Canary.Spec.GetAllChecks()
 	ctx.Debugf("[%s] checking %d checks", ctx.Canary.Name, len(checks))
-	for _, c := range All {
-		// FIXME: this doesn't work correct with DNS,
-		// t := GetDeadline(ctx.Canary)
-		// ctx, cancel := ctx.WithDeadline(t)
-		// defer cancel()
 
-		if _, ok := disabledChecks[c.Type()]; ok {
-			continue
-		}
-		if !Checks(checks).Includes(c) {
-			continue
+	if hasDependencies(checks) {
+		sortedChecks, err := sortChecksByDependency(checks)
+		if err != nil {
+			return nil, fmt.Errorf("failed to sort checks: %v", err)
 		}
 
-		result := c.Run(ctx)
-		transformedResults := TransformResults(ctx, result)
-		results = append(results, transformedResults...)
-		ExportCheckMetrics(ctx, transformedResults, true)
+		for _, check := range sortedChecks {
+			if _, ok := disabledChecks[check.GetType()]; ok {
+				continue
+			}
+
+			checker := getCheckerForType(check.GetType())
+			if checker == nil {
+				continue
+			}
+
+			singleRunner, ok := checker.(SingleCheckRunner)
+			if !ok {
+				continue
+			}
+
+			if len(ctx.Outputs) > 0 {
+				ctx.Environment["outputs"] = ctx.GetOutputs()
+			}
+
+			result := singleRunner.Check(ctx, check)
+			transformedResults := TransformResults(ctx, result)
+			results = append(results, transformedResults...)
+			ExportCheckMetrics(ctx, transformedResults, true)
+
+			if check.GetName() != "" && len(transformedResults) > 0 && transformedResults[0].Pass {
+				ctx.SetOutput(check.GetName(), transformedResults[0])
+			}
+		}
+	} else {
+		for _, c := range All {
+			if _, ok := disabledChecks[c.Type()]; ok {
+				continue
+			}
+			if !Checks(checks).Includes(c) {
+				continue
+			}
+
+			result := c.Run(ctx)
+			transformedResults := TransformResults(ctx, result)
+			results = append(results, transformedResults...)
+			ExportCheckMetrics(ctx, transformedResults, true)
+		}
 	}
 
 	if err := saveArtifacts(ctx, results); err != nil {
