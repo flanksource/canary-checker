@@ -150,34 +150,6 @@ func sortChecksByDependency(checks []external.Check) ([]external.Check, error) {
 	return append(unnamedChecks, sorted...), nil
 }
 
-func extractExportedValues(result *pkg.CheckResult, exportDef map[string]string) map[string]any {
-	if result == nil || result.Data == nil || len(exportDef) == 0 {
-		return nil
-	}
-
-	exported := make(map[string]any)
-	for key, path := range exportDef {
-		value := extractValue(result.Data, path)
-		exported[key] = value
-	}
-	return exported
-}
-
-func extractValue(data map[string]interface{}, path string) interface{} {
-	parts := strings.Split(path, ".")
-	var current interface{} = data
-
-	for _, part := range parts {
-		switch v := current.(type) {
-		case map[string]interface{}:
-			current = v[part]
-		default:
-			return nil
-		}
-	}
-	return current
-}
-
 // Exec runs the actions specified and returns the results, without saving artifacts
 func Exec(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	var results []*pkg.CheckResult
