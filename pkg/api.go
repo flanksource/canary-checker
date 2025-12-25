@@ -463,10 +463,6 @@ func (generic GenericCheck) GetDependsOn() []string {
 	return generic.Description.GetDependsOn()
 }
 
-func (generic GenericCheck) GetExport() map[string]string {
-	return generic.Description.GetExport()
-}
-
 type TransformedCheckResult struct {
 	ID                      uuid.UUID              `json:"id,omitempty"`
 	Start                   *time.Time             `json:"start,omitempty"`

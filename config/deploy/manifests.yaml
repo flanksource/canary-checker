@@ -101,11 +101,6 @@ spec:
                         additionalProperties:
                           type: string
                         type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       filters:
                         additionalProperties:
                           type: string
@@ -341,11 +336,6 @@ spec:
                         type: object
                       endpoint:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -581,11 +571,6 @@ spec:
                         type: object
                       endpoint:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       ignoreRules:
@@ -781,11 +766,6 @@ spec:
                           template:
                             type: string
                         type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -938,11 +918,6 @@ spec:
                             type: string
                           template:
                             type: string
-                        type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -1152,11 +1127,6 @@ spec:
                         type: object
                       endpoint:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -1416,10 +1386,6 @@ spec:
                       expectedSize:
                         format: int64
                         type: integer
-                      export:
-                        additionalProperties:
-                          type: string
-                        type: object
                       icon:
                         type: string
                       image:
@@ -1478,10 +1444,6 @@ spec:
                         type: array
                       description:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        type: object
                       icon:
                         type: string
                       image:
@@ -1555,11 +1517,6 @@ spec:
                             type: string
                           template:
                             type: string
-                        type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       gcp:
                         properties:
@@ -1712,11 +1669,6 @@ spec:
                         items:
                           type: string
                         type: array
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -1879,10 +1831,6 @@ spec:
                       expectedSize:
                         format: int64
                         type: integer
-                      export:
-                        additionalProperties:
-                          type: string
-                        type: object
                       icon:
                         type: string
                       image:
@@ -2026,10 +1974,6 @@ spec:
                         type: array
                       description:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        type: object
                       icon:
                         type: string
                       image:
@@ -2143,11 +2087,6 @@ spec:
                           template:
                             type: string
                         type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       host:
                         type: string
                       icon:
@@ -2246,11 +2185,6 @@ spec:
                             type: string
                           template:
                             type: string
-                        type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -3317,11 +3251,6 @@ spec:
                               type: object
                           type: object
                         type: array
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -3568,11 +3497,6 @@ spec:
                             type: string
                           template:
                             type: string
-                        type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       filter:
                         properties:
@@ -3955,11 +3879,6 @@ spec:
                           template:
                             type: string
                         type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       filename:
                         type: string
                       icon:
@@ -4142,11 +4061,6 @@ spec:
                             type: string
                           template:
                             type: string
-                        type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       githubToken:
                         properties:
@@ -4362,10 +4276,6 @@ spec:
                         type: array
                       description:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -4525,11 +4435,6 @@ spec:
                               type: object
                           type: object
                         type: array
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       headers:
                         description: Header fields to be used in the query
                         items:
@@ -4931,11 +4836,6 @@ spec:
                         type: string
                       endpoint:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -5009,11 +4909,6 @@ spec:
                         type: array
                       description:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       host:
                         description: Host is the server against which test plan needs to be executed
                         type: string
@@ -5159,11 +5054,6 @@ spec:
                             type: string
                           template:
                             type: string
-                        type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -5486,11 +5376,6 @@ spec:
                             type: boolean
                         required:
                           - cluster
-                        type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       gke:
                         properties:
@@ -5970,11 +5855,6 @@ spec:
                         required:
                           - cluster
                         type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       gke:
                         properties:
                           cluster:
@@ -6202,11 +6082,6 @@ spec:
                         type: array
                       description:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -6359,11 +6234,6 @@ spec:
                         type: array
                       description:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -6518,11 +6388,6 @@ spec:
                             type: string
                           template:
                             type: string
-                        type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -6711,11 +6576,6 @@ spec:
                           template:
                             type: string
                         type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -6901,10 +6761,6 @@ spec:
                           format: int64
                           type: integer
                         type: array
-                      export:
-                        additionalProperties:
-                          type: string
-                        type: object
                       httpRetryInterval:
                         format: int64
                         type: integer
@@ -7013,11 +6869,6 @@ spec:
                             type: string
                           template:
                             type: string
-                        type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -7207,10 +7058,6 @@ spec:
                         items:
                           type: integer
                         type: array
-                      export:
-                        additionalProperties:
-                          type: string
-                        type: object
                       httpRetryInterval:
                         format: int64
                         type: integer
@@ -7312,11 +7159,6 @@ spec:
                             type: string
                           template:
                             type: string
-                        type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       icon:
                         type: string
@@ -7546,11 +7388,6 @@ spec:
                             type: string
                           template:
                             type: string
-                        type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
                         type: object
                       host:
                         description: 'Deprecated: use `url` instead'
@@ -7972,11 +7809,6 @@ spec:
                           template:
                             type: string
                         type: object
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       kafka:
@@ -8324,11 +8156,6 @@ spec:
                         type: array
                       description:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -8531,11 +8358,6 @@ spec:
                         type: array
                       description:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -8742,11 +8564,6 @@ spec:
                         type: string
                       endpoint:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -8922,11 +8739,6 @@ spec:
                         type: object
                       endpoint:
                         type: string
-                      export:
-                        additionalProperties:
-                          type: string
-                        description: Export values from the check result, accessible via outputs.<checkName>.<key>
-                        type: object
                       icon:
                         type: string
                       labels:
@@ -9021,11 +8833,6 @@ spec:
                           type: string
                         template:
                           type: string
-                      type: object
-                    export:
-                      additionalProperties:
-                        type: string
-                      description: Export values from the check result, accessible via outputs.<checkName>.<key>
                       type: object
                     icon:
                       description: Icon for overwriting default icon on the dashboard

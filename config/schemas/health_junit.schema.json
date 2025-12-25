@@ -68,12 +68,6 @@
           },
           "type": "array"
         },
-        "export": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object"
-        },
         "testResults": {
           "type": "string"
         },

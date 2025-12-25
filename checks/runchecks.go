@@ -225,11 +225,13 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 
 			checker := getCheckerForType(check.GetType())
 			if checker == nil {
+				ctx.Warnf("no checker found for type %s", check.GetType())
 				continue
 			}
 
 			singleRunner, ok := checker.(SingleCheckRunner)
 			if !ok {
+				ctx.Warnf("checker %s does not implement SingleCheckRunner, skipping in dependency mode", check.GetType())
 				continue
 			}
 
@@ -327,6 +329,10 @@ func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.C
 			continue
 		}
 		checkCtx := ctx.WithCheckResult(r)
+		// Make outputs from previous checks available for templating
+		if len(ctx.Outputs) > 0 {
+			checkCtx.Environment["outputs"] = ctx.GetOutputs()
+		}
 		transformed, hasTransformer, err := transform(checkCtx, r)
 		if hasTransformer {
 			// Keeping the detail field empty as it can have huge json blobs
@@ -357,7 +363,7 @@ func ProcessResults(ctx *context.Context, results []*pkg.CheckResult) []*pkg.Che
 	switch ctx.Canary.Spec.ResultMode {
 	case v1.JunitResultMode:
 		suite := GetJunitReportFromResults(ctx.Canary.GetName(), results)
-		var status = true
+		status := true
 		if suite.Failed > 0 {
 			status = false
 		}

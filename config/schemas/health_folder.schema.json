@@ -108,12 +108,6 @@
           },
           "type": "array"
         },
-        "export": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object"
-        },
         "test": {
           "$ref": "#/$defs/Template"
         },

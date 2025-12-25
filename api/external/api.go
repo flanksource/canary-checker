@@ -18,7 +18,6 @@ type Describable interface {
 	GetHash() string
 	ShouldMarkFailOnEmpty() bool
 	GetDependsOn() []string
-	GetExport() map[string]string
 }
 
 type WithType interface {

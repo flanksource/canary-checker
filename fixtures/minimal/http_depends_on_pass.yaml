@@ -5,13 +5,15 @@ metadata:
 spec:
   schedule: "@every 5m"
   http:
-    - name: first-request
-      url: https://httpbin.flanksource.com/get
-      export:
-        url: json.url
-    - name: second-request
+    - name: getUuid
+      url: https://httpbin.flanksource.com/uuid
+      test:
+        expr: "code == 200 && json.uuid != ''"
+
+    - name: useUuid
       url: https://httpbin.flanksource.com/get
       dependsOn:
-        - first-request
+        - getUuid
       test:
-        expr: "code == 200"
+        # Verify we can access the output from the previous check
+        expr: "code == 200 && outputs.getUuid.json.uuid != ''"

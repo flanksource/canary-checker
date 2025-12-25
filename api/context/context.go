@@ -203,7 +203,9 @@ func (ctx *Context) GetOutputs() map[string]any {
 		checkOutput["duration"] = result.Duration
 		if result.Data != nil {
 			for k, v := range result.Data {
-				checkOutput[k] = v
+				if _, ok := checkOutput[k]; !ok {
+					checkOutput[k] = v
+				}
 			}
 		}
 		outputs[name] = checkOutput

@@ -116,12 +116,6 @@
           },
           "type": "array"
         },
-        "export": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object"
-        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
