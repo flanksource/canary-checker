@@ -18,7 +18,6 @@ import (
 	"github.com/flanksource/commons/http/middlewares"
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/models"
-	"github.com/flanksource/gomplate/v3"
 	"github.com/gocolly/colly/v2"
 	"github.com/samber/lo"
 	"github.com/samber/oops"
@@ -65,6 +64,8 @@ func (c *HTTPChecker) Type() string {
 	return "http"
 }
 
+// Run: Check every entry from config according to Checker interface
+// Returns check result and metrics
 func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.HTTP {
@@ -80,14 +81,6 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 		value, err := ctx.GetEnvValueFromCache(header, ctx.GetNamespace())
 		if err != nil {
 			return nil, fmt.Errorf("failed getting header (%v): %w", header, err)
-		}
-
-		if strings.Contains(value, "{{") {
-			templatedValue, err := gomplate.RunTemplate(ctx.Environment, gomplate.Template{Template: value})
-			if err != nil {
-				return nil, fmt.Errorf("failed templating header '%s': %w", header.Name, err)
-			}
-			value = templatedValue
 		}
 
 		client.Header(header.Name, value)

@@ -148,4 +148,3 @@ func TestSortChecksByDependency(t *testing.T) {
 		})
 	}
 }
-
