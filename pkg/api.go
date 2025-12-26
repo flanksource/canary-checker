@@ -459,6 +459,10 @@ func (generic GenericCheck) GetEndpoint() string {
 	return generic.Endpoint
 }
 
+func (generic GenericCheck) GetDependsOn() []string {
+	return generic.Description.GetDependsOn()
+}
+
 type TransformedCheckResult struct {
 	ID                      uuid.UUID              `json:"id,omitempty"`
 	Start                   *time.Time             `json:"start,omitempty"`
