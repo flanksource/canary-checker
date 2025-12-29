@@ -12,6 +12,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 	"github.com/flanksource/duty/context"
 	dutyTypes "github.com/flanksource/duty/types"
+	"github.com/samber/lo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -90,7 +91,7 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 		if result.Pass {
 			status = v1.Passed
 		} else {
-			failEvents = append(failEvents, fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), result.Message))
+			failEvents = append(failEvents, fmt.Sprintf("%s-%s: %s", result.Check.GetType(), result.Check.GetEndpoint(), lo.CoalesceOrEmpty(result.Message, pkg.TruncateMessage(result.Error))))
 			status = v1.Failed
 		}
 
