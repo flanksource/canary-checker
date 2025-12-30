@@ -62,6 +62,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -170,6 +176,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -248,6 +260,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -356,6 +374,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -732,6 +756,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -801,6 +831,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "connection": {
           "type": "string"
@@ -1243,6 +1279,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1294,6 +1336,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -1392,6 +1440,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1457,6 +1511,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1530,6 +1590,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1582,6 +1648,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -1631,6 +1703,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1727,6 +1805,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1830,6 +1914,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1931,6 +2021,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2212,6 +2308,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2269,6 +2371,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2332,6 +2440,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2450,6 +2564,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -2515,6 +2635,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -2589,6 +2715,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -2652,6 +2784,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "testResults": {
           "type": "string"
@@ -2738,6 +2876,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2844,6 +2988,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3242,6 +3392,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -3453,6 +3609,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "connection": {
           "type": "string"
         },
@@ -3500,6 +3662,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3569,6 +3737,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3656,6 +3830,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -3889,6 +4069,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -4008,6 +4194,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -4101,6 +4293,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -4169,6 +4367,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -4330,6 +4534,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -4451,6 +4661,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -4578,6 +4794,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },
@@ -4646,6 +4868,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
@@ -4912,6 +5140,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -5039,6 +5273,12 @@
         },
         "markFailOnEmpty": {
           "type": "boolean"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "test": {
           "$ref": "#/$defs/Template"

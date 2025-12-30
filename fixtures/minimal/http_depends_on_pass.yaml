@@ -1,0 +1,19 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-depends-on
+spec:
+  schedule: "@every 5m"
+  http:
+    - name: getUuid
+      url: https://httpbin.flanksource.com/uuid
+      test:
+        expr: "code == 200 && json.uuid != ''"
+
+    - name: useUuid
+      url: https://httpbin.flanksource.com/get
+      dependsOn:
+        - getUuid
+      test:
+        # Verify we can access the output from the previous check
+        expr: "code == 200 && outputs.getUuid.json.uuid != ''"

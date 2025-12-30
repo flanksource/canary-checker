@@ -62,6 +62,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "testResults": {
           "type": "string"
         },

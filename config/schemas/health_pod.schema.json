@@ -113,6 +113,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship"
         },

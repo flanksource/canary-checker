@@ -17,6 +17,7 @@ type Describable interface {
 	GetCustomUUID() uuid.UUID
 	GetHash() string
 	ShouldMarkFailOnEmpty() bool
+	GetDependsOn() []string
 }
 
 type WithType interface {

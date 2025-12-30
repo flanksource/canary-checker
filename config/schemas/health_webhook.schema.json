@@ -242,6 +242,12 @@
         "markFailOnEmpty": {
           "type": "boolean"
         },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },

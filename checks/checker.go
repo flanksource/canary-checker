@@ -22,6 +22,10 @@ type Checker interface {
 	Type() string
 }
 
+type SingleCheckRunner interface {
+	Check(ctx *context.Context, check external.Check) pkg.Results
+}
+
 var All = []Checker{
 	&AlertManagerChecker{},
 	&AwsConfigChecker{},
