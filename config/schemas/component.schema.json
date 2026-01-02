@@ -2272,6 +2272,9 @@
         "branch": {
           "type": "string"
         },
+        "depth": {
+          "type": "integer"
+        },
         "destination": {
           "type": "string"
         }

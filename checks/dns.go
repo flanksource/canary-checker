@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"reflect"
@@ -13,7 +14,6 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/samber/lo"
-	"golang.org/x/net/context"
 )
 
 type DNSChecker struct{}
