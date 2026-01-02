@@ -2476,10 +2476,14 @@ spec:
                             type: object
                           connection:
                             type: string
+                          depth:
+                            type: integer
                           destination:
                             description: |-
                               Destination is the full path to where the contents of the URL should be downloaded to.
                               If left empty, the sha256 hash of the URL will be used as the dir name.
+
+                              Deprecated: no similar functionality available. This depends on the use case
                             type: string
                           password:
                             properties:
