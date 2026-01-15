@@ -340,6 +340,8 @@ func (spec CanarySpec) KeepOnly(names ...string) CanarySpec {
 	return spec
 }
 
+const NoSchedule = "NoSchedule"
+
 func (spec CanarySpec) GetSchedule() string {
 	if spec.Schedule != "" {
 		return spec.Schedule
@@ -347,7 +349,7 @@ func (spec CanarySpec) GetSchedule() string {
 	if spec.Interval > 0 {
 		return fmt.Sprintf("@every %ds", spec.Interval)
 	}
-	return "@never"
+	return NoSchedule
 }
 
 func (c Canary) IsTrace() bool {

@@ -51,7 +51,7 @@ var ComponentCheckRun = &job.Job{
 }
 
 func createComponentCanaryFromInline(ctx context.Context, id, name, namespace, schedule, owner string, spec *v1.CanarySpec) (*pkg.Canary, error) {
-	if spec.GetSchedule() == "@never" {
+	if spec.GetSchedule() == v1.NoSchedule {
 		spec.Schedule = schedule
 	}
 	if spec.Owner == "" {

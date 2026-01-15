@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path"
 	"reflect"
+	"slices"
 	"sync"
 	"time"
 
@@ -89,7 +90,15 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 		existingJob = j.(*job.Job)
 	}
 
-	if canary.Spec.GetSchedule() == "@never" || dbCanary.DeletedAt != nil {
+	if schedule := canary.Spec.GetSchedule(); slices.Contains([]string{"@never", v1.NoSchedule}, schedule) {
+		if schedule == v1.NoSchedule {
+			logger.Warnf("Skipping canary:%s as no schedule is provided")
+		}
+		Unschedule(id)
+		return nil
+	}
+
+	if dbCanary.DeletedAt != nil {
 		Unschedule(id)
 		return nil
 	}
