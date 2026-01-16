@@ -164,6 +164,14 @@ func hydrate(ctx *context.Context, check v1.HTTPCheck) (*v1.HTTPCheck, *models.C
 	results = append(results, result)
 
 	oops := ctx.Oops()
+
+	if check.Kubernetes != nil {
+		*ctx = ctx.WithKubernetesConnection(*check.Kubernetes)
+		if _, _, err := check.Kubernetes.Populate(ctx.Context, true); err != nil {
+			return nil, nil, oops, results.Invalidf("failed to hydrate kubernetes connection: %v", err)
+		}
+	}
+
 	//nolint:staticcheck
 	if check.Endpoint != "" && check.URL != "" {
 		return nil, nil, oops, results.Invalidf("cannot specify both endpoint and url")
