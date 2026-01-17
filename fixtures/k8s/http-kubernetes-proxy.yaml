@@ -1,0 +1,10 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-check
+spec:
+  schedule: "@every 30s"
+  http:
+    - name: k8s-check
+      kubernetes: {}
+      url: http://httpbin.default/status/404

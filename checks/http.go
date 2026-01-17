@@ -3,6 +3,7 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
+	nethttp "net/http"
 	"net/url"
 	"regexp"
 	"sort"
@@ -21,6 +22,7 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/samber/lo"
 	"github.com/samber/oops"
+	"k8s.io/client-go/rest"
 
 	"github.com/flanksource/canary-checker/api/external"
 	"github.com/prometheus/client_golang/prometheus"
@@ -74,7 +76,7 @@ func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
 	return results
 }
 
-func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPCheck, connection *models.Connection) (*http.Request, error) {
+func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check *v1.HTTPCheck, connection *models.Connection) (*http.Request, error) {
 	client := http.NewClient().UserAgent("canary-checker/" + runner.Version)
 
 	for _, header := range check.Headers {
@@ -88,6 +90,35 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 
 	if connection.Username != "" || connection.Password != "" {
 		client.Auth(connection.Username, connection.Password)
+	}
+
+	if check.Kubernetes != nil {
+		k8s, err := ctx.Kubernetes()
+		if err != nil {
+			return nil, fmt.Errorf("failed to instantiate k8s client (%s): %w", check.Kubernetes, err)
+		}
+
+		k8srt, err := rest.TransportFor(k8s.Config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get transport config for k8s: %w", check.Kubernetes, err)
+		}
+
+		client.Use(func(rt nethttp.RoundTripper) nethttp.RoundTripper {
+			return k8srt
+		})
+
+		parsedURL, err := url.Parse(check.URL)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing check url[%s]: %w", check.URL, err)
+		}
+
+		port := lo.CoalesceOrEmpty(parsedURL.Port(), lo.Ternary(parsedURL.Scheme == "https", "443", "80"))
+		parts := strings.Split(parsedURL.Hostname(), ".")
+		if len(parts) < 2 {
+			return nil, fmt.Errorf("check host[%s] is invalid. Use `service.namespace` format", parsedURL.Hostname())
+		}
+		svc, ns := parts[0], parts[1]
+		check.URL = fmt.Sprintf("%s/api/v1/namespaces/%s/services/%s:%s/proxy/%s", k8s.Config.Host, ns, svc, port, strings.TrimPrefix(parsedURL.Path, "/"))
 	}
 
 	if check.Oauth2 != nil {
@@ -170,6 +201,7 @@ func hydrate(ctx *context.Context, check v1.HTTPCheck) (*v1.HTTPCheck, *models.C
 		if _, _, err := check.Kubernetes.Populate(ctx.Context, true); err != nil {
 			return nil, nil, oops, results.Invalidf("failed to hydrate kubernetes connection: %v", err)
 		}
+
 	}
 
 	//nolint:staticcheck
@@ -378,10 +410,11 @@ func (c *HTTPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 
 	result := results[0]
 
-	request, err := c.generateHTTPRequest(ctx, *check, connection)
+	request, err := c.generateHTTPRequest(ctx, check, connection)
 	if err != nil {
 		return results.ErrorMessage(oops.Wrap(err))
 	}
+	logger.Infof("Check url is %s", check.URL)
 	start := time.Now()
 
 	if check.Crawl != nil {
