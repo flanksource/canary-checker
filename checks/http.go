@@ -100,7 +100,7 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check *v1.HTTPCh
 
 		k8srt, err := rest.TransportFor(k8s.Config)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get transport config for k8s: %w", check.Kubernetes, err)
+			return nil, fmt.Errorf("failed to get transport config for k8s: %w", err)
 		}
 
 		client.Use(func(rt nethttp.RoundTripper) nethttp.RoundTripper {
@@ -201,7 +201,6 @@ func hydrate(ctx *context.Context, check v1.HTTPCheck) (*v1.HTTPCheck, *models.C
 		if _, _, err := check.Kubernetes.Populate(ctx.Context, true); err != nil {
 			return nil, nil, oops, results.Invalidf("failed to hydrate kubernetes connection: %v", err)
 		}
-
 	}
 
 	//nolint:staticcheck
