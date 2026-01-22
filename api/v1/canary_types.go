@@ -95,6 +95,10 @@ type CanarySpec struct {
 	Severity   string     `yaml:"severity,omitempty" json:"severity,omitempty"`
 	Owner      string     `yaml:"owner,omitempty" json:"owner,omitempty"`
 	ResultMode ResultMode `yaml:"resultMode,omitempty" json:"resultMode,omitempty"`
+	// AgentSelector specifies agents that should run this canary.
+	// When populated, the canary will not run locally but copies
+	// will be created for each matched agent.
+	AgentSelector []string `yaml:"agentSelector,omitempty" json:"agentSelector,omitempty"`
 }
 
 func (spec CanarySpec) GetAllChecks() []external.Check {
