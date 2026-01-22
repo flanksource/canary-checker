@@ -55,7 +55,7 @@ func syncAgentSelectorCanary(ctx dutyjob.JobRuntime, parentCanary pkg.Canary) er
 	for _, agentIdentifier := range spec.AgentSelector {
 		agent, err := query.FindCachedAgent(ctx.Context, agentIdentifier)
 		if err != nil {
-			ctx.History.AddErrorf("error looking up agent[%s] for canary[%s]: %w", parentCanary.ID, agentIdentifier, err)
+			ctx.History.AddErrorf("error looking up agent[%s] for canary[%s]: %v", parentCanary.ID, agentIdentifier, err)
 			continue
 		}
 		if agent == nil || agent.ID == uuid.Nil {
