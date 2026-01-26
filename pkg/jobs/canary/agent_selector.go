@@ -5,6 +5,7 @@ package canary
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -102,6 +103,10 @@ func upsertDerivedCanary(ctx dutyjob.JobRuntime, parentCanary pkg.Canary, agentI
 			"labels":      parentCanary.Labels,
 			"annotations": parentCanary.Annotations,
 		}).Error
+	}
+
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("failed to query existing derived canary: %w", err)
 	}
 
 	derivedCanary := pkg.Canary{

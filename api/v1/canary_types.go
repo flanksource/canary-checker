@@ -98,6 +98,7 @@ type CanarySpec struct {
 	// AgentSelector specifies agents that should run this canary.
 	// When populated, the canary will not run locally but copies
 	// will be created for each matched agent.
+	// This also supports prefix/suffix (eu-west-*) and negations (!team-b)
 	AgentSelector []string `yaml:"agentSelector,omitempty" json:"agentSelector,omitempty"`
 }
 
