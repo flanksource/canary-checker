@@ -20,6 +20,9 @@ import (
 var _ = ginkgo.Describe("AgentSelector", ginkgo.Ordered, func() {
 	var testAgent1 models.Agent
 	var testAgent2 models.Agent
+	var testAgentTeamA models.Agent
+	var testAgentTeamB models.Agent
+	var testAgentOther models.Agent
 	var parentCanaryID uuid.UUID
 
 	ginkgo.BeforeAll(func() {
@@ -30,6 +33,18 @@ var _ = ginkgo.Describe("AgentSelector", ginkgo.Ordered, func() {
 		testAgent2 = models.Agent{ID: uuid.New(), Name: "test-agent-selector-2"}
 		err = DefaultContext.DB().Create(&testAgent2).Error
 		Expect(err).To(BeNil())
+
+		testAgentTeamA = models.Agent{ID: uuid.New(), Name: "team-a"}
+		err = DefaultContext.DB().Create(&testAgentTeamA).Error
+		Expect(err).To(BeNil())
+
+		testAgentTeamB = models.Agent{ID: uuid.New(), Name: "team-b"}
+		err = DefaultContext.DB().Create(&testAgentTeamB).Error
+		Expect(err).To(BeNil())
+
+		testAgentOther = models.Agent{ID: uuid.New(), Name: "other-agent"}
+		err = DefaultContext.DB().Create(&testAgentOther).Error
+		Expect(err).To(BeNil())
 	})
 
 	ginkgo.AfterAll(func() {
@@ -39,6 +54,9 @@ var _ = ginkgo.Describe("AgentSelector", ginkgo.Ordered, func() {
 		// cleanup agents
 		DefaultContext.DB().Delete(&testAgent1)
 		DefaultContext.DB().Delete(&testAgent2)
+		DefaultContext.DB().Delete(&testAgentTeamA)
+		DefaultContext.DB().Delete(&testAgentTeamB)
+		DefaultContext.DB().Delete(&testAgentOther)
 	})
 
 	ginkgo.Describe("SyncAgentSelectorCanaries", func() {
@@ -140,6 +158,151 @@ var _ = ginkgo.Describe("AgentSelector", ginkgo.Ordered, func() {
 				First(&deletedCanary).Error
 			Expect(err).To(BeNil())
 			Expect(deletedCanary.DeletedAt).ToNot(BeNil())
+		})
+
+		ginkgo.It("should select agents using glob pattern", func() {
+			globCanaryID := uuid.New()
+
+			canarySpec := v1.CanarySpec{
+				Schedule: "@every 5m",
+				HTTP: []v1.HTTPCheck{
+					{
+						Connection: v1.Connection{URL: "https://example.com"},
+					},
+				},
+				AgentSelector: []string{"team-*"},
+			}
+
+			specBytes, err := json.Marshal(canarySpec)
+			Expect(err).To(BeNil())
+
+			var spec types.JSON
+			err = json.Unmarshal(specBytes, &spec)
+			Expect(err).To(BeNil())
+
+			globCanary := &models.Canary{
+				ID:        globCanaryID,
+				Name:      "agent-selector-test-glob",
+				Namespace: "default",
+				Spec:      spec,
+			}
+			err = DefaultContext.DB().Create(globCanary).Error
+			Expect(err).To(BeNil())
+
+			// Run the sync job
+			SyncAgentSelectorCanaries.Run()
+
+			// Verify derived canaries were created for team-a and team-b
+			var derivedCanaries []models.Canary
+			err = DefaultContext.DB().
+				Where("source = ?", fmt.Sprintf("agentSelector=%s", globCanaryID.String())).
+				Where("deleted_at IS NULL").
+				Find(&derivedCanaries).Error
+			Expect(err).To(BeNil())
+			Expect(derivedCanaries).To(HaveLen(2))
+
+			// Verify each derived canary has the correct agent_id
+			agentIDs := make(map[uuid.UUID]bool)
+			for _, c := range derivedCanaries {
+				agentIDs[c.AgentID] = true
+			}
+			Expect(agentIDs).To(HaveKey(testAgentTeamA.ID))
+			Expect(agentIDs).To(HaveKey(testAgentTeamB.ID))
+			Expect(agentIDs).ToNot(HaveKey(testAgentOther.ID))
+		})
+
+		ginkgo.It("should exclude agents using negation pattern", func() {
+			excludeCanaryID := uuid.New()
+
+			canarySpec := v1.CanarySpec{
+				Schedule: "@every 5m",
+				HTTP: []v1.HTTPCheck{
+					{
+						Connection: v1.Connection{URL: "https://example.com"},
+					},
+				},
+				AgentSelector: []string{"team-*", "!team-b"},
+			}
+
+			specBytes, err := json.Marshal(canarySpec)
+			Expect(err).To(BeNil())
+
+			var spec types.JSON
+			err = json.Unmarshal(specBytes, &spec)
+			Expect(err).To(BeNil())
+
+			excludeCanary := &models.Canary{
+				ID:        excludeCanaryID,
+				Name:      "agent-selector-test-exclude",
+				Namespace: "default",
+				Spec:      spec,
+			}
+			err = DefaultContext.DB().Create(excludeCanary).Error
+			Expect(err).To(BeNil())
+
+			// Run the sync job
+			SyncAgentSelectorCanaries.Run()
+
+			// Verify only team-a was selected (team-b excluded)
+			var derivedCanaries []models.Canary
+			err = DefaultContext.DB().
+				Where("source = ?", fmt.Sprintf("agentSelector=%s", excludeCanaryID.String())).
+				Where("deleted_at IS NULL").
+				Find(&derivedCanaries).Error
+			Expect(err).To(BeNil())
+			Expect(derivedCanaries).To(HaveLen(1))
+			Expect(derivedCanaries[0].AgentID).To(Equal(testAgentTeamA.ID))
+		})
+
+		ginkgo.It("should select all agents except excluded ones when only exclusion patterns", func() {
+			excludeOnlyCanaryID := uuid.New()
+
+			canarySpec := v1.CanarySpec{
+				Schedule: "@every 5m",
+				HTTP: []v1.HTTPCheck{
+					{
+						Connection: v1.Connection{URL: "https://example.com"},
+					},
+				},
+				AgentSelector: []string{"!team-b"},
+			}
+
+			specBytes, err := json.Marshal(canarySpec)
+			Expect(err).To(BeNil())
+
+			var spec types.JSON
+			err = json.Unmarshal(specBytes, &spec)
+			Expect(err).To(BeNil())
+
+			excludeOnlyCanary := &models.Canary{
+				ID:        excludeOnlyCanaryID,
+				Name:      "agent-selector-test-exclude-only",
+				Namespace: "default",
+				Spec:      spec,
+			}
+			err = DefaultContext.DB().Create(excludeOnlyCanary).Error
+			Expect(err).To(BeNil())
+
+			// Run the sync job
+			SyncAgentSelectorCanaries.Run()
+
+			// Verify all agents except team-b were selected
+			var derivedCanaries []models.Canary
+			err = DefaultContext.DB().
+				Where("source = ?", fmt.Sprintf("agentSelector=%s", excludeOnlyCanaryID.String())).
+				Where("deleted_at IS NULL").
+				Find(&derivedCanaries).Error
+			Expect(err).To(BeNil())
+
+			agentIDs := make(map[uuid.UUID]bool)
+			for _, c := range derivedCanaries {
+				agentIDs[c.AgentID] = true
+			}
+			Expect(agentIDs).To(HaveKey(testAgent1.ID))
+			Expect(agentIDs).To(HaveKey(testAgent2.ID))
+			Expect(agentIDs).To(HaveKey(testAgentTeamA.ID))
+			Expect(agentIDs).To(HaveKey(testAgentOther.ID))
+			Expect(agentIDs).ToNot(HaveKey(testAgentTeamB.ID))
 		})
 	})
 

@@ -4,14 +4,17 @@
 package canary
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/db"
+	"github.com/flanksource/commons/collections"
 	dutyjob "github.com/flanksource/duty/job"
-	"github.com/flanksource/duty/query"
+	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 var SyncAgentSelectorCanaries = &dutyjob.Job{
@@ -48,25 +51,35 @@ func syncAgentSelectorCanary(ctx dutyjob.JobRuntime, parentCanary pkg.Canary) er
 	if len(spec.AgentSelector) == 0 {
 		return nil
 	}
-
 	source := fmt.Sprintf("agentSelector=%s", parentCanary.ID.String())
+
 	var validAgentIDs []uuid.UUID
-
-	for _, agentIdentifier := range spec.AgentSelector {
-		agent, err := query.FindCachedAgent(ctx.Context, agentIdentifier)
-		if err != nil {
-			ctx.History.AddErrorf("error looking up agent[%s] for canary[%s]: %v", parentCanary.ID, agentIdentifier, err)
-			continue
+	for _, agent := range spec.AgentSelector {
+		if val, err := uuid.Parse(agent); err == nil {
+			validAgentIDs = append(validAgentIDs, val)
 		}
-		if agent == nil || agent.ID == uuid.Nil {
-			ctx.History.AddErrorf("agent[%s] for canary[%s] not found", agentIdentifier, parentCanary.ID)
-			continue
+	}
+
+	dbAgents, err := gorm.G[models.Agent](ctx.DB()).Select("id", "name").Where("deleted_at IS NULL").Find(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get agents: %w", err)
+	}
+	for _, dbAgent := range dbAgents {
+		if matches := collections.MatchItems(dbAgent.Name, spec.AgentSelector...); matches {
+			validAgentIDs = append(validAgentIDs, dbAgent.ID)
 		}
+	}
 
-		validAgentIDs = append(validAgentIDs, agent.ID)
+	spec.AgentSelector = nil
+	newSpec, err := json.Marshal(spec)
+	if err != nil {
+		return fmt.Errorf("error marshaling spec for canary[%s]: %w", parentCanary.ID, err)
+	}
+	parentCanary.Spec = newSpec
 
-		if err := upsertDerivedCanary(ctx, parentCanary, agent.ID, source); err != nil {
-			return fmt.Errorf("failed to upsert canary for agent %s: %w", agentIdentifier, err)
+	for _, agentID := range validAgentIDs {
+		if err := upsertDerivedCanary(ctx, parentCanary, agentID, source); err != nil {
+			return fmt.Errorf("failed to upsert canary for agent[%s]: %w", agentID, err)
 		}
 	}
 
