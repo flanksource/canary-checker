@@ -77,6 +77,12 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 		canary.Namespace = "default"
 	}
 
+	// Skip canaries with agentSelector - they are handled by SyncAgentSelectorCanaries job
+	if len(canary.Spec.AgentSelector) > 0 {
+		Unschedule(id)
+		return nil
+	}
+
 	if canary.Spec.Webhook != nil {
 		// Webhook checks can be persisted immediately as they do not require scheduling & running.
 		result := pkg.Success(canary.Spec.Webhook, *canary)

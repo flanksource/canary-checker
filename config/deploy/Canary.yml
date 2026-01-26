@@ -70,6 +70,15 @@ spec:
             spec:
               description: CanarySpec defines the desired state of Canary
               properties:
+                agentSelector:
+                  description: |-
+                    AgentSelector specifies agents that should run this canary.
+                    When populated, the canary will not run locally but copies
+                    will be created for each matched agent.
+                    This also supports prefix/suffix (eu-west-*) and negations (!team-b)
+                  items:
+                    type: string
+                  type: array
                 alertmanager:
                   items:
                     properties:

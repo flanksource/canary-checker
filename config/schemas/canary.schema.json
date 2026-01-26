@@ -743,6 +743,12 @@
         },
         "resultMode": {
           "type": "string"
+        },
+        "agentSelector": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
@@ -3064,6 +3070,12 @@
         },
         "resultMode": {
           "type": "string"
+        },
+        "agentSelector": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,

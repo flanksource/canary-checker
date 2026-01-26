@@ -50,7 +50,7 @@ func GetAllCanariesForSync(ctx context.Context, namespace string) ([]pkg.Canary,
             deleted_at IS NULL AND
             agent_id = '00000000-0000-0000-0000-000000000000' AND
             (spec->>'replicas' != '0' OR spec->'replicas' IS NULL) AND
-						(annotations->>'suspend' != 'true' OR annotations->>'suspend' IS NULL)
+			(annotations->>'suspend' != 'true' OR annotations->>'suspend' IS NULL)
     `
 
 	args := make(pgx.NamedArgs)
@@ -532,4 +532,34 @@ func PersistCanary(ctx context.Context, canary v1.Canary, source string) (*pkg.C
 	model.Source = source
 
 	return PersistCanaryModel(ctx, model)
+}
+
+func GetCanariesWithAgentSelector(ctx context.Context) ([]pkg.Canary, error) {
+	query := `
+		SELECT json_agg(to_jsonb(canaries)) :: jsonb AS canaries
+		FROM canaries
+		WHERE
+			deleted_at IS NULL AND
+			agent_id = '00000000-0000-0000-0000-000000000000' AND
+			jsonb_array_length(spec->'agentSelector') > 0
+	`
+
+	rows, err := ctx.Pool().Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var canaries []pkg.Canary
+	for rows.Next() {
+		if rows.RawValues()[0] == nil {
+			continue
+		}
+
+		if err := json.Unmarshal(rows.RawValues()[0], &canaries); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal canaries: %w", err)
+		}
+	}
+
+	return canaries, nil
 }

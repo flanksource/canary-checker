@@ -52,6 +52,7 @@ func Start() {
 		topologyJobs.TopologyCRDReconcile, canaryJobs.SyncCanaryJobs,
 		canaryJobs.CleanupDeletedCanaryChecks, dutyQuery.SyncComponentCacheJob,
 		canaryJobs.VacuumCanaryTables, canaryJobs.DeleteTransformedCanaries,
+		canaryJobs.SyncAgentSelectorCanaries, canaryJobs.CleanupOrphanedAgentSelectorCanaries,
 	}
 	for _, j := range miscJobs {
 		job := j
