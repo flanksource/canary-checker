@@ -2189,6 +2189,9 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
+        "kubernetes": {
+          "$ref": "#/$defs/KubernetesConnection"
+        },
         "endpoint": {
           "type": "string"
         },
