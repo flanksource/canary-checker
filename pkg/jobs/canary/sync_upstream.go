@@ -61,6 +61,10 @@ var PullUpstreamCanaries = &job.Job{
 	Schedule:   "@every 10m",
 	Retention:  job.RetentionFew,
 	Fn: func(ctx job.JobRuntime) error {
+		if ctx.Properties().Off("upstream.pull_canaries", true) {
+			ctx.History.Details = map[string]any{"details": "upstream canary pull is disabled"}
+			return nil
+		}
 		ctx.History.ResourceType = ResourceTypeUpstream
 		ctx.History.ResourceID = UpstreamConf.Host
 		count, err := pull(ctx.Context, UpstreamConf)
