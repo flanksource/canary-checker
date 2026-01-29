@@ -26,7 +26,7 @@ func Start() {
 		for _, j := range canaryJobs.UpstreamJobs {
 			if j.Name == "PullUpstreamCanaries" {
 				if properties.On(true, "upstream.pull_canaries") {
-					logger.Infof("Scheduling job to pull canaries from upstream")
+					logger.Infof("Scheduling job to pull canaries from upstream:%s", canaryJobs.UpstreamConf.Host)
 				} else {
 					continue
 				}
