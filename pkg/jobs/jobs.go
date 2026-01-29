@@ -9,6 +9,7 @@ import (
 	"github.com/flanksource/canary-checker/pkg/runner"
 	"github.com/flanksource/canary-checker/pkg/topology"
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/commons/properties"
 	dutyEcho "github.com/flanksource/duty/echo"
 	"github.com/flanksource/duty/job"
 	dutyQuery "github.com/flanksource/duty/query"
@@ -23,6 +24,13 @@ func Start() {
 
 	if canaryJobs.UpstreamConf.Valid() {
 		for _, j := range canaryJobs.UpstreamJobs {
+			if j.Name == "PullUpstreamCanaries" {
+				if properties.On(true, "upstream.pull_canaries") {
+					logger.Infof("Scheduling job to pull canaries from upstream:%s", canaryJobs.UpstreamConf.Host)
+				} else {
+					continue
+				}
+			}
 			job := j
 			job.Context = context.DefaultContext
 			if err := job.AddToScheduler(FuncScheduler); err != nil {
