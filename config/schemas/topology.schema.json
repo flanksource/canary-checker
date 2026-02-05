@@ -3267,6 +3267,9 @@
         "kind": {
           "type": "string"
         },
+        "apiVersion": {
+          "type": "string"
+        },
         "healthy": {
           "type": "boolean",
           "description": "Fail the check if any resources are unhealthy"

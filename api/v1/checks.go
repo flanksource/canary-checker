@@ -1066,21 +1066,43 @@ func (rs ResourceSelector) ToDutySelector() types.ResourceSelector {
 }
 
 type KubernetesCheck struct {
+	// Description provides the base check metadata including name, description,
+	// namespace, icon, labels, and metrics export configuration.
 	Description `yaml:",inline" json:",inline"`
-	Templatable `yaml:",inline" json:",inline"`
-	Relatable   `yaml:",inline" json:",inline"`
-	Namespace   ResourceSelector `yaml:"namespaceSelector,omitempty" json:"namespaceSelector,omitempty"`
-	Resource    ResourceSelector `yaml:"resource,omitempty" json:"resource,omitempty"`
-	// KubeConfig is the kubeconfig or the path to the kubeconfig file.
-	connection.KubernetesConnection `yaml:",inline" json:",inline"`
-	// Ignore the specified resources from the fetched resources. Can be a glob pattern.
-	Ignore []string `yaml:"ignore,omitempty" json:"ignore,omitempty"`
-	Kind   string   `yaml:"kind" json:"kind"`
 
-	// Fail the check if any resources are unhealthy
+	// Templatable provides test, display, and transform templates for the check results.
+	Templatable `yaml:",inline" json:",inline"`
+
+	// Relatable defines relationships to link check results to components and configs.
+	Relatable `yaml:",inline" json:",inline"`
+
+	// Namespace specifies which namespace(s) to search for resources.
+	// Use empty ResourceSelector to search in canary's namespace.
+	Namespace ResourceSelector `yaml:"namespaceSelector,omitempty" json:"namespaceSelector,omitempty"`
+
+	// Resource specifies which resources to select by name, labels, or field selectors.
+	Resource ResourceSelector `yaml:"resource,omitempty" json:"resource,omitempty"`
+
+	// KubernetesConnection defines how to connect to the Kubernetes cluster.
+	// Supports kubeconfig path/content, EKS, GKE, CNRM connections, or connection reference.
+	connection.KubernetesConnection `yaml:",inline" json:",inline"`
+
+	// Ignore specifies resources to exclude from the fetched results.
+	// Values can be glob patterns (e.g., "kube-*", "*-system").
+	Ignore []string `yaml:"ignore,omitempty" json:"ignore,omitempty"`
+
+	// Kind is the Kubernetes resource Kind to check (e.g., "Pod", "Deployment", "Service").
+	// This is a required field.
+	Kind string `yaml:"kind" json:"kind"`
+
+	// APIVersion is the Kubernetes API version for the resource (e.g., "v1", "apps/v1", "serving.knative.dev/v1").
+	// Used to distinguish between resources with the same Kind but different API groups.
+	APIVersion string `yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
+
+	// Healthy when true, fails the check if any resources are unhealthy.
 	Healthy bool `yaml:"healthy,omitempty" json:"healthy,omitempty"`
 
-	// Fail the check if any resources are not ready
+	// Ready when true, fails the check if any resources are not ready.
 	Ready bool `yaml:"ready,omitempty" json:"ready,omitempty"`
 }
 
