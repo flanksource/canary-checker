@@ -76,7 +76,10 @@ gen-schemas:
 	cd hack/generate-schemas && \
 	go mod edit -module=github.com/flanksource/canary-checker/hack/generate-schemas && \
 	go mod edit -require=github.com/flanksource/canary-checker@v1.0.0 && \
- 	go mod edit -replace=github.com/flanksource/canary-checker=../../ && \
+	go mod edit -replace=github.com/flanksource/canary-checker=../../ && \
+	if grep -v "^//" ../../go.mod | grep -q "replace.*github.com/flanksource/duty.*=>"; then \
+		go mod edit -replace=github.com/flanksource/duty=../../../duty; \
+	fi && \
 	go mod tidy && \
 	go run ./main.go
 
