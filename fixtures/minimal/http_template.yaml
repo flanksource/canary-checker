@@ -6,16 +6,16 @@ spec:
   schedule: "@every 5m"
   http:
     - name: templated-http
-      url: https://webhook.site/#!/9f1392a6-718a-4ef5-a8e2-bfb55b08afca/f93d307b-0aaf-4a38-b9b3-db5daaae5657/1
+      url: https://webhook.site/bf6a337a-4413-4839-9866-1d28ed96d65f
       responseCodes: [200]
       templateBody: true
-
+      method: POST
       env:
         - name: db
           valueFrom:
             secretKeyRef:
-              name: db-user-pass
-              key: username
+              name: incident-commander-postgres
+              key: POSTGRES_HOST
       body: |
         {
           "canary": "{{.canary.name}}",
