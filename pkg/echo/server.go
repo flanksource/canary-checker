@@ -45,7 +45,7 @@ func New(ctx context.Context) *echo.Echo {
 	echoLogConfig := middleware.DefaultLoggerConfig
 	echoLogConfig.Skipper = telemetryURLSkipper
 
-	e.Use(middleware.LoggerWithConfig(echoLogConfig))
+	e.Use(middleware.LoggerWithConfig(echoLogConfig)) //nolint:staticcheck
 
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

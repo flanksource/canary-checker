@@ -142,7 +142,7 @@ func newSQLAdmin(ctx dutyContext.Context, conn *connection.GCPConnection) (*sqla
 		return nil, err
 	}
 
-	client, err := sqladmin.NewService(ctx.Context, option.WithEndpoint(conn.Endpoint), option.WithCredentialsJSON([]byte(credential)))
+	client, err := sqladmin.NewService(ctx.Context, option.WithEndpoint(conn.Endpoint), option.WithCredentialsJSON([]byte(credential))) //nolint:staticcheck
 	if err != nil {
 		return nil, err
 	}

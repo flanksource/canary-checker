@@ -11,6 +11,15 @@ else
   VERSION_TAG=$(VERSION)
 endif
 
+## Location to install dependencies to
+LOCALBIN ?= $(shell pwd)/.bin
+
+## Tool Binaries
+GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
+
+## Tool Versions
+GOLANGCI_LINT_VERSION ?= v2.8.0
+
 # Image URL to use all building/pushing image targets
 IMG_F ?= docker.io/flanksource/canary-checker-full:${VERSION_TAG}
 IMG ?= docker.io/flanksource/canary-checker:${VERSION_TAG}
@@ -160,8 +169,13 @@ release: binaries
 	kustomize build config/ > .release/release.yaml
 
 .PHONY: lint
-lint: gen-schemas
-	golangci-lint run -v ./...
+lint: $(GOLANGCI_LINT)
+	$(GOLANGCI_LINT) run -v ./...
+
+.PHONY: golangci-lint
+golangci-lint: $(GOLANGCI_LINT)
+$(GOLANGCI_LINT): $(LOCALBIN)
+	test -s $(LOCALBIN)/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(LOCALBIN) $(GOLANGCI_LINT_VERSION)
 
 .PHONY: build-api-docs
 build-api-docs:
