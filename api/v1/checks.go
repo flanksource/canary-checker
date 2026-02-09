@@ -1541,6 +1541,55 @@ func (c AzureDevopsCheck) GetEndpoint() string {
 	return c.Project
 }
 
+type ArgoRequiredRepository struct {
+	// Name is the ArgoCD repository name.
+	// Supports wildcards (e.g. "*", "prod-*").
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+	// Repo is the repository URL in ArgoCD.
+	// Supports wildcards (e.g. "*", "https://github.com/*").
+	Repo string `yaml:"repo,omitempty" json:"repo,omitempty"`
+}
+
+type ArgoRequiredCluster struct {
+	// Name is the ArgoCD cluster name.
+	// Supports wildcards (e.g. "*", "prod-*").
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+	// Server is the cluster API server URL in ArgoCD.
+	// Supports wildcards (e.g. "*", "https://*.svc").
+	Server string `yaml:"server,omitempty" json:"server,omitempty"`
+}
+
+type ArgoCheck struct {
+	Description               `yaml:",inline" json:",inline"`
+	Templatable               `yaml:",inline" json:",inline"`
+	Relatable                 `yaml:",inline" json:",inline"`
+	connection.ArgoConnection `yaml:",inline" json:",inline"`
+
+	// Repositories lists the repositories that must exist and be healthy in ArgoCD.
+	// Each entry specifies a repository to validate by name or URL.
+	//
+	// Wildcards are supported (e.g. "*" or "https://github.com/flanksource/*").
+	// If empty, no repository validation is performed.
+	// If a specified repository is missing or unhealthy, the check fails.
+	Repositories []ArgoRequiredRepository `yaml:"repositories,omitempty" json:"repositories,omitempty"`
+
+	// Clusters lists the clusters that must exist and be connected in ArgoCD.
+	// Each entry specifies a cluster to validate by name or server URL.
+	//
+	// Wildcards are supported (e.g. "*" or "https://*.svc").
+	// If empty, no cluster validation is performed.
+	// If a specified cluster is missing or not connected, the check fails.
+	Clusters []ArgoRequiredCluster `yaml:"clusters,omitempty" json:"clusters,omitempty"`
+}
+
+func (c ArgoCheck) GetType() string {
+	return "argo"
+}
+
+func (c ArgoCheck) GetEndpoint() string {
+	return c.ArgoConnection.ConnectionName + c.ArgoConnection.URL
+}
+
 type WebhookCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
@@ -1559,6 +1608,7 @@ func (c WebhookCheck) GetEndpoint() string {
 
 var AllChecks = []external.Check{
 	AlertManagerCheck{},
+	ArgoCheck{},
 	AwsConfigCheck{},
 	AwsConfigRuleCheck{},
 	AzureDevopsCheck{},

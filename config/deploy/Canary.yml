@@ -275,6 +275,272 @@ spec:
                       - name
                     type: object
                   type: array
+                argo:
+                  items:
+                    properties:
+                      clusters:
+                        description: |-
+                          Clusters controls cluster validation.
+                          Empty means cluster validation is skipped.
+                          Add an entry with server="*" (or name="*") to validate all clusters.
+                        items:
+                          properties:
+                            labels:
+                              additionalProperties:
+                                type: string
+                              description: Labels can be used to target clusters by labels when name/server are not enough.
+                              type: object
+                            name:
+                              type: string
+                            server:
+                              description: |-
+                                Server is the cluster API server URL in ArgoCD.
+                                Use "*" to validate all clusters.
+                              type: string
+                          type: object
+                        type: array
+                      connection:
+                        description: Connection name e.g. connection://http/google
+                        type: string
+                      dependsOn:
+                        description: DependsOn lists the checks that must complete before this one runs
+                        items:
+                          type: string
+                        type: array
+                      description:
+                        type: string
+                      display:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      icon:
+                        type: string
+                      labels:
+                        additionalProperties:
+                          type: string
+                        description: Labels for the check
+                        type: object
+                      markFailOnEmpty:
+                        description: If check or transformation returns empty, that should be marked as failed
+                        type: boolean
+                      metrics:
+                        items:
+                          properties:
+                            labels:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                  valueExpr:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
+                            name:
+                              type: string
+                            type:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                        x-kubernetes-preserve-unknown-fields: true
+                      name:
+                        type: string
+                      namespace:
+                        description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
+                        type: string
+                      password:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
+                            type: object
+                        type: object
+                      relationships:
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      repositories:
+                        description: |-
+                          Repositories controls repository validation.
+                          Empty means repository validation is skipped.
+                          Add an entry with repo="*" (or name="*") to validate all repositories.
+                        items:
+                          properties:
+                            labels:
+                              additionalProperties:
+                                type: string
+                              description: Labels can be used to target repositories by labels when name/repo are not enough.
+                              type: object
+                            name:
+                              type: string
+                            repo:
+                              description: |-
+                                Repo is the repository URL in ArgoCD.
+                                Use "*" to validate all repositories.
+                              type: string
+                          type: object
+                        type: array
+                      test:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      token:
+                        description: |-
+                          Token is an optional bearer token for ArgoCD API auth.
+                          If omitted, username/password from the connection will be used to create a session token.
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
+                            type: object
+                        type: object
+                      transform:
+                        properties:
+                          expr:
+                            type: string
+                          javascript:
+                            type: string
+                          jsonPath:
+                            type: string
+                          template:
+                            type: string
+                        type: object
+                      transformDeleteStrategy:
+                        type: string
+                      url:
+                        description: Connection url, interpolated with username,password
+                        type: string
+                      username:
+                        properties:
+                          name:
+                            type: string
+                          value:
+                            type: string
+                          valueFrom:
+                            properties:
+                              configMapKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              helmRef:
+                                properties:
+                                  key:
+                                    description: Key is a JSONPath expression used to fetch the key from the merged JSON.
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              secretKeyRef:
+                                properties:
+                                  key:
+                                    type: string
+                                  name:
+                                    type: string
+                                required:
+                                  - key
+                                type: object
+                              serviceAccount:
+                                description: ServiceAccount specifies the service account whose token should be fetched
+                                type: string
+                            type: object
+                        type: object
+                    required:
+                      - name
+                    type: object
+                  type: array
                 awsConfig:
                   items:
                     properties:

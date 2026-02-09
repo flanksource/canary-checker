@@ -1,0 +1,354 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/flanksource/canary-checker/api/v1/argo-check",
+  "$ref": "#/$defs/ArgoCheck",
+  "$defs": {
+    "ArgoCheck": {
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description for the check"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the check"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
+        },
+        "transformDeleteStrategy": {
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "test": {
+          "$ref": "#/$defs/Template"
+        },
+        "display": {
+          "$ref": "#/$defs/Template"
+        },
+        "transform": {
+          "$ref": "#/$defs/Template"
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
+        },
+        "connection": {
+          "type": "string",
+          "description": "Connection name e.g. connection://http/google"
+        },
+        "url": {
+          "type": "string",
+          "description": "Connection url, interpolated with username,password"
+        },
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "token": {
+          "$ref": "#/$defs/EnvVar",
+          "description": "Token is an optional bearer token for ArgoCD API auth.\nIf omitted, username/password from the connection will be used to create a session token."
+        },
+        "repositories": {
+          "items": {
+            "$ref": "#/$defs/ArgoRequiredRepository"
+          },
+          "type": "array",
+          "description": "Repositories controls repository validation.\nEmpty means repository validation is skipped.\nAdd an entry with repo=\"*\" (or name=\"*\") to validate all repositories."
+        },
+        "clusters": {
+          "items": {
+            "$ref": "#/$defs/ArgoRequiredCluster"
+          },
+          "type": "array",
+          "description": "Clusters controls cluster validation.\nEmpty means cluster validation is skipped.\nAdd an entry with server=\"*\" (or name=\"*\") to validate all clusters."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "ArgoRequiredCluster": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "server": {
+          "type": "string",
+          "description": "Server is the cluster API server URL in ArgoCD.\nUse \"*\" to validate all clusters."
+        },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object",
+          "description": "Labels can be used to target clusters by labels when name/server are not enough."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "ArgoRequiredRepository": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "repo": {
+          "type": "string",
+          "description": "Repo is the repository URL in ArgoCD.\nUse \"*\" to validate all repositories."
+        },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object",
+          "description": "Labels can be used to target repositories by labels when name/repo are not enough."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "CheckRelationship": {
+      "properties": {
+        "components": {
+          "items": {
+            "$ref": "#/$defs/RelationshipSelectorTemplate"
+          },
+          "type": "array"
+        },
+        "configs": {
+          "items": {
+            "$ref": "#/$defs/RelationshipSelectorTemplate"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "description": "CheckRelationship defines a way to link the check results to components and configs\nusing lookup expressions."
+    },
+    "ConfigMapKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
+    "EnvVar": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueFrom": {
+          "$ref": "#/$defs/EnvVarSource"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "EnvVarSource": {
+      "properties": {
+        "serviceAccount": {
+          "type": "string"
+        },
+        "helmRef": {
+          "$ref": "#/$defs/HelmRefKeySelector"
+        },
+        "configMapKeyRef": {
+          "$ref": "#/$defs/ConfigMapKeySelector"
+        },
+        "secretKeyRef": {
+          "$ref": "#/$defs/SecretKeySelector"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "HelmRefKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
+    "Labels": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "Lookup": {
+      "properties": {
+        "expr": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "MetricLabel": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueExpr": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
+    "MetricLabels": {
+      "items": {
+        "$ref": "#/$defs/MetricLabel"
+      },
+      "type": "array"
+    },
+    "Metrics": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "$ref": "#/$defs/MetricLabels"
+        },
+        "type": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "RelationshipSelectorTemplate": {
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "external_id": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "name": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "namespace": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "type": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "agent": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "scope": {
+          "$ref": "#/$defs/Lookup"
+        },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "SecretKeySelector": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "key"
+      ]
+    },
+    "Template": {
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "jsonPath": {
+          "type": "string"
+        },
+        "expr": {
+          "type": "string"
+        },
+        "javascript": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    }
+  }
+}

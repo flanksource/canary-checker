@@ -28,6 +28,7 @@ type SingleCheckRunner interface {
 
 var All = []Checker{
 	&AlertManagerChecker{},
+	&ArgoChecker{},
 	&AwsConfigChecker{},
 	&AwsConfigRuleChecker{},
 	&AzureDevopsChecker{},

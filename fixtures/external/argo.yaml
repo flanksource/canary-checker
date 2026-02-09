@@ -1,0 +1,41 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: argo-kitchen-sink
+spec:
+  schedule: "@every 5m"
+  argo:
+    - name: check repositories and clusters using username@password
+      description: "Showcase all selectors with username/password authentication"
+      url: https://argocd.example.com
+      username:
+        value: admin
+      password:
+        value: "<ARGOCD_PASSWORD>"
+      # Select repositories by URL or name
+      repositories:
+        - repo: https://github.com/flanksource/mission-control
+        - name: platform-helm
+      # Select clusters by Server URL or name
+      clusters:
+        - server: https://kubernetes.default.svc
+        - name: in-cluster
+
+    - name: token-auth-wildcard
+      description: "Validate ALL repositories and clusters using Token authentication"
+      url: https://argocd.example.com
+      token:
+        valueFrom:
+          secretKeyRef:
+            secret: argo
+            key: token
+      repositories:
+        - repo: "*"
+      clusters:
+        - server: "*"
+
+    - name: connection-ref
+      description: "Use a connection resource for URL and credentials and only check repositories."
+      connection: connection://default/argocd-api
+      repositories:
+        - repo: "*"
