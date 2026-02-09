@@ -19,7 +19,8 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "CheckRelationship defines a way to link the check results to components and configs\nusing lookup expressions."
     },
     "ConfigMapKeySelector": {
       "properties": {
@@ -87,64 +88,80 @@
     "JmeterCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "jmx": {
-          "$ref": "#/$defs/EnvVar"
+          "$ref": "#/$defs/EnvVar",
+          "description": "Jmx defines the ConfigMap or Secret reference to get the JMX test plan"
         },
         "host": {
-          "type": "string"
+          "type": "string",
+          "description": "Host is the server against which test plan needs to be executed"
         },
         "port": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Port on which the server is running"
         },
         "properties": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Properties defines the local Jmeter properties"
         },
         "systemProperties": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "SystemProperties defines the java system property"
         },
         "responseDuration": {
-          "type": "string"
+          "type": "string",
+          "description": "ResponseDuration under which the all the test should pass"
         }
       },
       "additionalProperties": false,

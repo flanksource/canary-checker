@@ -19,7 +19,8 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "CheckRelationship defines a way to link the check results to components and configs\nusing lookup expressions."
     },
     "ConfigMapKeySelector": {
       "properties": {
@@ -76,37 +77,46 @@
     "FolderCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -118,40 +128,51 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "path": {
-          "type": "string"
+          "type": "string",
+          "description": "Path  to folder or object storage, e.g. `s3://\u003cbucket-name\u003e`,  `gcs://\u003cbucket-name\u003e`, `/path/tp/folder`"
         },
         "recursive": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Recursive when set to true will recursively scan the folder to list the files in it.\nHowever, symlinks are simply listed but not traversed."
         },
         "filter": {
           "$ref": "#/$defs/FolderFilter"
         },
         "minAge": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "MinAge the latest object should be older than defined age"
         },
         "maxAge": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "MaxAge the latest object should be younger than defined age"
         },
         "minCount": {
-          "type": "integer"
+          "type": "integer",
+          "description": "MinCount the minimum number of files inside the searchPath"
         },
         "maxCount": {
-          "type": "integer"
+          "type": "integer",
+          "description": "MinCount the minimum number of files inside the searchPath"
         },
         "minSize": {
-          "type": "string"
+          "type": "string",
+          "description": "MinSize of the files inside the searchPath"
         },
         "maxSize": {
-          "type": "string"
+          "type": "string",
+          "description": "MaxSize of the files inside the searchPath"
         },
         "availableSize": {
-          "type": "string"
+          "type": "string",
+          "description": "AvailableSize present on the filesystem"
         },
         "totalSize": {
-          "type": "string"
+          "type": "string",
+          "description": "TotalSize present on the filesystem"
         },
         "awsConnection": {
           "$ref": "#/$defs/S3Connection"

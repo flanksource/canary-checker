@@ -19,7 +19,8 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "CheckRelationship defines a way to link the check results to components and configs\nusing lookup expressions."
     },
     "ConfigMapKeySelector": {
       "properties": {
@@ -42,10 +43,12 @@
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Filters is a list of regex filters to apply to the crawled links."
         },
         "depth": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Depth is the maximum number of links to follow."
         },
         "allowedDomains": {
           "items": {
@@ -72,13 +75,16 @@
           "type": "array"
         },
         "delay": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "Delay is the duration to wait before creating a new request to the matching domains, defaults to 500ms"
         },
         "randomDelay": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "RandomDelay is the extra randomized duration to wait added to Delay before creating a new request, defaults to 100ms"
         },
         "parallelism": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Parallelism is the number of the maximum allowed concurrent requests, defaults to 2"
         }
       },
       "additionalProperties": false,
@@ -124,37 +130,46 @@
     "HTTPCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -166,13 +181,16 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection name e.g. connection://http/google"
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection url, interpolated with username,password"
         },
         "username": {
           "$ref": "#/$defs/EnvVar"
@@ -181,61 +199,77 @@
           "$ref": "#/$defs/EnvVar"
         },
         "endpoint": {
-          "type": "string"
+          "type": "string",
+          "description": "Deprecated: Use url instead"
         },
         "thresholdMillis": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer."
         },
         "responseCodes": {
           "items": {
             "type": "integer"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Expected response codes for the HTTP Request."
         },
         "responseContent": {
-          "type": "string"
+          "type": "string",
+          "description": "Exact response content expected to be returned by the endpoint."
         },
         "responseJSONContent": {
-          "$ref": "#/$defs/JSONCheck"
+          "$ref": "#/$defs/JSONCheck",
+          "description": "Deprecated, use expr and jsonpath function"
         },
         "maxSSLExpiry": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Maximum number of days until the SSL Certificate expires."
         },
         "method": {
-          "type": "string"
+          "type": "string",
+          "description": "Method to use - defaults to GET"
         },
         "ntlm": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "NTLM when set to true will do authentication using NTLM v1 protocol"
         },
         "ntlmv2": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "NTLM when set to true will do authentication using NTLM v2 protocol"
         },
         "body": {
-          "type": "string"
+          "type": "string",
+          "description": "Request Body Contents"
         },
         "headers": {
           "items": {
             "$ref": "#/$defs/EnvVar"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Header fields to be used in the query"
         },
         "templateBody": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Template the request body"
         },
         "env": {
           "items": {
             "$ref": "#/$defs/EnvVar"
           },
-          "type": "array"
+          "type": "array",
+          "description": "EnvVars are the environment variables that are accessible to templated body"
         },
         "oauth2": {
-          "$ref": "#/$defs/Oauth2Config"
+          "$ref": "#/$defs/Oauth2Config",
+          "description": "Oauth2 Configuration. The client ID \u0026 Client secret should go to username \u0026 password respectively."
         },
         "tlsConfig": {
-          "$ref": "#/$defs/TLSConfig"
+          "$ref": "#/$defs/TLSConfig",
+          "description": "TLS Config"
         },
         "crawl": {
-          "$ref": "#/$defs/Crawl"
+          "$ref": "#/$defs/Crawl",
+          "description": "Crawl site and verify links"
         }
       },
       "additionalProperties": false,
@@ -410,19 +444,24 @@
     "TLSConfig": {
       "properties": {
         "insecureSkipVerify": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "InsecureSkipVerify controls whether a client verifies the server's\ncertificate chain and host name"
         },
         "handshakeTimeout": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "HandshakeTimeout defaults to 10 seconds"
         },
         "ca": {
-          "$ref": "#/$defs/EnvVar"
+          "$ref": "#/$defs/EnvVar",
+          "description": "PEM encoded certificate of the CA to verify the server certificate"
         },
         "cert": {
-          "$ref": "#/$defs/EnvVar"
+          "$ref": "#/$defs/EnvVar",
+          "description": "PEM encoded client certificate"
         },
         "key": {
-          "$ref": "#/$defs/EnvVar"
+          "$ref": "#/$defs/EnvVar",
+          "description": "PEM encoded client private key"
         }
       },
       "additionalProperties": false,

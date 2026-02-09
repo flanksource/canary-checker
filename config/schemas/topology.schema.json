@@ -36,37 +36,46 @@
     "AlertManagerCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -78,10 +87,12 @@
           "$ref": "#/$defs/Template"
         },
         "connection": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection name e.g. connection://http/google"
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection url, interpolated with username,password"
         },
         "username": {
           "$ref": "#/$defs/EnvVar"
@@ -90,7 +101,8 @@
           "$ref": "#/$defs/EnvVar"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "alerts": {
           "items": {
@@ -126,7 +138,8 @@
     "Artifact": {
       "properties": {
         "path": {
-          "type": "string"
+          "type": "string",
+          "description": "Path to the artifact on the check runner.\nSpecial paths: /dev/stdout \u0026 /dev/stdin"
         }
       },
       "additionalProperties": false,
@@ -150,37 +163,46 @@
     "AwsConfigCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -192,7 +214,8 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "query": {
           "type": "string"
@@ -235,37 +258,46 @@
     "AwsConfigRuleCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -277,25 +309,29 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "ignoreRules": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "List of rules which would be omitted from the fetch result"
         },
         "rules": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Specify one or more Config rule names to filter the results by rule."
         },
         "complianceTypes": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Filters the results by compliance. The allowed values are INSUFFICIENT_DATA, NON_COMPLIANT, NOT_APPLICABLE, COMPLIANT"
         },
         "connection": {
           "type": "string"
@@ -349,37 +385,46 @@
     "AzureDevopsCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -391,7 +436,8 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
           "type": "string"
@@ -403,7 +449,8 @@
           "$ref": "#/$defs/EnvVar"
         },
         "project": {
-          "type": "string"
+          "type": "string",
+          "description": "Name or ID of the Project"
         },
         "pipeline": {
           "type": "string"
@@ -421,7 +468,8 @@
           "type": "array"
         },
         "thresholdMillis": {
-          "type": "integer"
+          "type": "integer",
+          "description": "ThresholdMillis the maximum duration of a Run. (Optional)"
         }
       },
       "additionalProperties": false,
@@ -460,7 +508,8 @@
     "CanarySpec": {
       "properties": {
         "replicas": {
-          "type": "integer"
+          "type": "integer",
+          "description": "+optional\nReplicas pauses the canary if = 0."
         },
         "env": {
           "additionalProperties": {
@@ -706,10 +755,12 @@
           "$ref": "#/$defs/WebhookCheck"
         },
         "interval": {
-          "type": "integer"
+          "type": "integer",
+          "description": "interval (in seconds) to run checks on Deprecated in favor of Schedule"
         },
         "schedule": {
-          "type": "string"
+          "type": "string",
+          "description": "Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron\nAlso supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.\nIf both schedule and interval are empty, the canary will not run"
         },
         "icon": {
           "type": "string"
@@ -727,46 +778,57 @@
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "AgentSelector specifies agents that should run this canary.\nWhen populated, the canary will not run locally but copies\nwill be created for each matched agent.\nThis also supports prefix/suffix (eu-west-*) and negations (!team-b)"
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "CanarySpec defines the desired state of Canary"
     },
     "CatalogCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -778,7 +840,8 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "selector": {
           "$ref": "#/$defs/ResourceSelectors"
@@ -807,42 +870,52 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "CheckRelationship defines a way to link the check results to components and configs\nusing lookup expressions."
     },
     "CloudWatchCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "connection": {
           "type": "string"
@@ -878,7 +951,8 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "actionPrefix": {
           "type": "string"
@@ -941,7 +1015,8 @@
           "type": "string"
         },
         "id": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/Template",
+          "description": "nolint"
         },
         "order": {
           "type": "integer"
@@ -953,13 +1028,16 @@
           "type": "object"
         },
         "hidden": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If set to true, do not display in UI"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "description": "The type of component, e.g. service, API, website, library, database, etc."
         },
         "lifecycle": {
-          "type": "string"
+          "type": "string",
+          "description": "The lifecycle state of the component e.g. production, staging, dev, etc."
         },
         "relationships": {
           "items": {
@@ -974,40 +1052,50 @@
           "type": "array"
         },
         "lookup": {
-          "$ref": "#/$defs/CanarySpec"
+          "$ref": "#/$defs/CanarySpec",
+          "description": "Lookup component definitions from an external source, use the\nforEach property to iterate over the results to further enrich each component."
         },
         "components": {
           "items": {
             "$ref": "#/$defs/ComponentSpecObject"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Create new child components"
         },
         "selectors": {
-          "$ref": "#/$defs/ResourceSelectors"
+          "$ref": "#/$defs/ResourceSelectors",
+          "description": "Lookup and associcate other components with this component"
         },
         "checks": {
           "$ref": "#/$defs/ComponentChecks"
         },
         "configs": {
-          "$ref": "#/$defs/ConfigQueries"
+          "$ref": "#/$defs/ConfigQueries",
+          "description": "Lookup and associate config items with this component"
         },
         "summary": {
-          "$ref": "#/$defs/Summary"
+          "$ref": "#/$defs/Summary",
+          "description": "Summary is the health, incidents, insights \u0026 check summary"
         },
         "forEach": {
-          "$ref": "#/$defs/ForEach"
+          "$ref": "#/$defs/ForEach",
+          "description": "Only applies when using lookup, when specified the components and properties\nspecified under ForEach will be templated using the components returned by the lookup\n${.properties} can be used to reference the properties of the component\n${.component} can be used to reference the component itself"
         },
         "logs": {
-          "$ref": "#/$defs/LogSelectors"
+          "$ref": "#/$defs/LogSelectors",
+          "description": "Logs is a list of logs selector for apm-hub."
         },
         "parentLookup": {
-          "$ref": "#/$defs/ParentLookup"
+          "$ref": "#/$defs/ParentLookup",
+          "description": "Reference to populate parent_id"
         },
         "statusExpr": {
-          "type": "string"
+          "type": "string",
+          "description": "statusExpr allows defining a cel expression to evaluate the status of a component\nbased on the summary."
         },
         "healthExpr": {
-          "type": "string"
+          "type": "string",
+          "description": "healthExpr allows defining a cel expression to evaluate the health of a component\nbased on the summary."
         },
         "health": {
           "type": "string"
@@ -1017,7 +1105,8 @@
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "ComponentSpec defines the specification for a component."
     },
     "ComponentSpecObject": {
       "properties": {
@@ -1124,13 +1213,16 @@
           "type": "string"
         },
         "config": {
-          "$ref": "#/$defs/ConfigQuery"
+          "$ref": "#/$defs/ConfigQuery",
+          "description": "Lookup a config by it"
         },
         "field": {
-          "type": "string"
+          "type": "string",
+          "description": "A JSONPath expression to lookup the value in the config"
         },
         "display": {
-          "$ref": "#/$defs/Display"
+          "$ref": "#/$defs/Display",
+          "description": "Apply transformations to the value"
         }
       },
       "additionalProperties": false,
@@ -1229,40 +1321,50 @@
     "ContainerdPullCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "image": {
           "type": "string"
@@ -1287,40 +1389,50 @@
     "ContainerdPushCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "image": {
           "type": "string"
@@ -1345,10 +1457,12 @@
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Filters is a list of regex filters to apply to the crawled links."
         },
         "depth": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Depth is the maximum number of links to follow."
         },
         "allowedDomains": {
           "items": {
@@ -1375,13 +1489,16 @@
           "type": "array"
         },
         "delay": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "Delay is the duration to wait before creating a new request to the matching domains, defaults to 500ms"
         },
         "randomDelay": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "RandomDelay is the extra randomized duration to wait added to Delay before creating a new request, defaults to 100ms"
         },
         "parallelism": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Parallelism is the number of the maximum allowed concurrent requests, defaults to 2"
         }
       },
       "additionalProperties": false,
@@ -1390,40 +1507,50 @@
     "DNSCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "server": {
           "type": "string"
@@ -1462,37 +1589,46 @@
     "DatabaseBackupCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1504,7 +1640,8 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "gcp": {
           "$ref": "#/$defs/GCPDatabase"
@@ -1540,40 +1677,50 @@
     "DockerPullCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "image": {
           "type": "string"
@@ -1598,40 +1745,50 @@
     "DockerPushCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "image": {
           "type": "string"
@@ -1654,37 +1811,45 @@
     "DynatraceCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
           "type": "string"
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1696,7 +1861,8 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
           "type": "string"
@@ -1756,37 +1922,46 @@
     "ElasticsearchCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1798,13 +1973,16 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection name e.g. connection://http/google"
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection url, interpolated with username,password"
         },
         "username": {
           "$ref": "#/$defs/EnvVar"
@@ -1864,37 +2042,46 @@
     "ExecCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1906,10 +2093,12 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "script": {
-          "type": "string"
+          "type": "string",
+          "description": "Script can be a inline script or a path to a script that needs to be executed\nOn windows executed via powershell and in darwin and linux executed using bash"
         },
         "connections": {
           "$ref": "#/$defs/ExecConnections"
@@ -1918,16 +2107,19 @@
           "items": {
             "$ref": "#/$defs/EnvVar"
           },
-          "type": "array"
+          "type": "array",
+          "description": "EnvVars are the environment variables that are accessible to exec processes"
         },
         "checkout": {
-          "$ref": "#/$defs/GitConnection"
+          "$ref": "#/$defs/GitConnection",
+          "description": "Checkout details the git repository that should be mounted to the process"
         },
         "artifacts": {
           "items": {
             "$ref": "#/$defs/Artifact"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Artifacts configure the artifacts generated by the check"
         }
       },
       "additionalProperties": false,
@@ -1972,37 +2164,46 @@
     "FolderCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2014,40 +2215,51 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "path": {
-          "type": "string"
+          "type": "string",
+          "description": "Path  to folder or object storage, e.g. `s3://\u003cbucket-name\u003e`,  `gcs://\u003cbucket-name\u003e`, `/path/tp/folder`"
         },
         "recursive": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Recursive when set to true will recursively scan the folder to list the files in it.\nHowever, symlinks are simply listed but not traversed."
         },
         "filter": {
           "$ref": "#/$defs/FolderFilter"
         },
         "minAge": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "MinAge the latest object should be older than defined age"
         },
         "maxAge": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "MaxAge the latest object should be younger than defined age"
         },
         "minCount": {
-          "type": "integer"
+          "type": "integer",
+          "description": "MinCount the minimum number of files inside the searchPath"
         },
         "maxCount": {
-          "type": "integer"
+          "type": "integer",
+          "description": "MinCount the minimum number of files inside the searchPath"
         },
         "minSize": {
-          "type": "string"
+          "type": "string",
+          "description": "MinSize of the files inside the searchPath"
         },
         "maxSize": {
-          "type": "string"
+          "type": "string",
+          "description": "MaxSize of the files inside the searchPath"
         },
         "availableSize": {
-          "type": "string"
+          "type": "string",
+          "description": "AvailableSize present on the filesystem"
         },
         "totalSize": {
-          "type": "string"
+          "type": "string",
+          "description": "TotalSize present on the filesystem"
         },
         "awsConnection": {
           "$ref": "#/$defs/S3Connection"
@@ -2102,7 +2314,8 @@
           "type": "array"
         },
         "properties": {
-          "$ref": "#/$defs/Properties"
+          "$ref": "#/$defs/Properties",
+          "description": "Properties are created once the full component tree is created, property lookup functions\ncan return a map of component name =\u003e properties to allow for bulk property lookups\nbeing applied to multiple components in the tree"
         },
         "configs": {
           "items": {
@@ -2261,37 +2474,46 @@
     "GitHubCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2303,13 +2525,15 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
           "type": "string"
         },
         "query": {
-          "type": "string"
+          "type": "string",
+          "description": "Query to be executed. Please see https://github.com/askgitdev/askgit for more details regarding syntax"
         },
         "githubToken": {
           "$ref": "#/$defs/EnvVar"
@@ -2325,37 +2549,46 @@
     "GitProtocolCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2367,7 +2600,8 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "filename": {
           "type": "string"
@@ -2394,37 +2628,46 @@
     "HTTPCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2436,13 +2679,16 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection name e.g. connection://http/google"
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection url, interpolated with username,password"
         },
         "username": {
           "$ref": "#/$defs/EnvVar"
@@ -2451,61 +2697,77 @@
           "$ref": "#/$defs/EnvVar"
         },
         "endpoint": {
-          "type": "string"
+          "type": "string",
+          "description": "Deprecated: Use url instead"
         },
         "thresholdMillis": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer."
         },
         "responseCodes": {
           "items": {
             "type": "integer"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Expected response codes for the HTTP Request."
         },
         "responseContent": {
-          "type": "string"
+          "type": "string",
+          "description": "Exact response content expected to be returned by the endpoint."
         },
         "responseJSONContent": {
-          "$ref": "#/$defs/JSONCheck"
+          "$ref": "#/$defs/JSONCheck",
+          "description": "Deprecated, use expr and jsonpath function"
         },
         "maxSSLExpiry": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Maximum number of days until the SSL Certificate expires."
         },
         "method": {
-          "type": "string"
+          "type": "string",
+          "description": "Method to use - defaults to GET"
         },
         "ntlm": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "NTLM when set to true will do authentication using NTLM v1 protocol"
         },
         "ntlmv2": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "NTLM when set to true will do authentication using NTLM v2 protocol"
         },
         "body": {
-          "type": "string"
+          "type": "string",
+          "description": "Request Body Contents"
         },
         "headers": {
           "items": {
             "$ref": "#/$defs/EnvVar"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Header fields to be used in the query"
         },
         "templateBody": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Template the request body"
         },
         "env": {
           "items": {
             "$ref": "#/$defs/EnvVar"
           },
-          "type": "array"
+          "type": "array",
+          "description": "EnvVars are the environment variables that are accessible to templated body"
         },
         "oauth2": {
-          "$ref": "#/$defs/Oauth2Config"
+          "$ref": "#/$defs/Oauth2Config",
+          "description": "Oauth2 Configuration. The client ID \u0026 Client secret should go to username \u0026 password respectively."
         },
         "tlsConfig": {
-          "$ref": "#/$defs/TLSConfig"
+          "$ref": "#/$defs/TLSConfig",
+          "description": "TLS Config"
         },
         "crawl": {
-          "$ref": "#/$defs/Crawl"
+          "$ref": "#/$defs/Crawl",
+          "description": "Crawl site and verify links"
         }
       },
       "additionalProperties": false,
@@ -2545,6 +2807,12 @@
         },
         "tls": {
           "$ref": "#/$defs/TLSConfig"
+        },
+        "headers": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
         }
       },
       "additionalProperties": false,
@@ -2553,40 +2821,50 @@
     "HelmCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "chartmuseum": {
           "type": "string"
@@ -2625,40 +2903,50 @@
     "ICMPCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "endpoint": {
           "type": "string"
@@ -2704,64 +2992,80 @@
     "JmeterCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "jmx": {
-          "$ref": "#/$defs/EnvVar"
+          "$ref": "#/$defs/EnvVar",
+          "description": "Jmx defines the ConfigMap or Secret reference to get the JMX test plan"
         },
         "host": {
-          "type": "string"
+          "type": "string",
+          "description": "Host is the server against which test plan needs to be executed"
         },
         "port": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Port on which the server is running"
         },
         "properties": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Properties defines the local Jmeter properties"
         },
         "systemProperties": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "SystemProperties defines the java system property"
         },
         "responseDuration": {
-          "type": "string"
+          "type": "string",
+          "description": "ResponseDuration under which the all the test should pass"
         }
       },
       "additionalProperties": false,
@@ -2774,37 +3078,46 @@
     "JunitCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "testResults": {
           "type": "string"
@@ -2819,17 +3132,20 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "timeout": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Timeout in minutes to wait for specified container to finish its job. Defaults to 5 minutes"
         },
         "spec": true,
         "artifacts": {
           "items": {
             "$ref": "#/$defs/Artifact"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Artifacts configure the artifacts generated by the check"
         }
       },
       "additionalProperties": false,
@@ -2866,37 +3182,46 @@
     "KubernetesCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2908,7 +3233,8 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "namespaceSelector": {
           "$ref": "#/$defs/ResourceSelector"
@@ -2935,16 +3261,19 @@
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Ignore the specified resources from the fetched resources. Can be a glob pattern."
         },
         "kind": {
           "type": "string"
         },
         "healthy": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Fail the check if any resources are unhealthy"
         },
         "ready": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Fail the check if any resources are not ready"
         }
       },
       "additionalProperties": false,
@@ -2978,37 +3307,46 @@
     "KubernetesResourceCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3020,31 +3358,37 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "staticResources": {
           "items": {
             "$ref": "#/$defs/Unstructured"
           },
-          "type": "array"
+          "type": "array",
+          "description": "StaticResources are kubernetes resources that are created \u0026 only\ncleared when the canary is deleted"
         },
         "resources": {
           "items": {
             "$ref": "#/$defs/Unstructured"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Resources are kubernetes resources that are created \u0026 cleared\nafter every check run."
         },
         "checks": {
           "items": {
             "$ref": "#/$defs/KubernetesResourceChecks"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Checks to run against the kubernetes resources."
         },
         "checkRetries": {
-          "$ref": "#/$defs/KubernetesResourceCheckRetries"
+          "$ref": "#/$defs/KubernetesResourceCheckRetries",
+          "description": "Set initial delays and retry intervals for checks."
         },
         "clearResources": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Ensure that the resources are deleted before creating them."
         },
         "connection": {
           "type": "string"
@@ -3075,7 +3419,8 @@
     "KubernetesResourceCheckRetries": {
       "properties": {
         "delay": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "Delay is the initial delay"
         },
         "timeout": {
           "$ref": "#/$defs/Duration"
@@ -3090,19 +3435,24 @@
     "KubernetesResourceCheckWaitFor": {
       "properties": {
         "expr": {
-          "type": "string"
+          "type": "string",
+          "description": "Expr is a cel expression that determines whether all the resources\nare in their desired state before running checks on them.\n\tDefault: `dyn(resources).all(r, k8s.isHealthy(r))`"
         },
         "disable": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Disable waiting for resources to get to their desired state."
         },
         "delete": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "Whether to wait for deletion or not"
         },
         "timeout": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "Timeout to wait for all static \u0026 non-static resources to be ready.\n\tDefault: 10m"
         },
         "interval": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "Interval to check if all static \u0026 non-static resources are ready.\n\tDefault: 5s"
         }
       },
       "additionalProperties": false,
@@ -3111,7 +3461,8 @@
     "KubernetesResourceChecks": {
       "properties": {
         "replicas": {
-          "type": "integer"
+          "type": "integer",
+          "description": "+optional\nReplicas pauses the canary if = 0."
         },
         "env": {
           "additionalProperties": {
@@ -3357,10 +3708,12 @@
           "$ref": "#/$defs/WebhookCheck"
         },
         "interval": {
-          "type": "integer"
+          "type": "integer",
+          "description": "interval (in seconds) to run checks on Deprecated in favor of Schedule"
         },
         "schedule": {
-          "type": "string"
+          "type": "string",
+          "description": "Schedule to run checks on. Supports all cron expression, example: '30 3-6,20-23 * * *'. For more info about cron expression syntax see https://en.wikipedia.org/wiki/Cron\nAlso supports golang duration, can be set as '@every 1m30s' which runs the check every 1 minute and 30 seconds.\nIf both schedule and interval are empty, the canary will not run"
         },
         "icon": {
           "type": "string"
@@ -3378,55 +3731,69 @@
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "AgentSelector specifies agents that should run this canary.\nWhen populated, the canary will not run locally but copies\nwill be created for each matched agent.\nThis also supports prefix/suffix (eu-west-*) and negations (!team-b)"
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "KubernetesResourceChecks is the canary spec.\nNOTE: It's only created to make crd generation possible.\nembedding CanarySpec into KubernetesResourceCheck.checks\ndirectly generates an invalid crd."
     },
     "LDAPCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection name e.g. connection://http/google"
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection url, interpolated with username,password"
         },
         "username": {
           "$ref": "#/$defs/EnvVar"
@@ -3604,43 +3971,54 @@
     "MongoDBCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "connection": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection name e.g. connection://http/google"
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection url, interpolated with username,password"
         },
         "username": {
           "$ref": "#/$defs/EnvVar"
@@ -3658,37 +4036,46 @@
     "MssqlCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3700,13 +4087,16 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection name e.g. connection://http/google"
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection url, interpolated with username,password"
         },
         "username": {
           "$ref": "#/$defs/EnvVar"
@@ -3721,7 +4111,8 @@
           "type": "string"
         },
         "results": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Number rows to check for"
         }
       },
       "additionalProperties": false,
@@ -3733,37 +4124,46 @@
     "MysqlCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3775,13 +4175,16 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection name e.g. connection://http/google"
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection url, interpolated with username,password"
         },
         "username": {
           "$ref": "#/$defs/EnvVar"
@@ -3796,7 +4199,8 @@
           "type": "string"
         },
         "results": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Number rows to check for"
         }
       },
       "additionalProperties": false,
@@ -3826,40 +4230,50 @@
     "NamespaceCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "namespaceNamePrefix": {
           "type": "string"
@@ -4064,37 +4478,46 @@
     "OpenSearchCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -4106,13 +4529,16 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection name e.g. connection://http/google"
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection url, interpolated with username,password"
         },
         "username": {
           "$ref": "#/$defs/EnvVar"
@@ -4189,40 +4615,49 @@
     "PodCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
           "type": "string"
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "spec": {
           "type": "string"
@@ -4288,37 +4723,46 @@
     "PostgresCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -4330,13 +4774,16 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection name e.g. connection://http/google"
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection url, interpolated with username,password"
         },
         "username": {
           "$ref": "#/$defs/EnvVar"
@@ -4351,7 +4798,8 @@
           "type": "string"
         },
         "results": {
-          "type": "integer"
+          "type": "integer",
+          "description": "Number rows to check for"
         }
       },
       "additionalProperties": false,
@@ -4363,37 +4811,46 @@
     "PrometheusCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -4405,10 +4862,12 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "host": {
-          "type": "string"
+          "type": "string",
+          "description": "Deprecated: use `url` instead"
         },
         "connection": {
           "type": "string"
@@ -4440,8 +4899,15 @@
         "tls": {
           "$ref": "#/$defs/TLSConfig"
         },
+        "headers": {
+          "items": {
+            "$ref": "#/$defs/EnvVar"
+          },
+          "type": "array"
+        },
         "query": {
-          "type": "string"
+          "type": "string",
+          "description": "PromQL query"
         }
       },
       "additionalProperties": false,
@@ -4490,7 +4956,8 @@
           "type": "boolean"
         },
         "unit": {
-          "type": "string"
+          "type": "string",
+          "description": "e.g. milliseconds, bytes, millicores, epoch etc."
         },
         "value": {
           "type": "integer"
@@ -4529,37 +4996,46 @@
     "PubSubCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -4657,46 +5133,58 @@
     "RedisCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection name e.g. connection://http/google"
         },
         "url": {
-          "type": "string"
+          "type": "string",
+          "description": "Connection url, interpolated with username,password"
         },
         "username": {
           "$ref": "#/$defs/EnvVar"
@@ -4705,7 +5193,8 @@
           "$ref": "#/$defs/EnvVar"
         },
         "addr": {
-          "type": "string"
+          "type": "string",
+          "description": "Deprecated: Use url instead"
         },
         "db": {
           "type": "integer"
@@ -4753,7 +5242,8 @@
     "RelationshipSpec": {
       "properties": {
         "type": {
-          "type": "string"
+          "type": "string",
+          "description": "The type of relationship, e.g. dependsOn, subcomponentOf, providesApis, consumesApis"
         },
         "ref": {
           "type": "string"
@@ -4789,67 +5279,86 @@
     "ResticCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the connection used to derive restic password."
         },
         "awsConnectionName": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the AWS connection used to derive the access key and secret key."
         },
         "repository": {
-          "type": "string"
+          "type": "string",
+          "description": "Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name"
         },
         "password": {
-          "$ref": "#/$defs/EnvVar"
+          "$ref": "#/$defs/EnvVar",
+          "description": "Password for the restic repository"
         },
         "maxAge": {
-          "type": "string"
+          "type": "string",
+          "description": "MaxAge for backup freshness"
         },
         "checkIntegrity": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry"
         },
         "accessKey": {
-          "$ref": "#/$defs/EnvVar"
+          "$ref": "#/$defs/EnvVar",
+          "description": "AccessKey access key id for connection with aws s3, minio, wasabi, alibaba oss"
         },
         "secretKey": {
-          "$ref": "#/$defs/EnvVar"
+          "$ref": "#/$defs/EnvVar",
+          "description": "SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss"
         },
         "caCert": {
-          "type": "string"
+          "type": "string",
+          "description": "CaCert path to the root cert. In case of self-signed certificates"
         }
       },
       "additionalProperties": false,
@@ -4864,40 +5373,50 @@
     "S3Check": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "connection": {
           "type": "string"
@@ -5135,37 +5654,46 @@
     "TCPCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -5177,7 +5705,8 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "endpoint": {
           "type": "string"
@@ -5195,19 +5724,24 @@
     "TLSConfig": {
       "properties": {
         "insecureSkipVerify": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "InsecureSkipVerify controls whether a client verifies the server's\ncertificate chain and host name"
         },
         "handshakeTimeout": {
-          "$ref": "#/$defs/Duration"
+          "$ref": "#/$defs/Duration",
+          "description": "HandshakeTimeout defaults to 10 seconds"
         },
         "ca": {
-          "$ref": "#/$defs/EnvVar"
+          "$ref": "#/$defs/EnvVar",
+          "description": "PEM encoded certificate of the CA to verify the server certificate"
         },
         "cert": {
-          "$ref": "#/$defs/EnvVar"
+          "$ref": "#/$defs/EnvVar",
+          "description": "PEM encoded client certificate"
         },
         "key": {
-          "$ref": "#/$defs/EnvVar"
+          "$ref": "#/$defs/EnvVar",
+          "description": "PEM encoded client private key"
         }
       },
       "additionalProperties": false,
@@ -5263,7 +5797,8 @@
           "type": "string"
         },
         "id": {
-          "$ref": "#/$defs/Template"
+          "$ref": "#/$defs/Template",
+          "description": "nolint"
         },
         "schedule": {
           "type": "string"
@@ -5290,25 +5825,31 @@
           "type": "array"
         },
         "healthExpr": {
-          "type": "string"
+          "type": "string",
+          "description": "statusExpr allows defining a cel expression to evaluate the status of a component\nbased on the summary."
         },
         "statusExpr": {
-          "type": "string"
+          "type": "string",
+          "description": "statusExpr allows defining a cel expression to evaluate the status of a component\nbased on the summary."
         },
         "properties": {
-          "$ref": "#/$defs/Properties"
+          "$ref": "#/$defs/Properties",
+          "description": "Properties are created once the full component tree is created, property lookup functions\ncan return a map of coomponent name =\u003e properties to allow for bulk property lookups\nbeing applied to multiple components in the tree"
         },
         "configs": {
           "items": {
             "$ref": "#/$defs/ConfigQuery"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Lookup and associate config items with this component"
         },
         "groupBy": {
-          "$ref": "#/$defs/TopologyTagSelector"
+          "$ref": "#/$defs/TopologyTagSelector",
+          "description": "Specify the catalog tag (\u0026 optionally the tag selector) to group\nthe topology."
         },
         "push": {
-          "$ref": "#/$defs/HTTPConnection"
+          "$ref": "#/$defs/HTTPConnection",
+          "description": "Agent will push topology to specified path"
         }
       },
       "additionalProperties": false,
@@ -5320,7 +5861,8 @@
           "type": "string"
         },
         "observedGeneration": {
-          "type": "integer"
+          "type": "integer",
+          "description": "+optional"
         },
         "status": {
           "type": "string"
@@ -5359,55 +5901,69 @@
     "VarSource": {
       "properties": {
         "fieldRef": {
-          "$ref": "#/$defs/ObjectFieldSelector"
+          "$ref": "#/$defs/ObjectFieldSelector",
+          "description": "Selects a field of the pod: supports metadata.name, metadata.namespace, metadata.labels, metadata.annotations,\nspec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.\n+optional"
         },
         "value": {
-          "type": "string"
+          "type": "string",
+          "description": "+optional"
         },
         "configMapKeyRef": {
-          "$ref": "#/$defs/ConfigMapKeySelector"
+          "$ref": "#/$defs/ConfigMapKeySelector",
+          "description": "Selects a key of a ConfigMap.\n+optional"
         },
         "secretKeyRef": {
-          "$ref": "#/$defs/SecretKeySelector"
+          "$ref": "#/$defs/SecretKeySelector",
+          "description": "Selects a key of a secret in the pod's namespace\n+optional"
         }
       },
       "additionalProperties": false,
-      "type": "object"
+      "type": "object",
+      "description": "VarSource represents a source for a value"
     },
     "WebhookCheck": {
       "properties": {
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Description for the check"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "Name of the check"
         },
         "namespace": {
-          "type": "string"
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
         },
         "icon": {
-          "type": "string"
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
         },
         "labels": {
-          "$ref": "#/$defs/Labels"
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
         },
         "transformDeleteStrategy": {
-          "type": "string"
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
         },
         "metrics": {
           "items": {
             "$ref": "#/$defs/Metrics"
           },
-          "type": "array"
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
         },
         "markFailOnEmpty": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
         },
         "dependsOn": {
           "items": {
             "type": "string"
           },
-          "type": "array"
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -5419,10 +5975,12 @@
           "$ref": "#/$defs/Template"
         },
         "relationships": {
-          "$ref": "#/$defs/CheckRelationship"
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
         "token": {
-          "$ref": "#/$defs/EnvVar"
+          "$ref": "#/$defs/EnvVar",
+          "description": "Token is an optional authorization token to run this check"
         }
       },
       "additionalProperties": false,
