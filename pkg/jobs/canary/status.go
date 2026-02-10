@@ -22,6 +22,10 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 		return
 	}
 
+	if len(results) == 0 {
+		return
+	}
+
 	// Skip function if canary is not sourced from Kubernetes CRD
 	if !strings.HasPrefix(canary.Annotations["source"], "kubernetes") {
 		return

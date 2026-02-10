@@ -3,6 +3,7 @@ package canary
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -101,9 +102,13 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		attribute.String("canary.namespace", j.Canary.Namespace),
 	)
 
-	results, err := checks.RunChecks(canaryCtx)
+	results, runMeta, err := checks.RunChecks(canaryCtx)
 	if err != nil {
 		return err
+	}
+
+	if runMeta.SecretLookupRateLimitSkipped > 0 {
+		maybeRescheduleAfterSecretLookupRateLimit(ctx.Context, j.DBCanary, j.Canary, runMeta.SecretLookupRateLimitSkipped)
 	}
 
 	// Get transformed checks before and after, and then delete the olds ones that are not in new set.
@@ -162,6 +167,28 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	CanaryLastRuntimes.Store(canaryID, time.Now())
 	ctx.History.SuccessCount = len(results)
 	return nil
+}
+
+func maybeRescheduleAfterSecretLookupRateLimit(ctx context.Context, dbCanary pkg.Canary, canary v1.Canary, skipped int) {
+	nextRuntime, err := canary.NextRuntime(time.Now())
+	if err != nil || nextRuntime == nil {
+		ctx.Warnf("failed to compute next runtime for canary[%s/%s]: %v", canary.Namespace, canary.Name, err)
+		return
+	}
+
+	if time.Until(*nextRuntime) <= 5*time.Minute {
+		return
+	}
+
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+	delay := time.Minute + time.Duration(rng.Intn(60))*time.Second
+	runAt := time.Now().Add(delay)
+	if err := TriggerAt(ctx, dbCanary, runAt); err != nil {
+		ctx.Warnf("failed to schedule earlier retry for canary[%s/%s] after %d skipped results: %v", canary.Namespace, canary.Name, skipped, err)
+		return
+	}
+
+	ctx.Infof("scheduled earlier retry for canary[%s/%s] in %s after %d secret lookup rate-limited skips", canary.Namespace, canary.Name, delay.Round(time.Second), skipped)
 }
 
 func SaveResults(ctx context.Context, results []*pkg.CheckResult) ([]string, map[string]string, error) {

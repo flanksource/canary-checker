@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/flanksource/canary-checker/api/external"
-	v1 "github.com/flanksource/canary-checker/api/v1"
-	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/duty/connection"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/flanksource/duty/types"
 	"github.com/flanksource/gomplate/v3"
+
+	"github.com/flanksource/canary-checker/api/external"
+	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 )
 
 var DefaultContext dutyCtx.Context
