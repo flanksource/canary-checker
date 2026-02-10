@@ -9,19 +9,36 @@ import (
 	"time"
 
 	"github.com/flanksource/artifacts"
+	dutyCtx "github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/models"
+	"github.com/google/uuid"
+	gocache "github.com/patrickmn/go-cache"
+	"golang.org/x/time/rate"
+
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
-	"github.com/flanksource/duty/models"
-	"github.com/google/uuid"
-	gocache "github.com/patrickmn/go-cache"
+)
+
+const (
+	defaultSecretLookupFailureThreshold = 50
+	defaultSecretLookupFailureWindow    = 30 * time.Minute
 )
 
 var checksCache = gocache.New(5*time.Minute, 5*time.Minute)
 
+var secretLookupRateLimiter = rate.NewLimiter(
+	rate.Limit(float64(defaultSecretLookupFailureThreshold)/defaultSecretLookupFailureWindow.Seconds()),
+	defaultSecretLookupFailureThreshold,
+)
+
 var DisabledChecks []string
+
+type RunChecksMeta struct {
+	SecretLookupRateLimitSkipped int
+}
 
 func getDisabledChecks(ctx *context.Context) (map[string]struct{}, error) {
 	if val, ok := checksCache.Get("disabledChecks"); ok {
@@ -150,8 +167,13 @@ func sortChecksByDependency(checks []external.Check) ([]external.Check, error) {
 	return append(unnamedChecks, sorted...), nil
 }
 
-// Exec runs the actions specified and returns the results, without saving artifacts
-func Exec(ctx *context.Context) ([]*pkg.CheckResult, error) {
+// RunChecksNoPersistence executes checks and returns transformed results without persistence side effects.
+//
+// Unlike RunChecks, it does not perform canary deletion checks, dependency ordering,
+// artifact saving, or final result post-processing (e.g. resultMode handling).
+// It exports only check spec metrics (not per-result emitted metrics) and is intended
+// for embedded execution paths (e.g. topology lookups and kubernetesResource sub-checks).
+func RunChecksNoPersistence(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	var results []*pkg.CheckResult
 	disabledChecks, err := getDisabledChecks(ctx)
 	if err != nil {
@@ -174,9 +196,11 @@ func Exec(ctx *context.Context) ([]*pkg.CheckResult, error) {
 
 		result := c.Run(ctx)
 		transformedResults := TransformResults(ctx, result)
-		results = append(results, transformedResults...)
-		ExportCheckMetrics(ctx, transformedResults, false)
+		_, filteredResults := filterSecretLookupRateLimitedResults(ctx, transformedResults)
+		results = append(results, filteredResults...)
+		ExportCheckMetrics(ctx, filteredResults, false)
 	}
+
 	return results, nil
 }
 
@@ -189,11 +213,12 @@ func hasDependencies(checks []external.Check) bool {
 	return false
 }
 
-func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
+func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, RunChecksMeta, error) {
 	var results []*pkg.CheckResult
+	meta := RunChecksMeta{}
 	disabledChecks, err := getDisabledChecks(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error getting disabled checks: %v", err)
+		return nil, meta, fmt.Errorf("error getting disabled checks: %v", err)
 	}
 
 	// Check if canary is not marked deleted in DB
@@ -201,11 +226,11 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 		var deletedAt sql.NullTime
 		err := ctx.DB().Table("canaries").Select("deleted_at").Where("id = ? and deleted_at < now()", ctx.Canary.GetPersistedID()).Scan(&deletedAt).Error
 		if err != nil {
-			return nil, fmt.Errorf("error getting canary: %v", err)
+			return nil, meta, fmt.Errorf("error getting canary: %v", err)
 		}
 
 		if deletedAt.Valid {
-			return nil, nil
+			return nil, meta, nil
 		}
 	}
 
@@ -215,7 +240,7 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 	if hasDependencies(checks) {
 		sortedChecks, err := sortChecksByDependency(checks)
 		if err != nil {
-			return nil, fmt.Errorf("failed to sort checks: %v", err)
+			return nil, meta, fmt.Errorf("failed to sort checks: %v", err)
 		}
 
 		for _, check := range sortedChecks {
@@ -241,11 +266,13 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 
 			result := singleRunner.Check(ctx, check)
 			transformedResults := TransformResults(ctx, result)
-			results = append(results, transformedResults...)
-			ExportCheckMetrics(ctx, transformedResults, true)
+			skippedCount, filteredResults := filterSecretLookupRateLimitedResults(ctx, transformedResults)
+			meta.SecretLookupRateLimitSkipped += skippedCount
+			results = append(results, filteredResults...)
+			ExportCheckMetrics(ctx, filteredResults, true)
 
-			if check.GetName() != "" && len(transformedResults) > 0 && transformedResults[0].Pass {
-				ctx.SetOutput(check.GetName(), transformedResults[0])
+			if check.GetName() != "" && len(filteredResults) > 0 && filteredResults[0].Pass {
+				ctx.SetOutput(check.GetName(), filteredResults[0])
 			}
 		}
 	} else {
@@ -259,8 +286,10 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 
 			result := c.Run(ctx)
 			transformedResults := TransformResults(ctx, result)
-			results = append(results, transformedResults...)
-			ExportCheckMetrics(ctx, transformedResults, true)
+			skippedCount, filteredResults := filterSecretLookupRateLimitedResults(ctx, transformedResults)
+			meta.SecretLookupRateLimitSkipped += skippedCount
+			results = append(results, filteredResults...)
+			ExportCheckMetrics(ctx, filteredResults, true)
 		}
 	}
 
@@ -268,7 +297,7 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, error) {
 		ctx.Errorf("error saving artifacts: %v", err)
 	}
 
-	return ProcessResults(ctx, results), nil
+	return ProcessResults(ctx, results), meta, nil
 }
 
 func saveArtifacts(ctx *context.Context, results pkg.Results) error {
@@ -354,6 +383,48 @@ func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.C
 		}
 	}
 	return out
+}
+
+func isSecretLookupRateLimitResult(result *pkg.CheckResult) bool {
+	if result == nil {
+		return false
+	}
+	if dutyCtx.IsSecretLookupRateLimited(result.ErrorObject) {
+		return true
+	}
+	return strings.Contains(strings.ToLower(result.Error), strings.ToLower(dutyCtx.ErrSecretLookupRateLimited.Error()))
+}
+
+func filterSecretLookupRateLimitedResults(ctx *context.Context, in []*pkg.CheckResult) (int, []*pkg.CheckResult) {
+	if len(in) == 0 {
+		return 0, in
+	}
+
+	skipped := 0
+	out := make([]*pkg.CheckResult, 0, len(in))
+
+	for _, result := range in {
+		if !isSecretLookupRateLimitResult(result) {
+			out = append(out, result)
+			continue
+		}
+
+		if secretLookupRateLimiter.Allow() {
+			skipped++
+			ctx.Warnf("skipping check result due to secret lookup rate limiting for check=%s (threshold=%d window=%s)", result.GetName(), defaultSecretLookupFailureThreshold, defaultSecretLookupFailureWindow.Round(time.Second))
+			continue
+		}
+
+		ctx.Warnf("secret lookup rate limit threshold exceeded for check=%s (threshold=%d window=%s), recording as failure", result.GetName(), defaultSecretLookupFailureThreshold, defaultSecretLookupFailureWindow.Round(time.Second))
+		result.Invalid = false
+		result.Pass = false
+		if result.Error == "" {
+			result.Error = "secret lookup repeatedly rate limited"
+		}
+		out = append(out, result)
+	}
+
+	return skipped, out
 }
 
 func ProcessResults(ctx *context.Context, results []*pkg.CheckResult) []*pkg.CheckResult {

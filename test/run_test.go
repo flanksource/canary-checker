@@ -113,7 +113,7 @@ func runFixture(name string) {
 			}
 			context := context.New(DefaultContext, canary)
 
-			checkResults, err := checks.RunChecks(context)
+			checkResults, _, err := checks.RunChecks(context)
 			if err != nil {
 				ginkgo.Fail(err.Error())
 				return

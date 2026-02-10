@@ -49,7 +49,7 @@ func RunCanaryHandler(c echo.Context) error {
 	}
 
 	ctx := context.New(duty, *canary)
-	results, err := checks.RunChecks(ctx)
+	results, _, err := checks.RunChecks(ctx)
 	if err != nil {
 		return errorResponse(c, err, http.StatusInternalServerError)
 	}
