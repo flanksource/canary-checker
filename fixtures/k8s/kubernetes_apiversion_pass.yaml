@@ -1,0 +1,19 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: kube-apiversion-pass
+spec:
+  schedule: "@every 5m"
+  kubernetes:
+    # Same Kind (Event), different apiVersions
+    - name: events-core
+      kind: Event
+      apiVersion: v1
+      namespaceSelector:
+        name: kube-system
+
+    - name: events-k8s-io
+      kind: Event
+      apiVersion: events.k8s.io/v1
+      namespaceSelector:
+        name: kube-system

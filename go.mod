@@ -480,8 +480,6 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.1 // indirect
 )
 
-// replace github.com/flanksource/duty => ../duty
-
 // replace github.com/flanksource/artifacts => ../artifacts
 
 // replace github.com/flanksource/gomplate/v3 => ../gomplate

@@ -63,7 +63,11 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 		if namespace != "" {
 			selector.Namespace = namespace
 		}
-		selector.Types = []string{check.Kind}
+		if check.APIVersion != "" {
+			selector.Types = []string{check.APIVersion + "/" + check.Kind}
+		} else {
+			selector.Types = []string{check.Kind}
+		}
 		resources, err := k8sClient.QueryResources(ctx, selector)
 
 		if err != nil {

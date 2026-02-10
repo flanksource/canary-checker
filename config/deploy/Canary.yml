@@ -5153,6 +5153,11 @@ spec:
                 kubernetes:
                   items:
                     properties:
+                      apiVersion:
+                        description: |-
+                          APIVersion is the Kubernetes API version for the resource (e.g., "v1", "apps/v1", "serving.knative.dev/v1").
+                          Used to distinguish between resources with the same Kind but different API groups.
+                        type: string
                       cnrm:
                         properties:
                           clusterResource:
@@ -5456,16 +5461,21 @@ spec:
                           - zone
                         type: object
                       healthy:
-                        description: Fail the check if any resources are unhealthy
+                        description: Healthy when true, fails the check if any resources are unhealthy.
                         type: boolean
                       icon:
                         type: string
                       ignore:
-                        description: Ignore the specified resources from the fetched resources. Can be a glob pattern.
+                        description: |-
+                          Ignore specifies resources to exclude from the fetched results.
+                          Values can be glob patterns (e.g., "kube-*", "*-system").
                         items:
                           type: string
                         type: array
                       kind:
+                        description: |-
+                          Kind is the Kubernetes resource Kind to check (e.g., "Pod", "Deployment", "Service").
+                          This is a required field.
                         type: string
                       kubeconfig:
                         properties:
@@ -5547,6 +5557,9 @@ spec:
                         description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
                       namespaceSelector:
+                        description: |-
+                          Namespace specifies which namespace(s) to search for resources.
+                          Use empty ResourceSelector to search in canary's namespace.
                         properties:
                           fieldSelector:
                             type: string
@@ -5558,12 +5571,13 @@ spec:
                             type: string
                         type: object
                       ready:
-                        description: Fail the check if any resources are not ready
+                        description: Ready when true, fails the check if any resources are not ready.
                         type: boolean
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
                       resource:
+                        description: Resource specifies which resources to select by name, labels, or field selectors.
                         properties:
                           fieldSelector:
                             type: string
