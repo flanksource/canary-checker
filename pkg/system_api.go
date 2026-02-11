@@ -333,9 +333,9 @@ func (components Components) Debug(properties bool, prefix string) string {
 		status := component.Status
 
 		if component.IsHealthy() {
-			status = dutyTypes.ComponentStatus(console.Greenf(string(status)))
+			status = dutyTypes.ComponentStatus(console.Greenf("%s", string(status)))
 		} else {
-			status = dutyTypes.ComponentStatus(console.Redf(string(status)))
+			status = dutyTypes.ComponentStatus(console.Redf("%s", string(status)))
 		}
 
 		s += fmt.Sprintf("%s%s => %s", prefix, component, status)
@@ -343,7 +343,7 @@ func (components Components) Debug(properties bool, prefix string) string {
 		if properties {
 			s += "{"
 			for k, v := range component.Properties.AsMap() {
-				s += fmt.Sprintf(" %s=%v", console.DarkWhitef(k), v)
+				s += fmt.Sprintf(" %s=%v", console.DarkWhitef("%s", k), v)
 			}
 			s += "}"
 		}

@@ -1,21 +1,51 @@
 on: pull_request
 name: Build
-# Declare default permissions as read only
 permissions: read-all
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  docker:
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
-        target:
-          - docker-full
-          - docker-minimal
-          - linux compress
+        include:
+          - { arch: amd64, runner: ubuntu-latest, variant: full }
+          - { arch: amd64, runner: ubuntu-latest, variant: slim }
+          - { arch: arm64, runner: ubuntu-24.04-arm, variant: full }
+          - { arch: arm64, runner: ubuntu-24.04-arm, variant: slim }
+          - { arch: amd64, runner: ubuntu-latest, variant: minimal }
+          - { arch: arm64, runner: ubuntu-24.04-arm, variant: minimal }
     steps:
-      - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - name: Build Container
-        run: make ${{matrix.target}}
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - name: Build Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: build/${{ matrix.variant }}/Dockerfile
+          platforms: linux/${{ matrix.arch }}
+          load: true
+          tags: canary-checker:${{ matrix.variant }}-${{ matrix.arch }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Run Container Self-Test
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/fixtures/selftest:/fixtures:ro \
+            canary-checker:${{ matrix.variant }}-${{ matrix.arch }} \
+            run /fixtures/container-selftest-${{ matrix.variant }}.yaml
+
+  binary:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-latest }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build Linux Binary
+        run: make linux compress
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

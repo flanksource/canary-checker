@@ -3,6 +3,7 @@ package context
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/flanksource/duty/connection"
@@ -105,7 +106,16 @@ func (ctx *Context) GetConnection(conn v1.Connection) (*models.Connection, error
 	if err != nil {
 		return nil, err
 	}
-	templater := ctx.NewStructTemplater(data, "template", nil)
+
+	// Merge ctx.Environment (which includes outputs, check, etc.) into the
+	// template data so that dependsOn output references like
+	// $(outputs.startPg.results.stdout) resolve correctly.
+	// Connection-specific keys take precedence over environment keys.
+	merged := make(map[string]any, len(ctx.Environment)+len(data))
+	maps.Copy(merged, ctx.Environment)
+	maps.Copy(merged, data)
+
+	templater := ctx.NewStructTemplater(merged, "template", ctx.GetContextualFunctions())
 	if err := templater.Walk(connection); err != nil {
 		return nil, err
 	}

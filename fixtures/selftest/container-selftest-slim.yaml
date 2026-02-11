@@ -1,0 +1,55 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: container-selftest-slim
+spec:
+  schedule: "@every 5m"
+  exec:
+    - name: binary
+      description: "Canary-checker binary works"
+      script: /app/canary-checker version
+
+    - name: startPg
+      description: "Start embedded postgres"
+      script: |
+        /app/canary-checker serve --db embedded:///tmp/test-db > /tmp/serve.log 2>&1 &
+        echo $! > /tmp/serve.pid
+        for i in $(seq 1 60); do
+          PORT=$(sed -n 's/.*localhost:\([0-9]*\)\/.*/\1/p' /tmp/serve.log 2>/dev/null | head -1)
+          [ -n "$PORT" ] && break
+          sleep 1
+        done
+        echo -n $PORT
+      display:
+        expr: |
+          "stdout: " + results.stdout + "\nstderr: " + results.stderr
+      test:
+        expr: "results.exitCode == 0"
+
+    - name: postgrest
+      description: "PostgREST is available"
+      script: /app/.bin/postgrest --version
+      display:
+        expr: |
+          "stdout: " + results.stdout + "\nstderr: " + results.stderr
+      test:
+        expr: "results.exitCode == 0"
+
+    - name: stopPg
+      description: "Stop canary-checker serve"
+      dependsOn:
+        - embeddedPg
+      script: kill "$(cat /tmp/serve.pid)" 2>/dev/null; echo done
+      test:
+        expr: 'results.stdout.contains("done")'
+
+  postgres:
+    - name: embeddedPg
+      description: "Embedded postgres accepts queries"
+      dependsOn:
+        - startPg
+      url: "postgres://postgres:postgres@localhost:$(outputs.startPg.results.stdout)/embedded?sslmode=disable"
+      query: "SELECT version()"
+      display:
+        expr: 'results.rows[0].version'
+      results: 1

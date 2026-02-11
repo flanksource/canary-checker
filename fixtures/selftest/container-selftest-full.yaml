@@ -1,0 +1,169 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: container-selftest-full
+  annotations:
+    debug: true
+    trace: true
+spec:
+  schedule: "@every 5m"
+  exec:
+    - name: binary
+      description: "Canary-checker binary works"
+      script: /app/canary-checker version
+
+    - name: shell
+      description: "Shell script execution"
+      script: echo "hello-world"
+      test:
+        expr: 'results.stdout == "hello-world"'
+
+    - name: env
+      description: "Environment variable handling"
+      script: echo -n "${TEST_VAR}"
+      env:
+        - name: TEST_VAR
+          value: "env-test-passed"
+      test:
+        expr: 'results.stdout == "env-test-passed"'
+
+    - name: curl
+      description: "curl is available"
+      script: curl --version | head -1
+      test:
+        expr: 'results.stdout.contains("curl")'
+
+    - name: jq
+      description: "jq is available"
+      script: echo '{"test":"value"}' | jq -r '.test'
+      test:
+        expr: 'results.stdout == "value"'
+
+    - name: git
+      description: "git is available"
+      script: git --version
+      test:
+        expr: 'results.stdout.contains("git version")'
+
+    - name: kubectl
+      description: "kubectl is available"
+      script: kubectl version --client -o yaml | head -1
+      test:
+        expr: "results.exitCode == 0"
+
+    - name: aws
+      description: "AWS CLI is available"
+      script: aws --version
+      test:
+        expr: 'results.stdout.contains("aws-cli")'
+
+    - name: python
+      description: "Python is available"
+      script: python3 --version
+      test:
+        expr: 'results.stdout.contains("Python")'
+
+    - name: startPg
+      description: "Start embedded postgres"
+      script: |
+        /app/canary-checker serve --db embedded:///tmp/test-db > /tmp/serve.log 2>&1 &
+        echo $! > /tmp/serve.pid
+        for i in $(seq 1 60); do
+          PORT=$(sed -n 's/.*localhost:\([0-9]*\)\/.*/\1/p' /tmp/serve.log 2>/dev/null | head -1)
+          [ -n "$PORT" ] && break
+          sleep 1
+        done
+        echo -n $PORT
+      display:
+        expr: |
+          "stdout: " + results.stdout + "\nstderr: " + results.stderr
+      test:
+        expr: "results.exitCode == 0"
+
+    - name: postgrest
+      description: "PostgREST is available"
+      script: /app/.bin/postgrest --version
+      display:
+        expr: |
+          "stdout: " + results.stdout + "\nstderr: " + results.stderr
+      test:
+        expr: "results.exitCode == 0"
+
+    - name: uv
+      description: "uv is available"
+      script: uv --version
+      display:
+        expr: |
+          "stdout: " + results.stdout + "\nstderr: " + results.stderr
+      test:
+        expr: 'results.stdout.contains("uv")'
+
+    - name: bun
+      description: "bun is available"
+      script: bun --version
+      display:
+        expr: |
+          "stdout: " + results.stdout + "\nstderr: " + results.stderr
+      test:
+        expr: "results.exitCode == 0"
+
+    - name: pwsh
+      description: "PowerShell is available"
+      script: pwsh --version
+      test:
+        expr: 'results.stdout.contains("PowerShell")'
+
+    - name: az
+      description: "Azure CLI is available"
+      script: az --version | head -1
+      test:
+        expr: 'results.stdout.contains("azure-cli")'
+
+    - name: gcloud
+      description: "Google Cloud CLI is available"
+      script: gcloud --version | head -1
+      test:
+        expr: 'results.stdout.contains("Google Cloud SDK")'
+
+    - name: java
+      description: "Java is available"
+      script: java --version | head -1
+      test:
+        expr: "results.exitCode == 0"
+
+    - name: restic
+      description: "restic is available"
+      script: restic version
+      test:
+        expr: 'results.stdout.contains("restic")'
+
+    - name: k6
+      description: "k6 is available"
+      script: k6 version
+      test:
+        expr: 'results.stdout.contains("k6")'
+
+    - name: benthos
+      description: "benthos is available"
+      script: benthos --version
+      test:
+        expr: "results.exitCode == 0"
+
+    - name: stopPg
+      description: "Stop canary-checker serve"
+      dependsOn:
+        - embeddedPg
+      script: kill "$(cat /tmp/serve.pid)" 2>/dev/null; echo done
+      test:
+        expr: 'results.stdout.contains("done")'
+
+  postgres:
+    - name: embeddedPg
+      description: "Embedded postgres accepts queries"
+      dependsOn:
+        - startPg
+      url: "postgres://postgres:postgres@localhost:$(outputs.startPg.results.stdout)/embedded?sslmode=disable"
+      query: "SELECT version()"
+      display:
+        expr: 'results.rows[0].version'
+      results: 1

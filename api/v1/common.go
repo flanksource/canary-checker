@@ -99,7 +99,7 @@ type FolderFilter struct {
 func (f FolderFilter) String() string {
 	s := []string{}
 	if f.MinAge != "" {
-		s = append(s, fmt.Sprintf("minAge="+string(f.MinAge)))
+		s = append(s, "minAge="+string(f.MinAge))
 	}
 	if f.MaxAge != "" {
 		s = append(s, "maxAge="+string(f.MaxAge))
