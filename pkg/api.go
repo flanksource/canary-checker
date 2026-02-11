@@ -421,10 +421,14 @@ func (result CheckResult) GetName() string {
 func (result CheckResult) String() string {
 	if result.Pass {
 		return fmt.Sprintf("%s duration=%d %s", console.Greenf("PASS"), result.Duration, result.Message)
-	} else if result.ErrorObject != nil {
-		return fmt.Sprintf("%s duration=%d %s %+v", console.Redf("FAIL"), result.Duration, result.Message, result.ErrorObject)
 	}
-	return fmt.Sprintf("%s duration=%d %s %s", console.Redf("FAIL"), result.Duration, result.Message, result.Error)
+	if result.Error != "" {
+		return fmt.Sprintf("%s duration=%d %s", console.Redf("FAIL"), result.Duration, result.Error)
+	}
+	if result.ErrorObject != nil {
+		return fmt.Sprintf("%s duration=%d %s", console.Redf("FAIL"), result.Duration, result.ErrorObject.Error())
+	}
+	return fmt.Sprintf("%s duration=%d", console.Redf("FAIL"), result.Duration)
 }
 
 func (r CheckResult) HasCanary() bool {

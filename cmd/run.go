@@ -93,10 +93,9 @@ var Run = &cobra.Command{
 					passed++
 				}
 
-				if result.Pass || result.ErrorObject == nil {
-					logger.GetLogger(result.LoggerName()).Infof("%s", result.String())
-				} else {
-					logger.GetLogger(result.LoggerName()).Infof("%s %+v", result.String(), result.ErrorObject)
+				logger.GetLogger(result.LoggerName()).Infof("%s", result.String())
+				if !result.Pass && result.ErrorObject != nil && logger.IsLevelEnabled(3) {
+					logger.GetLogger(result.LoggerName()).Debugf("%v", result.ErrorObject)
 				}
 				results = append(results, result)
 			}

@@ -36,14 +36,20 @@ func (c *ExecChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		Artifacts:   check.Artifacts,
 	})
 	if err != nil {
-		return result.ErrorMessage(err).Invalidf("%v", err.Error())
+		if details != nil && details.Stderr != "" {
+			return result.AddDetails(details).Failf("%s", details.Stderr).ToSlice()
+		}
+		return result.Failf("%s", err.Error()).ToSlice()
 	}
 	if details != nil {
 		result.AddDetails(details)
 		result.Artifacts = append(result.Artifacts, details.Artifacts...)
 
 		if details.ExitCode != 0 {
-			return result.Failf("%s", details.String()).ToSlice()
+			if details.Stderr != "" {
+				return result.Failf("%s", details.Stderr).ToSlice()
+			}
+			return result.Failf("exit code %d", details.ExitCode).ToSlice()
 		}
 	}
 
