@@ -63,7 +63,7 @@ func (result *CheckResult) ErrorMessage(err error) *CheckResult {
 		return result
 	}
 	result.ErrorObject = err
-	return result.Failf(err.Error())
+	return result.Failf("%s", err.Error())
 }
 
 func (result *CheckResult) UpdateCheck(check external.Check) *CheckResult {
@@ -142,7 +142,7 @@ func (result *CheckResult) AddMetric(metric Metric) *CheckResult {
 
 func (result *CheckResult) AddDataStruct(data interface{}) *CheckResult {
 	if m, err := utils.ToJSONMap(data); err != nil {
-		result.Invalidf(err.Error())
+		result.Invalidf("%s", err.Error())
 		return result
 	} else {
 		return result.AddData(m)
