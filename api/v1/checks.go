@@ -298,7 +298,7 @@ type JmeterCheck struct {
 }
 
 func (c JmeterCheck) GetEndpoint() string {
-	return fmt.Sprintf(c.Host + ":" + string(c.Port))
+	return c.Host + ":" + string(c.Port)
 }
 
 func (c JmeterCheck) GetType() string {
@@ -804,11 +804,14 @@ func (c MongoDBCheck) GetType() string {
 	return "mongodb"
 }
 
-// Git executes a SQL style query against a github repo using https://github.com/askgitdev/askgit
+// Git executes a SQL style query against a github repo using mergestat.
+// Deprecated: This check type is deprecated and will be removed in a future release.
 type Git struct {
 	GitHubCheck `yaml:",inline" json:",inline"`
 }
 
+// GitHubCheck executes SQL queries against GitHub repositories using mergestat.
+// Deprecated: This check type is deprecated and will be removed in a future release.
 type GitHubCheck struct {
 	Description    `yaml:",inline" json:",inline"`
 	Templatable    `yaml:",inline" json:",inline"`

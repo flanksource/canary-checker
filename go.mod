@@ -19,6 +19,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.19.0
 	github.com/flanksource/artifacts v1.0.18
 	github.com/flanksource/commons v1.44.1
+	github.com/flanksource/deps v1.0.23
 	github.com/flanksource/duty v1.0.1177
 	github.com/flanksource/gomplate/v3 v3.24.66
 	github.com/flanksource/is-healthy v1.0.82
@@ -206,7 +207,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fergusstrange/embedded-postgres v1.33.0 // indirect
 	github.com/flanksource/clicky v1.16.1 // indirect
-	github.com/flanksource/deps v1.0.23 // indirect
 	github.com/flanksource/kubectl-neat v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect

@@ -4054,6 +4054,9 @@ spec:
                   type: array
                 github:
                   items:
+                    description: |-
+                      GitHubCheck executes SQL queries against GitHub repositories using mergestat.
+                      Deprecated: This check type is deprecated and will be removed in a future release.
                     properties:
                       connection:
                         type: string

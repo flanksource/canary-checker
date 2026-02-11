@@ -2544,7 +2544,8 @@
       "required": [
         "name",
         "query"
-      ]
+      ],
+      "description": "GitHubCheck executes SQL queries against GitHub repositories using mergestat.\nDeprecated: This check type is deprecated and will be removed in a future release."
     },
     "GitProtocolCheck": {
       "properties": {

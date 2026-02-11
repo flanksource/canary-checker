@@ -31,3 +31,5 @@ canary-checker.properties
 *.code-workspace
 .windsurfrules
 .envrc
+.db/
+data/

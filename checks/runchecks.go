@@ -20,6 +20,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/utils"
+	"github.com/flanksource/duty/shell"
 )
 
 const (
@@ -498,7 +499,15 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 		} else if parsed, err := strconv.ParseBool(message); err != nil {
 			r.Failf("test expression did not return a boolean value. got %s", message)
 		} else if !parsed {
-			r.Failf("")
+			if details, ok := r.Detail.(shell.ExecDetails); ok {
+				if details.Stderr != "" || details.Stdout != "" {
+					r.Failf("%s", strings.TrimSpace(details.Stderr+" "+details.Stdout))
+				} else {
+					r.Failf("exit code %d", details.ExitCode)
+				}
+			} else {
+				r.Failf("test failed")
+			}
 		}
 	}
 
