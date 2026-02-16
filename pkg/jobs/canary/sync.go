@@ -20,7 +20,30 @@ import (
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
 	"github.com/robfig/cron/v3"
+	"golang.org/x/sync/semaphore"
 )
+
+const propertyCheckConcurrency = "check.concurrency"
+
+var (
+	// The maximum number of checks that can run concurrently
+	defaultCheckConcurrency = 50
+
+	// Holds in the lock for every running check.
+	// Can be overwritten by 'check.concurrency' property.
+	globalCheckSemaphore *semaphore.Weighted
+)
+
+// AcquireAllCheckLocks blocks until the global check sempahore is fully acquired.
+//
+// This helps to ensure that no checks are currently running.
+func AcquireAllCheckLocks(ctx context.Context) {
+	ctx.Logger.V(6).Infof("acquiring all check locks")
+	if err := globalCheckSemaphore.Acquire(ctx, int64(ctx.Properties().Int(propertyCheckConcurrency, defaultCheckConcurrency))); err != nil {
+		ctx.Logger.Errorf("failed to acquire check semaphores: %v", err)
+	}
+	ctx.Logger.V(6).Infof("acquired all check locks")
+}
 
 var canaryJobs sync.Map
 
@@ -153,6 +176,7 @@ func newCanaryJob(c CanaryJob) error {
 		IgnoreSuccessHistory: true,
 		Retention:            job.RetentionBalanced,
 		ResourceID:           c.DBCanary.ID.String(),
+		Semaphores:           []*semaphore.Weighted{globalCheckSemaphore},
 		ResourceType:         "canary",
 		ID:                   fmt.Sprintf("%s/%s", c.Canary.Namespace, c.Canary.Name),
 		Fn:                   c.Run,
@@ -174,6 +198,10 @@ var SyncCanaryJobs = &job.Job{
 	Schedule:   "@every 5m",
 	Retention:  job.RetentionFew,
 	Fn: func(ctx job.JobRuntime) error {
+		if globalCheckSemaphore == nil {
+			globalCheckSemaphore = semaphore.NewWeighted(int64(ctx.Properties().Int(propertyCheckConcurrency, defaultCheckConcurrency)))
+		}
+
 		canaries, err := db.GetAllCanariesForSync(ctx.Context, runner.WatchNamespace)
 		if err != nil {
 			return err
