@@ -125,7 +125,7 @@ spec:
           {{- if .Values.upstream.secretKeyRef.name }}
           envFrom:
             - secretRef:
-                name: {{ .Values.upstream.secretKeyRef.name }}
+                name: {{ tpl .Values.upstream.secretKeyRef.name . }}
           {{- end }}
           volumeMounts:
             {{- if eq .Values.dockerSocket true }}
