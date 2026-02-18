@@ -61,7 +61,7 @@ jobs:
       - run: make bin
       - name: Test
         env:
-          KUBERNETES_VERSION: v1.20.7
+          KUBERNETES_VERSION: v1.30.6
           GH_TOKEN: ${{ secrets.CHECKRUNS_TOKEN }}
         run: ./test/e2e.sh fixtures/${{matrix.suite.name}}
       - name: Publish Unit Test Results

@@ -6,7 +6,6 @@ set -e
 
 export KUBECONFIG=~/.kube/config
 export KARINA="karina -c $(pwd)/test/karina.yaml"
-export DOCKER_API_VERSION=1.39
 export CLUSTER_NAME='kind-test'
 export PATH=$(pwd)/.bin:$PATH
 export ROOT=$(pwd)
