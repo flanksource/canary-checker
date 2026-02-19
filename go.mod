@@ -17,7 +17,7 @@ require (
 	github.com/eko/gocache/lib/v4 v4.2.3
 	github.com/eko/gocache/store/bigcache/v4 v4.2.3
 	github.com/elastic/go-elasticsearch/v8 v8.19.0
-	github.com/flanksource/artifacts v1.0.18
+	github.com/flanksource/artifacts v1.0.20
 	github.com/flanksource/commons v1.44.1
 	github.com/flanksource/deps v1.0.23
 	github.com/flanksource/duty v1.0.1180
@@ -220,7 +220,6 @@ require (
 	github.com/go-git/go-billy/v5 v5.7.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
-	github.com/go-json-experiment/json v0.0.0-20251027170946-4849db3c2f7e // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-logr/zapr v1.3.0 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
@@ -308,10 +307,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.1-0.20220621161143-b0104c826a24 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/kaptinlin/go-i18n v0.2.3 // indirect
-	github.com/kaptinlin/jsonpointer v0.4.9 // indirect
-	github.com/kaptinlin/jsonschema v0.6.8 // indirect
-	github.com/kaptinlin/messageformat-go v0.4.9 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/kevinburke/ssh_config v1.4.0 // indirect
 	github.com/klauspost/compress v1.18.3 // indirect
