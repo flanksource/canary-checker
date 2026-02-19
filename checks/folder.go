@@ -64,13 +64,13 @@ func (c *FolderChecker) Run(ctx *context.Context) pkg.Results {
 
 func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.FolderCheck)
-	path := strings.ToLower(check.Path)
 	ctx = ctx.WithCheck(check)
 	if ctx.CanTemplate() {
-		if err := ctx.TemplateStruct(&check.Filter); err != nil {
-			return pkg.Invalid(check, ctx.Canary, fmt.Sprintf("failed to template filter: %v", err))
+		if err := ctx.TemplateStruct(&check); err != nil {
+			return pkg.Invalid(check, ctx.Canary, fmt.Sprintf("failed to template check: %v", err))
 		}
 	}
+	path := strings.ToLower(check.Path)
 	if ctx.IsDebug() {
 		ctx.Infof("Checking %s with filter(%s)", path, check.Filter)
 	}
