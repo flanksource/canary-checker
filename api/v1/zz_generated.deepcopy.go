@@ -2010,6 +2010,11 @@ func (in *HTTPCheck) DeepCopyInto(out *HTTPCheck) {
 	out.Templatable = in.Templatable
 	in.Relatable.DeepCopyInto(&out.Relatable)
 	in.Connection.DeepCopyInto(&out.Connection)
+	if in.Kubernetes != nil {
+		in, out := &in.Kubernetes, &out.Kubernetes
+		*out = new(connection.KubernetesConnection)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.ResponseCodes != nil {
 		in, out := &in.ResponseCodes, &out.ResponseCodes
 		*out = make([]int, len(*in))

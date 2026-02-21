@@ -119,6 +119,8 @@ type HTTPCheck struct {
 	Templatable `yaml:",inline" json:",inline"`
 	Relatable   `yaml:",inline" json:",inline"`
 	Connection  `yaml:",inline" json:",inline"`
+	// Kubernetes connection to use for the HTTP request
+	Kubernetes *connection.KubernetesConnection `yaml:"kubernetes,omitempty" json:"kubernetes,omitempty"`
 	// Deprecated: Use url instead
 	Endpoint string `yaml:"endpoint" json:"endpoint,omitempty" template:"true"`
 	// Maximum duration in milliseconds for the HTTP request. It will fail the check if it takes longer.

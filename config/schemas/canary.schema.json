@@ -2437,6 +2437,9 @@
         "password": {
           "$ref": "#/$defs/EnvVar"
         },
+        "kubernetes": {
+          "$ref": "#/$defs/KubernetesConnection"
+        },
         "endpoint": {
           "type": "string",
           "description": "Deprecated: Use url instead"
