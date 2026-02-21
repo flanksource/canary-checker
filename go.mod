@@ -20,7 +20,7 @@ require (
 	github.com/flanksource/artifacts v1.0.20
 	github.com/flanksource/commons v1.44.1
 	github.com/flanksource/deps v1.0.23
-	github.com/flanksource/duty v1.0.1180
+	github.com/flanksource/duty v1.0.1181
 	github.com/flanksource/gomplate/v3 v3.24.66
 	github.com/flanksource/is-healthy v1.0.82
 	github.com/flanksource/kommons v0.31.7
