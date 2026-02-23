@@ -237,17 +237,13 @@ ginkgo:
 	wget -nv https://github.com/atkrad/wait4x/releases/download/v0.3.0/wait4x-$(OS)-$(ARCH) -O .bin/wait4x && \
   chmod +x .bin/wait4x
 
-.bin/karina:
-	curl -sSLo .bin/karina https://github.com/flanksource/karina/releases/download/v0.50.0/karina_$(OS)-$(ARCH) && \
-	chmod +x .bin/karina
-
 $(RELEASE_DIR):
 	mkdir -p $(RELEASE_DIR)
 
 .bin:
 	mkdir -p .bin
 
-bin: .bin .bin/wait4x .bin/karina $(RELEASE_DIR)
+bin: .bin .bin/wait4x $(RELEASE_DIR)
 
 # Generate all the resources and formats your code, i.e: CRDs, controller-gen, static
 .PHONY: resources

@@ -1,21 +1,15 @@
 #!/bin/bash
-
-# The script tests the push subcommand as well as postgres convectivity for canary-checker.
+# ABOUTME: Tests the push subcommand and postgres connectivity for canary-checker.
+# ABOUTME: Runs operator against a postgres container and validates canary status reporting.
 
 set -e
 
 export KUBECONFIG=~/.kube/config
-export KARINA="karina -c $(pwd)/test/karina.yaml"
 export CLUSTER_NAME='kind-test'
 export PATH=$(pwd)/.bin:$PATH
 export ROOT=$(pwd)
 
 echo "::group::Provisioning"
-if [[ ! -e .certs/root-ca.key ]]; then
-$KARINA ca generate --name root-ca --cert-path .certs/root-ca.crt --private-key-path .certs/root-ca.key --password foobar  --expiry 1
-$KARINA ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --private-key-path .certs/ingress-ca.key --password foobar  --expiry 1
-$KARINA ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
-fi
 
 ## starting the postgres as docker container
 docker run --rm -p 5433:5432  --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres:14.1
