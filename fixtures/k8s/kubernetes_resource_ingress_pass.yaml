@@ -61,7 +61,7 @@ spec:
       checks:
         - http:
             - name: Call httpbin via ingress
-              url: "http://ingress-nginx.ingress-nginx.svc"
+              url: "http://ingress-nginx-controller.ingress-nginx.svc"
               headers:
                 - name: Host
                   value: "{{(index ((index .staticResources 0).Object.spec.rules) 0).host}}"
