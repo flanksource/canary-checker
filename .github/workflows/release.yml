@@ -284,15 +284,21 @@ jobs:
   helm:
     runs-on: ubuntu-latest
     needs: [semantic-release, docker, docker-slim, docker-full]
+    if: always()
+    outputs:
+      release-version: ${{ steps.version.outputs.release-version }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Install yq
         uses: mikefarah/yq@bbdd97482f2d439126582a59689eb1c855944955 # v4.44.3
       - name: Set version
+        id: version
         # Always use git tags as semantic release can fail due to rate limit
         run: |
           git fetch --prune --unshallow
-          echo "RELEASE_VERSION=$(git describe --abbrev=0 --tags | sed -e 's/^v//')" >> $GITHUB_ENV
+          VERSION=$(git describe --abbrev=0 --tags | sed -e 's/^v//')
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "release-version=$VERSION" >> $GITHUB_OUTPUT
       - name: Update chart version
         run: yq -i e '.version = "${{ env.RELEASE_VERSION }}"' chart/Chart.yaml
       - name: Update app version
@@ -306,27 +312,26 @@ jobs:
       - name: Package Helm chart
         run: |
           make chart
-      - name: Clone charts repo
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Upload helm chart artifact
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
-          repository: "${{ github.repository_owner }}/charts"
-          path: charts
-          token: "${{ secrets.FLANKBOT }}"
-      - name: Update chart repo
-        run: |
-          cd charts
-          cp ../canary-checker-*.tgz ./
-          helm repo index --merge index.yaml .
-      - name: Push changes to chart repo
-        uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0 # v6.0.1
-        with:
-          commit_message: "Release ${{ needs.semantic-release.outputs.release-version }} of ${{ github.repository }}"
-          branch: gh-pages
-          repository: ./charts
+          name: helm-chart
+          path: canary-checker-*.tgz
+
+  push-helm-chart:
+    needs: helm
+    if: always() && needs.helm.result == 'success'
+    uses: flanksource/action-workflows/.github/workflows/push-helm-chart.yml@4b41aaf6cf7727789c0d21cd0bc262e850ba543f # main
+    with:
+      filename_regex: "canary-checker-*.tgz"
+      version: ${{ needs.helm.outputs.release-version }}
+      pr_title: "Release ${{ needs.helm.outputs.release-version }} of ${{ github.repository }}"
+    secrets:
+      token: ${{ secrets.FLANKBOT }}
 
   update-incident-commander-chart:
     runs-on: ubuntu-latest
-    needs: [helm, semantic-release]
+    needs: [push-helm-chart, semantic-release]
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Set version
