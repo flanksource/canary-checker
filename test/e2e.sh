@@ -1,55 +1,46 @@
 #!/bin/bash
+# ABOUTME: End-to-end test runner for canary-checker.
+# ABOUTME: Provisions infrastructure, deploys test fixtures, and runs ginkgo tests in a Kind cluster.
 
 set -e
 
 export KUBECONFIG=~/.kube/config
-export KARINA="karina -c $(pwd)/test/karina.yaml"
 export CLUSTER_NAME=kind-test
 export PATH=$(pwd)/.bin:/usr/local/bin:$PATH
 export ROOT=$(pwd)
 export TEST_FOLDER=${TEST_FOLDER:-$1}
 export TEST_BINARY=./test.test
 SKIP_SETUP=${SKIP_SETUP:-false}
-SKIP_KARINA=${SKIP_KARINA:-false}
+SKIP_CLUSTER=${SKIP_CLUSTER:-false}
 
 if [[ "$1" == "" ]]; then
-  echo "Usage ./test/e2e.sh TEST_FOLDER  [RunRegex] [--skip-setup] [--skip-karina] [--skip-all] "
+  echo "Usage ./test/e2e.sh TEST_FOLDER  [RunRegex] [--skip-setup] [--skip-cluster] [--skip-all] "
   exit 1
 fi
 
 if [[ "$*" == *"--skip-setup"* ]]; then
   SKIP_SETUP=true
 fi
-if [[ "$*" == *"--skip-karina"* ]]; then
-  SKIP_KARINA=true
+if [[ "$*" == *"--skip-cluster"* ]] || [[ "$*" == *"--skip-karina"* ]]; then
+  SKIP_CLUSTER=true
 fi
 if [[ "$*" == *"--skip-all"* ]]; then
-  SKIP_KARINA=true
+  SKIP_CLUSTER=true
   SKIP_SETUP=true
 fi
 
-echo "Testing $TEST_FOLDER with skip_setup=$SKIP_SETUP skip_karina=$SKIP_KARINA"
+echo "Testing $TEST_FOLDER with skip_setup=$SKIP_SETUP skip_cluster=$SKIP_CLUSTER"
 
-if [[ "$SKIP_KARINA" != "true" ]] ; then
+if [[ "$SKIP_CLUSTER" != "true" ]] ; then
   echo "::group::Provisioning"
-  if [[ ! -e .certs/root-ca.key ]]; then
-    $KARINA ca generate --name root-ca --cert-path .certs/root-ca.crt --private-key-path .certs/root-ca.key --password foobar  --expiry 1
-    $KARINA ca generate --name ingress-ca --cert-path .certs/ingress-ca.crt --private-key-path .certs/ingress-ca.key --password foobar  --expiry 1
-    $KARINA ca generate --name sealed-secrets --cert-path .certs/sealed-secrets-crt.pem --private-key-path .certs/sealed-secrets-key.pem --password foobar  --expiry 1
+  # Kind cluster is provisioned by the CI workflow via helm/kind-action.
+  if ! kind get clusters | grep -q $CLUSTER_NAME; then
+    echo "Error: Kind cluster '$CLUSTER_NAME' not found. It should be provisioned by the workflow."
+    exit 1
   fi
-
-  if ! kind get clusters | grep $CLUSTER_NAME; then
-    if $KARINA provision kind-cluster -e name=$CLUSTER_NAME -v ; then
-      echo "::endgroup::"
-    else
-      echo "::endgroup::"
-      exit 1
-    fi
-  fi
-
-  echo "::group::Deploying Base"
-  $KARINA deploy bootstrap -vv --prune=false
   echo "::endgroup::"
+
+  bash $(pwd)/test/setup-infra.sh "$TEST_FOLDER"
 fi
 
 
@@ -58,20 +49,17 @@ if [ "$SKIP_SETUP" != "true" ]; then
   export GOOS=linux
   export GOARCH=amd64
   kubectl create ns canaries || true
-  if [ -e $TEST_FOLDER/_karina.yaml ]; then
-    $KARINA deploy phases --stubs --monitoring --apacheds --minio -c $(pwd)/$TEST_FOLDER/_karina.yaml -vv --prune=false
-  fi
 
   if [ -e $TEST_FOLDER/_setup.sh ]; then
     bash $TEST_FOLDER/_setup.sh || echo Setup failed, attempting tests anyway
   fi
 
   if [ -e $TEST_FOLDER/_setup.yaml ]; then
-    $KARINA apply $(pwd)/$TEST_FOLDER/_setup.yaml -v
+    kubectl apply -f $(pwd)/$TEST_FOLDER/_setup.yaml
   fi
 
   if [ -e $TEST_FOLDER/../_setup.yaml ]; then
-    $KARINA apply $(pwd)/$TEST_FOLDER/../_setup.yaml -v
+    kubectl apply -f $(pwd)/$TEST_FOLDER/../_setup.yaml
   fi
 
   if [ -e $TEST_FOLDER/_post_setup.sh ]; then
@@ -79,8 +67,15 @@ if [ "$SKIP_SETUP" != "true" ]; then
   fi
 
   if [ -e $TEST_FOLDER/main.go ]; then
+    # Port-forward MinIO to the host for S3 setup
+    kubectl port-forward -n minio svc/minio 9000:9000 &
+    PF_PID=$!
+    sleep 2
+    export S3_ENDPOINT=http://localhost:9000
     cd $TEST_FOLDER
     go run main.go
+    cd $ROOT
+    kill $PF_PID 2>/dev/null || true
   fi
   echo "::endgroup::"
 fi
