@@ -21,7 +21,7 @@ fi
 if [[ "$*" == *"--skip-setup"* ]]; then
   SKIP_SETUP=true
 fi
-if [[ "$*" == *"--skip-cluster"* ]] || [[ "$*" == *"--skip-karina"* ]]; then
+if [[ "$*" == *"--skip-cluster"* ]]; then
   SKIP_CLUSTER=true
 fi
 if [[ "$*" == *"--skip-all"* ]]; then
