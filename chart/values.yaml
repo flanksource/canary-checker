@@ -407,6 +407,18 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
+  # @schema
+  # required: true
+  # default: /
+  # @schema
+  path: /
+
+  # @schema
+  # required: true
+  # default: ImplementationSpecific
+  # @schema
+  pathType: ImplementationSpecific
+
 # @schema
 # required: false
 # $ref: https://raw.githubusercontent.com/flanksource/flanksource-ui/main/chart/values.schema.deref.json
