@@ -3949,11 +3949,23 @@
           "default": "canary-checker",
           "title": "host"
         },
+        "path": {
+          "default": "/",
+          "title": "path"
+        },
+        "pathType": {
+          "default": "ImplementationSpecific",
+          "title": "pathType"
+        },
         "tls": {
           "items": {},
           "title": "tls"
         }
       },
+      "required": [
+        "path",
+        "pathType"
+      ],
       "title": "ingress",
       "type": "object"
     },
