@@ -12,7 +12,6 @@ import (
 	"github.com/flanksource/commons/properties"
 	dutyEcho "github.com/flanksource/duty/echo"
 	"github.com/flanksource/duty/job"
-	dutyQuery "github.com/flanksource/duty/query"
 	"github.com/robfig/cron/v3"
 )
 
@@ -47,7 +46,7 @@ func Start() {
 		}
 	}
 
-	for _, j := range topology.Jobs {
+	for _, j := range topology.CleanupJobs {
 		job := j
 		job.Context = context.DefaultContext
 		if err := job.AddToScheduler(FuncScheduler); err != nil {
@@ -56,9 +55,8 @@ func Start() {
 	}
 
 	miscJobs := []*job.Job{
-		topologyJobs.CleanupDeletedTopologyComponents, topologyJobs.SyncTopology,
-		topologyJobs.TopologyCRDReconcile, canaryJobs.SyncCanaryJobs,
-		canaryJobs.CleanupDeletedCanaryChecks, dutyQuery.SyncComponentCacheJob,
+		topologyJobs.CleanupDeletedTopologyComponents, canaryJobs.SyncCanaryJobs,
+		canaryJobs.CleanupDeletedCanaryChecks,
 		canaryJobs.VacuumCanaryTables, canaryJobs.DeleteTransformedCanaries,
 		canaryJobs.SyncAgentSelectorCanaries, canaryJobs.CleanupOrphanedAgentSelectorCanaries,
 	}

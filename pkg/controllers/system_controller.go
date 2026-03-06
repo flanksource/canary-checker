@@ -21,7 +21,6 @@ import (
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg/db"
-	systemJobs "github.com/flanksource/canary-checker/pkg/jobs/topology"
 	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/query"
 	"github.com/go-logr/logr"
@@ -69,25 +68,16 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 			logger.Error(err, "failed to delete topology")
 			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
 		}
-		systemJobs.DeleteTopologyJob(topology.GetPersistedID())
 		controllerutil.RemoveFinalizer(topology, TopologyFinalizerName)
 		query.FlushTopologyCache()
 		return ctrl.Result{}, r.Update(ctx, topology)
 	}
 
-	dbModel, changed, err := db.PersistV1Topology(dCtx, topology)
-	if err != nil {
+	if _, _, err := db.PersistV1Topology(dCtx, topology); err != nil {
 		logger.Error(err, "failed to persist topology", "id", topology.GetPersistedID(), "name", topology.GetName())
 		return ctrl.Result{}, err
 	}
 
-	// Sync jobs if topology is created or updated
-	if changed || topology.Generation == 1 {
-		if err := systemJobs.SyncTopologyJob(dCtx, dbModel); err != nil {
-			logger.Error(err, "failed to sync topology job")
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
-		}
-	}
 	return ctrl.Result{}, nil
 }
 
