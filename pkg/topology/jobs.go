@@ -2,14 +2,9 @@ package topology
 
 import "github.com/flanksource/duty/job"
 
-var Jobs = []*job.Job{
-	ComponentConfigRun,
-	ComponentCheckRun,
+var CleanupJobs = []*job.Job{
 	CleanupSoftDeletedComponents,
 	CleanupCanaries,
 	CleanupChecks,
 	CleanupMetricsGauges,
-	ComponentCostRun,
-	ComponentRelationshipSync,
-	ComponentStatusSummarySync,
 }
