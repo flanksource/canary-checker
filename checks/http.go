@@ -145,10 +145,10 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 	}
 
 	// TODO: Add finer controls over tracing to the canary
-	if ctx.IsTrace() && ctx.Properties()["http.trace"] != "disabled" {
+	if ctx.IsTrace() && ctx.Properties().On(false, "http.trace") {
 		client.TraceToStdout(http.TraceAll)
 		client.Trace(http.TraceAll)
-	} else if ctx.IsDebug() && ctx.Properties()["http.debug"] != "disabled" {
+	} else if ctx.IsDebug() && ctx.Properties().On(false, "http.debug") {
 		client.TraceToStdout(http.TraceHeaders)
 		client.Trace(http.TraceHeaders)
 	}

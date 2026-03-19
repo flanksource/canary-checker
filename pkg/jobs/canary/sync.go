@@ -63,11 +63,14 @@ func findJob(dbCanary pkg.Canary) *job.Job {
 
 func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	id := dbCanary.ID.String()
-	ctx.Logger.V(2).Infof("SyncCanaryJob (id=%s name=%s)", dbCanary.ID, dbCanary.Name)
 
-	if disabled := ctx.Properties()["check.*.disabled"]; disabled == "true" {
+	if ctx.Properties().On(false, "check.*.disabled", fmt.Sprintf("check.%s.disabled", dbCanary.ID)) {
+		ctx.Logger.V(3).Infof("skipping scheduling of canary (disabled) (id=%s name=%s)", dbCanary.ID, dbCanary.Name)
+
 		return nil
 	}
+	ctx.Logger.V(2).Infof("scheduling canary(id=%s name=%s)", dbCanary.ID, dbCanary.Name)
+
 	canary, err := dbCanary.ToV1()
 	if err != nil {
 		return err
@@ -98,7 +101,7 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 
 	if schedule := canary.Spec.GetSchedule(); slices.Contains([]string{"@never", v1.NoSchedule}, schedule) {
 		if schedule == v1.NoSchedule {
-			logger.Warnf("Skipping canary:%s as no schedule is provided")
+			ctx.Logger.Warnf("Skipping canary:%s as no schedule is provided", canary.ID)
 		}
 		Unschedule(id)
 		return nil
