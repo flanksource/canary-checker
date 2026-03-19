@@ -41,6 +41,7 @@ jobs:
           cache-to: type=gha,mode=max
         env:
           KIND_REGISTRY: kind-registry:5000
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update canary-checker image in helm chart
         uses: mikefarah/yq@0ecdce24e83f0fa127940334be98c86b07b0c488 # v4.48.1
