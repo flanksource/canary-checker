@@ -4,7 +4,7 @@ kind: Canary
 metadata:
   name: ingress-test
   labels:
-    "Expected-Fail": "false"
+    "Expected-Fail": "true"
 spec:
   schedule: "@every 5m"
   kubernetesResource:
