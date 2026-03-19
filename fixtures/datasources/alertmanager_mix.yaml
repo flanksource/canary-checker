@@ -5,7 +5,7 @@ metadata:
 spec:
   schedule: "@every 5m"
   alertmanager:
-    - url: https://alertmanager.demo.aws.flanksource.com
+    - url: http://kube-prometheus-stack-alertmanager.monitoring:9093
       name: alertmanager-check
       alerts:
         - .*

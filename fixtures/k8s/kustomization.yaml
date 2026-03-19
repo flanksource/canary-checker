@@ -5,7 +5,6 @@ resources:
   - _setup.yaml
   - junit_fail.yaml
   - junit_pass.yaml
-  - slow/namespace_pass.yaml
   - pod_fail.yaml
   - pod_pass.yaml
   - cronjob_monitor_fail.yaml
