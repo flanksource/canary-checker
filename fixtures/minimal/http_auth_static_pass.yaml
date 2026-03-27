@@ -2,6 +2,9 @@ apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
   name: http-basic-auth-static
+  annotations: 
+    trace2: "true"
+    log.level: trace6
 spec:
   http:
     - name: "basic auth fail"

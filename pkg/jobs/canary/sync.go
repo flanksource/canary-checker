@@ -65,7 +65,7 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	id := dbCanary.ID.String()
 	ctx.Logger.V(2).Infof("SyncCanaryJob (id=%s name=%s)", dbCanary.ID, dbCanary.Name)
 
-	if disabled := ctx.Properties()["check.*.disabled"]; disabled == "true" {
+	if ctx.Properties().On(false, "check.*.disabled") {
 		return nil
 	}
 	canary, err := dbCanary.ToV1()

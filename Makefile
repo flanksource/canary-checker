@@ -41,6 +41,10 @@ all: manager
 test: manifests generate fmt ginkgo
 	ginkgo -vv -r  --cover  --keep-going --junit-report junit-report.xml --
 
+.PHONY: test\:fixtures
+test\:fixtures:
+	gavel fixtures fixtures/gavel/*.md
+
 # Build manager binary
 manager: generate fmt vet
 	go build -o bin/canary-checker main.go

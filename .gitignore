@@ -33,3 +33,7 @@ canary-checker.properties
 .envrc
 .db/
 data/
+*.har
+out.*
+.*/
+canary-checker

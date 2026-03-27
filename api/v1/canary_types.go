@@ -24,6 +24,8 @@ import (
 	"time"
 
 	"github.com/flanksource/canary-checker/api/external"
+	"github.com/flanksource/clicky"
+	"github.com/flanksource/clicky/api"
 	"github.com/flanksource/commons/logger"
 	"github.com/robfig/cron/v3"
 	"github.com/samber/lo"
@@ -355,6 +357,52 @@ func (spec CanarySpec) GetSchedule() string {
 		return fmt.Sprintf("@every %ds", spec.Interval)
 	}
 	return NoSchedule
+}
+
+func (c Canary) Pretty() api.Text {
+	t := clicky.Text("").Append("Canary ", "text-purple-500").
+		Append(c.Namespace).Append("/", "text-muted").Append(c.Name)
+
+	if c.IsTrace() {
+		t = t.Append(" (trace)", "text-yellow-500")
+	} else if c.IsDebug() {
+		t = t.Append(" (debug)", "text-blue-500")
+	}
+
+	level := c.GetLogLevel(logger.GetLogger())
+
+	if level != logger.Info {
+		t = t.Append(" log=", "text-muted").Append(level, "text-green-500")
+	}
+
+	return t
+}
+
+func (c Canary) GetLogLevel(root logger.Logger) logger.LogLevel {
+	if c.Annotations == nil {
+		if c.IsTrace() {
+			return logger.Trace
+		} else if c.IsDebug() {
+			return logger.Debug
+		} else {
+			return logger.Info
+		}
+	}
+	level := c.Annotations["log.level"]
+	if level == "" {
+		level = c.Annotations["canary.checker/log.level"]
+	}
+	if level == "" {
+		if c.IsTrace() {
+			return logger.Trace
+		} else if c.IsDebug() {
+			return logger.Debug
+		} else {
+			return logger.Info
+		}
+	} else {
+		return logger.ParseLevel(root, level)
+	}
 }
 
 func (c Canary) IsTrace() bool {

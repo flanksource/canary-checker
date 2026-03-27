@@ -2,13 +2,16 @@ package checks
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/flanksource/artifacts"
+	"github.com/flanksource/commons/har"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
 	"github.com/google/uuid"
@@ -236,7 +239,8 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, RunChecksMeta, error) 
 	}
 
 	checks := ctx.Canary.Spec.GetAllChecks()
-	ctx.Debugf("[%s] checking %d checks", ctx.Canary.Name, len(checks))
+
+	ctx.Debugf("running %s, %d checks", ctx.Canary.Pretty().ANSI(), len(checks))
 
 	if hasDependencies(checks) {
 		sortedChecks, err := sortChecksByDependency(checks)
@@ -298,6 +302,12 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, RunChecksMeta, error) 
 		ctx.Errorf("error saving artifacts: %v", err)
 	}
 
+	if ctx.HARCollector != nil && len(ctx.HARCollector.Entries()) > 0 {
+		if err := saveHAR(ctx); err != nil {
+			ctx.Errorf("error saving HAR: %v", err)
+		}
+	}
+
 	return ProcessResults(ctx, results), meta, nil
 }
 
@@ -349,6 +359,37 @@ func saveArtifacts(ctx *context.Context, results pkg.Results) error {
 		}
 	}
 
+	return nil
+}
+
+func saveHAR(ctx *context.Context) error {
+	location := ctx.Properties().String("http.har.location", ".")
+	filename := fmt.Sprintf("%s_%s_%d.har",
+		ctx.Canary.Namespace, ctx.Canary.Name, time.Now().UnixMilli())
+	path := filepath.Join(location, filename)
+
+	harFile := har.File{
+		Log: har.Log{
+			Version: "1.2",
+			Creator: har.Creator{Name: "canary-checker", Version: "1.0"},
+			Entries: ctx.HARCollector.Entries(),
+		},
+	}
+
+	data, err := json.MarshalIndent(harFile, "", "  ")
+	if err != nil {
+		return fmt.Errorf("error marshaling HAR: %w", err)
+	}
+
+	if err := os.MkdirAll(location, 0o755); err != nil {
+		return fmt.Errorf("error creating HAR directory %s: %w", location, err)
+	}
+
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		return fmt.Errorf("error writing HAR file %s: %w", path, err)
+	}
+
+	ctx.Infof("HAR saved to %s (%d entries)", path, len(harFile.Log.Entries))
 	return nil
 }
 

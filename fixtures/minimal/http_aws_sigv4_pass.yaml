@@ -1,0 +1,17 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-aws-sigv4
+spec:
+  http:
+    - name: aws-sigv4-signing
+      url: https://httpbin.flanksource.com/headers
+      awsSigV4:
+        accessKey:
+          value: test-key
+        secretKey:
+          value: test-secret
+        region: us-east-1
+        service: execute-api
+      test:
+        expr: 'json.headers.Authorization.startsWith("AWS4-HMAC-SHA256")'

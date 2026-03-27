@@ -249,6 +249,7 @@ func ServerFlags(flags *pflag.FlagSet) {
 
 func init() {
 	logger.BindFlags(Root.PersistentFlags())
+	properties.BindFlags(Root.PersistentFlags())
 	_ = properties.LoadFile("canary-checker.properties")
 	logger.UseSlog()
 	Root.PersistentFlags().BoolVar(&logFail, "log-fail", false, "Log every failing check")

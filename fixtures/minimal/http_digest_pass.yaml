@@ -1,0 +1,24 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-digest-auth
+spec:
+  http:
+    - name: digest-auth-pass
+      url: https://httpbin.flanksource.com/digest-auth/auth/user/pass
+      username:
+        value: user
+      password:
+        value: pass
+      digest: true
+      responseCodes: [200]
+      test:
+        expr: 'json.authenticated == true && json.user == "user"'
+    - name: digest-auth-fail
+      url: https://httpbin.flanksource.com/digest-auth/auth/user/pass
+      username:
+        value: user
+      password:
+        value: wrong
+      digest: true
+      responseCodes: [401]

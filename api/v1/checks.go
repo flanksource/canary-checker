@@ -137,6 +137,8 @@ type HTTPCheck struct {
 	NTLM bool `yaml:"ntlm,omitempty" json:"ntlm,omitempty"`
 	// NTLM when set to true will do authentication using NTLM v2 protocol
 	NTLMv2 bool `yaml:"ntlmv2,omitempty" json:"ntlmv2,omitempty"`
+	// Digest when set to true will do authentication using HTTP digest
+	Digest bool `yaml:"digest,omitempty" json:"digest,omitempty"`
 	// Request Body Contents
 	Body string `yaml:"body,omitempty" json:"body,omitempty" template:"true"`
 	// Header fields to be used in the query
@@ -147,6 +149,8 @@ type HTTPCheck struct {
 	EnvVars []types.EnvVar `yaml:"env,omitempty" json:"env,omitempty"`
 	// Oauth2 Configuration. The client ID & Client secret should go to username & password respectively.
 	Oauth2 *Oauth2Config `yaml:"oauth2,omitempty" json:"oauth2,omitempty"`
+	// AWS SigV4 signing for authenticating to AWS APIs
+	AwsSigV4 *connection.AWSSigV4 `yaml:"awsSigV4,omitempty" json:"awsSigV4,omitempty"`
 	// TLS Config
 	TLSConfig *TLSConfig `yaml:"tlsConfig,omitempty" json:"tlsConfig,omitempty"`
 	// Crawl site and verify links
