@@ -15,9 +15,10 @@ import (
 	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/commons/console"
 	"github.com/flanksource/commons/http"
-	"github.com/flanksource/commons/http/middlewares"
 	"github.com/flanksource/commons/logger"
+	dutyConnection "github.com/flanksource/duty/connection"
 	"github.com/flanksource/duty/models"
+	"github.com/flanksource/duty/types"
 	"github.com/gocolly/colly/v2"
 	"github.com/samber/lo"
 	"github.com/samber/oops"
@@ -74,83 +75,64 @@ func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
 	return results
 }
 
-func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPCheck, connection *models.Connection) (*http.Request, error) {
-	client := http.NewClient().UserAgent("canary-checker/" + runner.Version)
-
-	for _, header := range check.Headers {
-		value, err := ctx.GetEnvValueFromCache(header, ctx.GetNamespace())
-		if err != nil {
-			return nil, fmt.Errorf("failed getting header (%v): %w", header, err)
-		}
-
-		client.Header(header.Name, value)
-	}
-
-	if connection.Username != "" || connection.Password != "" {
-		client.Auth(connection.Username, connection.Password)
+func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPCheck, conn *models.Connection) (*http.Request, error) {
+	httpConn := dutyConnection.HTTPConnection{
+		HTTPBasicAuth: types.HTTPBasicAuth{
+			Authentication: types.Authentication{
+				Username: check.Authentication.Username,
+				Password: check.Authentication.Password,
+			},
+			NTLM:   check.NTLM,
+			NTLMV2: check.NTLMv2,
+			Digest: check.Digest,
+		},
+		URL:      check.URL,
+		Headers:  check.Headers,
+		AWSSigV4: check.AwsSigV4,
 	}
 
 	if check.Oauth2 != nil {
-		client.OAuth(middlewares.OauthConfig{
-			ClientID:     connection.Username,
-			ClientSecret: connection.Password,
+		httpConn.OAuth = types.OAuth{
+			ClientID:     check.Authentication.Username,
+			ClientSecret: check.Authentication.Password,
 			TokenURL:     check.Oauth2.TokenURL,
 			Scopes:       check.Oauth2.Scopes,
 			Params:       check.Oauth2.Params,
-		})
+		}
+		httpConn.HTTPBasicAuth = types.HTTPBasicAuth{} // clear basic auth when oauth is used
 	}
 
 	if check.TLSConfig != nil {
-		tlsconfig := http.TLSConfig{
+		httpConn.TLS = dutyConnection.TLSConfig{
 			InsecureSkipVerify: check.TLSConfig.InsecureSkipVerify,
+			CA:                 check.TLSConfig.CA,
+			Cert:               check.TLSConfig.Cert,
+			Key:                check.TLSConfig.Key,
 		}
-		tlsconfig.HandshakeTimeout, _ = check.TLSConfig.HandshakeTimeout.GetDurationOr(time.Second * 10)
-
-		if !check.TLSConfig.CA.IsEmpty() {
-			v, err := ctx.GetEnvValueFromCache(check.TLSConfig.CA, ctx.GetNamespace())
-			if err != nil {
-				return nil, fmt.Errorf("failed getting header (%v): %w", check.TLSConfig.CA, err)
-			}
-			tlsconfig.CA = v
-		}
-
-		if !check.TLSConfig.Cert.IsEmpty() {
-			v, err := ctx.GetEnvValueFromCache(check.TLSConfig.Cert, ctx.GetNamespace())
-			if err != nil {
-				return nil, fmt.Errorf("failed getting header (%v): %w", check.TLSConfig.Cert, err)
-			}
-			tlsconfig.Cert = v
-		}
-
-		if !check.TLSConfig.Key.IsEmpty() {
-			v, err := ctx.GetEnvValueFromCache(check.TLSConfig.Key, ctx.GetNamespace())
-			if err != nil {
-				return nil, fmt.Errorf("failed getting header (%v): %w", check.TLSConfig.Key, err)
-			}
-			tlsconfig.Key = v
-		}
-
-		var err error
-		client, err = client.TLSConfig(tlsconfig)
-		if err != nil {
-			return nil, fmt.Errorf("failed to set tls config: %w", err)
-		}
+		httpConn.TLS.HandshakeTimeout, _ = check.TLSConfig.HandshakeTimeout.GetDurationOr(time.Second * 10)
 	}
 
-	client.NTLM(check.NTLM)
-	client.NTLMV2(check.NTLMv2)
+	if conn != nil {
+		httpConn.ConnectionName = check.Connection.Connection
+	}
+
+	hydrated, err := httpConn.Hydrate(ctx.Context, ctx.GetNamespace())
+	if err != nil {
+		return nil, fmt.Errorf("hydrate connection: %w", err)
+	}
+
+	client, err := dutyConnection.CreateHTTPClient(ctx.Context, *hydrated)
+	if err != nil {
+		return nil, fmt.Errorf("create http client: %w", err)
+	}
+
+	client.UserAgent("canary-checker/" + runner.Version)
 
 	if check.ThresholdMillis > 0 {
 		client.Timeout(time.Duration(check.ThresholdMillis) * time.Millisecond)
 	}
-
-	// TODO: Add finer controls over tracing to the canary
-	if ctx.IsTrace() && ctx.Properties()["http.trace"] != "disabled" {
-		client.TraceToStdout(http.TraceAll)
-		client.Trace(http.TraceAll)
-	} else if ctx.IsDebug() && ctx.Properties()["http.debug"] != "disabled" {
-		client.TraceToStdout(http.TraceHeaders)
-		client.Trace(http.TraceHeaders)
+	if ctx.HARCollector != nil {
+		client.HARCollector(ctx.HARCollector)
 	}
 
 	return client.R(ctx), nil

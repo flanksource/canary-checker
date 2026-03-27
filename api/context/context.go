@@ -6,6 +6,7 @@ import (
 	"maps"
 	"strings"
 
+	"github.com/flanksource/commons/har"
 	"github.com/flanksource/duty/connection"
 	dutyCtx "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/models"
@@ -20,11 +21,12 @@ import (
 var DefaultContext dutyCtx.Context
 
 type Context struct {
-	Namespace   string
-	Canary      v1.Canary
-	Environment map[string]interface{}
-	cache       map[string]any
-	Outputs     map[string]*pkg.CheckResult
+	Namespace    string
+	Canary       v1.Canary
+	Environment  map[string]interface{}
+	cache        map[string]any
+	Outputs      map[string]*pkg.CheckResult
+	HARCollector *har.Collector
 	dutyCtx.Context
 }
 
@@ -176,7 +178,7 @@ func New(ctx dutyCtx.Context, canary v1.Canary) *Context {
 		canary.Namespace = "default"
 	}
 
-	ctx = ctx.WithObject(canary.ObjectMeta).
+	ctx = ctx.WithObject(canary).
 		WithName(fmt.Sprintf("Canary[%s/%s]", canary.Namespace, canary.Name)).
 		WithDB(ctx.DB(), ctx.Pool())
 	c := &Context{
@@ -187,11 +189,10 @@ func New(ctx dutyCtx.Context, canary v1.Canary) *Context {
 		Outputs:     make(map[string]*pkg.CheckResult),
 	}
 
-	if c.Logger.IsLevelEnabled(4) || c.IsTrace() {
-		c.Logger.SetMinLogLevel(2)
-	} else if c.Logger.IsLevelEnabled(3) || c.IsDebug() {
-		c.Logger.SetMinLogLevel(1)
+	if c.Properties().On(false, "http.har") {
+		c.HARCollector = har.NewCollector(har.DefaultConfig())
 	}
+
 	return c
 }
 
@@ -225,23 +226,19 @@ func (ctx *Context) GetOutputs() map[string]any {
 }
 
 func (ctx *Context) IsDebug() bool {
-	return ctx.Logger.IsLevelEnabled(3) || ctx.Canary.IsDebug() || ctx.IsTrace()
+	return ctx.Context.IsDebug() || ctx.Canary.IsDebug()
 }
 
 func (ctx *Context) IsTrace() bool {
-	return ctx.Logger.IsLevelEnabled(4) || ctx.Canary.IsTrace()
+	return ctx.Context.IsTrace() || ctx.Canary.IsTrace()
 }
 
 func (ctx *Context) Debugf(format string, args ...interface{}) {
-	if ctx.IsDebug() {
-		ctx.Logger.Debugf(format, args...)
-	}
+	ctx.Logger.Debugf(format, args...)
 }
 
 func (ctx *Context) Tracef(format string, args ...interface{}) {
-	if ctx.IsTrace() {
-		ctx.Logger.Tracef(format, args...)
-	}
+	ctx.Logger.Tracef(format, args...)
 }
 
 func (ctx *Context) WithCheckResult(result *pkg.CheckResult) *Context {

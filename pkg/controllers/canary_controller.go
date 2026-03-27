@@ -86,7 +86,7 @@ func (r *CanaryReconciler) Reconcile(parentCtx gocontext.Context, req ctrl.Reque
 		return ctrl.Result{}, nil
 	}
 
-	ctx := r.Context.WithObject(canary.ObjectMeta).WithName(req.NamespacedName.String())
+	ctx := r.Context.WithObject(canary).WithName(req.NamespacedName.String())
 
 	result, err := r.reconcile(ctx, canary, req.NamespacedName)
 	if err != nil {

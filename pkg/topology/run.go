@@ -214,7 +214,7 @@ func lookup(ctx *ComponentContext, name string, spec v1.CanarySpec) ([]interface
 	var results []any
 
 	canarySpec := v1.NewCanaryFromSpec(name, ctx.GetNamespace(), spec)
-	canaryCtx := context.New(ctx.WithObject(canarySpec.ObjectMeta), canarySpec)
+	canaryCtx := context.New(ctx.WithObject(canarySpec), canarySpec)
 	canaryCtx.Context = ctx.Context
 	canaryCtx.Namespace = ctx.GetNamespace()
 	// canaryCtx.Environment = ctx.
@@ -494,7 +494,7 @@ func Run(ctx dutyCtx.Context, topology pkg.Topology) (pkg.Components, *models.Jo
 		Topology:  *v1,
 		Namespace: topology.Namespace,
 	}
-	j.Context = ctx.WithObject(v1.ObjectMeta)
+	j.Context = ctx.WithObject(v1)
 	j.Fn = tj.Run
 
 	j.Run()

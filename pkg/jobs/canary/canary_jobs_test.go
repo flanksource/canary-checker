@@ -103,7 +103,7 @@ var _ = ginkgo.Describe("Transformed Canary", ginkgo.Ordered, func() {
 
 		j := &job.Job{
 			Name:    "Canary",
-			Context: DefaultContext.WithObject(v1Canary.ObjectMeta).WithAnyValue("canary", v1Canary),
+			Context: DefaultContext.WithObject(v1Canary).WithAnyValue("canary", v1Canary),
 			Fn:      c.Run,
 		}
 

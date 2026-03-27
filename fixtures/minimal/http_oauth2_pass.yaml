@@ -1,0 +1,17 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-oauth2
+spec:
+  http:
+    - name: oauth2-client-credentials
+      url: https://httpbin.flanksource.com/get
+      username:
+        value: demo-backend-client
+      password:
+        value: MJlO3binatD9jk1
+      oauth2:
+        tokenURL: https://login-demo.curity.io/oauth/v2/oauth-token
+        scope: [read]
+      test:
+        expr: 'json.headers.Authorization.startsWith("Bearer ")'
