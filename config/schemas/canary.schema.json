@@ -33,6 +33,39 @@
       "additionalProperties": false,
       "type": "object"
     },
+    "AWSSigV4": {
+      "properties": {
+        "connection": {
+          "type": "string"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "sessionToken": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "assumeRole": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "skipTLSVerify": {
+          "type": "boolean"
+        },
+        "service": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "AlertManagerCheck": {
       "properties": {
         "description": {
@@ -2476,6 +2509,10 @@
           "type": "boolean",
           "description": "NTLM when set to true will do authentication using NTLM v2 protocol"
         },
+        "digest": {
+          "type": "boolean",
+          "description": "Digest when set to true will do authentication using HTTP digest"
+        },
         "body": {
           "type": "string",
           "description": "Request Body Contents"
@@ -2501,6 +2538,10 @@
         "oauth2": {
           "$ref": "#/$defs/Oauth2Config",
           "description": "Oauth2 Configuration. The client ID \u0026 Client secret should go to username \u0026 password respectively."
+        },
+        "awsSigV4": {
+          "$ref": "#/$defs/AWSSigV4",
+          "description": "AWS SigV4 signing for authenticating to AWS APIs"
         },
         "tlsConfig": {
           "$ref": "#/$defs/TLSConfig",
@@ -4538,6 +4579,9 @@
             "$ref": "#/$defs/EnvVar"
           },
           "type": "array"
+        },
+        "awsSigV4": {
+          "$ref": "#/$defs/AWSSigV4"
         },
         "query": {
           "type": "string",

@@ -25,9 +25,8 @@ for check in "${checks[@]}"; do
 	fi
 done
 
-for depreceated in containerd containerdPush docker dockerPush helm namespace pod; do
-	yq "del($schemaPath.$depreceated.items.properties.**.description)" -i  $slim
-
+for removed in containerd containerdPush docker dockerPush helm namespace pod github gitProtocol; do
+	yq "$schemaPath.$removed.items = {\"type\": \"object\", \"x-kubernetes-preserve-unknown-fields\": true, \"description\": \"Removed: use kubernetesResource or exec checks instead\"}" -i $slim
 done
 
 for description in icon description name transformDeleteStrategy metrics; do
