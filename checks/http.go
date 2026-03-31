@@ -76,11 +76,22 @@ func (c *HTTPChecker) Run(ctx *context.Context) pkg.Results {
 }
 
 func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPCheck, conn *models.Connection) (*http.Request, error) {
+	username := check.Authentication.Username
+	password := check.Authentication.Password
+	if conn != nil {
+		if username.IsEmpty() && conn.Username != "" {
+			username = types.EnvVar{ValueStatic: conn.Username}
+		}
+		if password.IsEmpty() && conn.Password != "" {
+			password = types.EnvVar{ValueStatic: conn.Password}
+		}
+	}
+
 	httpConn := dutyConnection.HTTPConnection{
 		HTTPBasicAuth: types.HTTPBasicAuth{
 			Authentication: types.Authentication{
-				Username: check.Authentication.Username,
-				Password: check.Authentication.Password,
+				Username: username,
+				Password: password,
 			},
 			NTLM:   check.NTLM,
 			NTLMV2: check.NTLMv2,
