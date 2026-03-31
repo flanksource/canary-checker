@@ -7,7 +7,7 @@ godebug x509negativeserial=1
 require (
 	github.com/flanksource/artifacts v1.0.21
 	github.com/flanksource/commons v1.50.0
-	github.com/flanksource/deps v1.0.24
+	github.com/flanksource/deps v1.0.24 // indirect
 	github.com/flanksource/duty v1.0.1237
 	github.com/flanksource/gomplate/v3 v3.24.75
 	github.com/flanksource/is-healthy v1.0.86
@@ -29,7 +29,6 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.19.0
 	github.com/flanksource/clicky v1.21.1
 	github.com/friendsofgo/errors v0.9.2
-	github.com/go-git/go-git/v5 v5.16.5
 	github.com/go-ldap/ldap/v3 v3.4.12
 	github.com/go-logr/logr v1.4.3
 	github.com/go-redis/redis/v8 v8.11.5
@@ -88,7 +87,6 @@ require (
 	k8s.io/apimachinery v0.35.2
 	k8s.io/client-go v0.35.2
 	sigs.k8s.io/controller-runtime v0.22.3
-	sigs.k8s.io/yaml v1.6.0
 )
 
 require (
@@ -219,6 +217,7 @@ require (
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.7.0 // indirect
+	github.com/go-git/go-git/v5 v5.16.5 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -474,6 +473,7 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.17.1 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.2 // indirect
+	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
 // replace github.com/flanksource/artifacts => ../artifacts

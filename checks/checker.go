@@ -39,8 +39,27 @@ var All = []Checker{
 	&ElasticsearchChecker{},
 	&ExecChecker{},
 	&FolderChecker{},
-	&GitHubChecker{},
-	&GitProtocolChecker{},
+	&removedChecker{typeName: "github", specFn: func(ctx *context.Context) []external.Check {
+		return toChecks(ctx.Canary.Spec.GitHub)
+	}},
+	&removedChecker{typeName: "gitProtocol", specFn: func(ctx *context.Context) []external.Check {
+		return toChecks(ctx.Canary.Spec.GitProtocol)
+	}},
+	&removedChecker{typeName: "containerdPull", specFn: func(ctx *context.Context) []external.Check {
+		return toChecks(ctx.Canary.Spec.ContainerdPull)
+	}},
+	&removedChecker{typeName: "containerdPush", specFn: func(ctx *context.Context) []external.Check {
+		return toChecks(ctx.Canary.Spec.ContainerdPush)
+	}},
+	&removedChecker{typeName: "dockerPull", specFn: func(ctx *context.Context) []external.Check {
+		return toChecks(ctx.Canary.Spec.DockerPull)
+	}},
+	&removedChecker{typeName: "dockerPush", specFn: func(ctx *context.Context) []external.Check {
+		return toChecks(ctx.Canary.Spec.DockerPush)
+	}},
+	&removedChecker{typeName: "helm", specFn: func(ctx *context.Context) []external.Check {
+		return toChecks(ctx.Canary.Spec.Helm)
+	}},
 	&HTTPChecker{},
 	&IcmpChecker{},
 	&JmeterChecker{},
@@ -58,7 +77,11 @@ var All = []Checker{
 	&RedisChecker{},
 	&ResticChecker{},
 	&S3Checker{},
-	NewNamespaceChecker(),
-	NewPodChecker(),
+	&removedChecker{typeName: "namespace", specFn: func(ctx *context.Context) []external.Check {
+		return toChecks(ctx.Canary.Spec.Namespace)
+	}},
+	&removedChecker{typeName: "pod", specFn: func(ctx *context.Context) []external.Check {
+		return toChecks(ctx.Canary.Spec.Pod)
+	}},
 	NewTCPChecker(),
 }
