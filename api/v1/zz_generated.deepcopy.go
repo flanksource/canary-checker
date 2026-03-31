@@ -2039,6 +2039,11 @@ func (in *HTTPCheck) DeepCopyInto(out *HTTPCheck) {
 		*out = new(Oauth2Config)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.AwsSigV4 != nil {
+		in, out := &in.AwsSigV4, &out.AwsSigV4
+		*out = new(connection.AWSSigV4)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.TLSConfig != nil {
 		in, out := &in.TLSConfig, &out.TLSConfig
 		*out = new(TLSConfig)
