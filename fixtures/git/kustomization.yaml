@@ -1,2 +1,2 @@
 resources:
-  - git_pull_push_pass.yaml
+  - git_pull_push_fail.yaml
