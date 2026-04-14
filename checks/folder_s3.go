@@ -4,7 +4,6 @@ package checks
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -31,10 +30,6 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	var bucket string
 	bucket, check.Path = parseS3Path(check.Path)
-
-	fmt.Printf("OBJECT META %+v\n", ctx.GetObjectMeta())
-	fmt.Printf("NAMESPACE %s\n", ctx.GetNamespace())
-	fmt.Printf("NAMESPACE 2 %s\n", ctx.Namespace)
 
 	if err := check.S3Connection.Populate(ctx); err != nil {
 		return results.ErrorMessage(err)
