@@ -34,8 +34,9 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	fmt.Printf("OBJECT META %+v\n", ctx.GetObjectMeta())
 	fmt.Printf("NAMESPACE %s\n", ctx.GetNamespace())
+	fmt.Printf("NAMESPACE 2 %s\n", ctx.Namespace)
 
-	if err := check.S3Connection.Populate(ctx.WithNamespace(check.GetNamespace())); err != nil {
+	if err := check.S3Connection.Populate(ctx); err != nil {
 		return results.ErrorMessage(err)
 	}
 
