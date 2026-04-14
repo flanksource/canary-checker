@@ -291,7 +291,7 @@ func (ctx *Context) WithEnvValues(environment map[string]interface{}) *Context {
 
 func (ctx *Context) New(name string, environment map[string]interface{}) *Context {
 	return &Context{
-		Context:     ctx.Context.WithName(name),
+		Context:     ctx.Context.WithName(name).WithNamespace(ctx.Namespace),
 		Namespace:   ctx.Namespace,
 		Canary:      ctx.Canary,
 		Environment: environment,
