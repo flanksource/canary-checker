@@ -65,6 +65,9 @@ STATUS_COUNT_POSTGRES=$(curl -s http://0.0.0.0:8080/api/summary | jq ".checks_su
 
 echo "::group::Dry Running Fixtures"
 
+# Certain fixtures require namespace
+kubectl create namespace canaries || true
+
 for fixture in minimal datasources k8s git ldap opensearch prometheus external elasticsearch aws azure; do
     for f in $(find ./fixtures/$fixture -name "*.yaml" ! -name "kustomization.yaml" ! -name "_*" ); do
         kubectl apply -f $f --dry-run=server
