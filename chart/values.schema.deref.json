@@ -2578,6 +2578,14 @@
               "default": "",
               "title": "ingressClassName"
             },
+            "path": {
+              "default": "/",
+              "title": "path"
+            },
+            "pathType": {
+              "default": "ImplementationSpecific",
+              "title": "pathType"
+            },
             "tls": {
               "items": {
                 "description": "IngressTLS describes the transport layer security associated with an ingress.",
