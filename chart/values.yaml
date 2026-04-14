@@ -483,6 +483,20 @@ flanksource-ui:
     #    hosts:
     #      - chart-example.local
 
+
+    # @schema
+    # required: true
+    # default: /
+    # @schema
+    path: /
+
+    # @schema
+    # required: true
+    # default: ImplementationSpecific
+    # @schema
+    pathType: ImplementationSpecific
+
+
 # @schema
 # $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.ResourceRequirements
 # @schema
