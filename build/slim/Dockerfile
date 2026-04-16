@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.25-bookworm@sha256:ee420c17fa013f71eca6b35c3547b854c838d4f26056a34eb6171bba5bf8ece4 AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26.1-bookworm@sha256:bd76f94e0ec7c7926e1dff7b90913f639608b8dd57315cd1c420624e577f95d3 AS builder
 WORKDIR /app
 
 ARG TARGETOS
