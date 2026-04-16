@@ -2015,6 +2015,11 @@ func (in *HTTPCheck) DeepCopyInto(out *HTTPCheck) {
 		*out = make([]int, len(*in))
 		copy(*out, *in)
 	}
+	if in.MaxRedirects != nil {
+		in, out := &in.MaxRedirects, &out.MaxRedirects
+		*out = new(int)
+		**out = **in
+	}
 	if in.ResponseJSONContent != nil {
 		in, out := &in.ResponseJSONContent, &out.ResponseJSONContent
 		*out = new(JSONCheck)
