@@ -25,7 +25,7 @@ jobs:
         with:
           driver-opts: network=kind
           buildkitd-flags: --allow-insecure-entitlement network.host
-          config-inline: |
+          buildkitd-config-inline: |
             [registry."kind-registry:5000"]
               http = true
               insecure = true
