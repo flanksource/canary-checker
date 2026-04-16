@@ -33,7 +33,11 @@ import (
 	"github.com/flanksource/canary-checker/pkg/utils"
 )
 
-const trueString = "true"
+const (
+	trueString = "true"
+
+	maxRedirectDefault = 10 // default for the http lib we're using. But we enforce it explicitly.
+)
 
 var (
 	responseStatus = prometheus.NewCounterVec(
@@ -142,6 +146,12 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 	if check.ThresholdMillis > 0 {
 		client.Timeout(time.Duration(check.ThresholdMillis) * time.Millisecond)
 	}
+	if check.MaxRedirects != nil {
+		client.RedirectPolicy(*check.MaxRedirects)
+	} else {
+		client.RedirectPolicy(maxRedirectDefault)
+	}
+
 	if ctx.HARCollector != nil {
 		client.HARCollector(ctx.HARCollector)
 	}

@@ -3722,6 +3722,11 @@ spec:
                       markFailOnEmpty:
                         description: If check or transformation returns empty, that should be marked as failed
                         type: boolean
+                      maxRedirects:
+                        description: |-
+                          Maximum redirects to follow (Defaults 10).
+                          Set to 0 to disable following redirects.
+                        type: integer
                       maxSSLExpiry:
                         description: Maximum number of days until the SSL Certificate expires.
                         type: integer

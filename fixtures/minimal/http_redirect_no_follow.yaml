@@ -1,0 +1,17 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: http-redirect-no-follow
+  labels:
+    canary: http
+spec:
+  schedule: "@every 5m"
+  http:
+    - name: redirect-301-no-follow
+      url: "https://httpbin.flanksource.com/redirect-to?url=/get&status_code=301"
+      maxRedirects: 0
+      responseCodes: [301]
+      test:
+        expr: "headers['Location'] == '/get'"
+      display:
+        expr: "'status=' + string(code) + ', location=' + headers['Location']"

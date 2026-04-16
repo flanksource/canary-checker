@@ -125,6 +125,9 @@ type HTTPCheck struct {
 	ThresholdMillis int `yaml:"thresholdMillis,omitempty" json:"thresholdMillis,omitempty"`
 	// Expected response codes for the HTTP Request.
 	ResponseCodes []int `yaml:"responseCodes,omitempty" json:"responseCodes,omitempty"`
+	// Maximum redirects to follow (Defaults 10).
+	// Set to 0 to disable following redirects.
+	MaxRedirects *int `yaml:"maxRedirects,omitempty" json:"maxRedirects,omitempty"`
 	// Exact response content expected to be returned by the endpoint.
 	ResponseContent string `yaml:"responseContent,omitempty" json:"responseContent,omitempty"`
 	// Deprecated, use expr and jsonpath function

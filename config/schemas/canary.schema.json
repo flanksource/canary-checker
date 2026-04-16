@@ -2485,6 +2485,10 @@
           "type": "array",
           "description": "Expected response codes for the HTTP Request."
         },
+        "maxRedirects": {
+          "type": "integer",
+          "description": "Maximum redirects to follow (Defaults 10).\nSet to 0 to disable following redirects."
+        },
         "responseContent": {
           "type": "string",
           "description": "Exact response content expected to be returned by the endpoint."

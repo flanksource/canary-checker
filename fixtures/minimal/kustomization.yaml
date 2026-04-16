@@ -7,6 +7,7 @@ resources:
   - http_single_pass.yaml
   - http_timeout_fail.yaml
   - http_auth_static_pass.yaml
+  - http_redirect_no_follow.yaml
   - display-with-cel_pass.yaml
   - display-with-gotemplate_pass.yaml
   - display-with-javascript_pass.yaml
