@@ -87,7 +87,7 @@ func (c *KubernetesResourceChecker) Check(ctx context.Context, check v1.Kubernet
 	if check.HasResourcesWithMissingNamespace() {
 		namespacedResources, err := fetchNamespacedResources(ctx)
 		if err != nil {
-			return results.Failf("failed to get api resources: %w", err)
+			return results.Failf("failed to get api resources: %v", err)
 		}
 
 		check.SetMissingNamespace(ctx.Canary, namespacedResources)

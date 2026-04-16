@@ -228,7 +228,7 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 
 	k8s, err := ctx.Kubernetes()
 	if err != nil {
-		return results.Failf("error creating kubernetes client: %w", err)
+		return results.Failf("error creating kubernetes client: %v", err)
 	}
 	timeout := time.Duration(check.GetTimeout()) * time.Minute
 	pod, err := newPod(ctx, check)

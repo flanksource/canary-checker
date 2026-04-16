@@ -41,7 +41,7 @@ import (
 	"github.com/robfig/cron/v3"
 	k8sErrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -56,7 +56,7 @@ type CanaryReconciler struct {
 	dutyContext.Context
 	Log         logr.Logger
 	Scheme      *runtime.Scheme
-	Events      record.EventRecorder
+	Events      events.EventRecorder
 	Cron        *cron.Cron
 	RunnerName  string
 	Done        chan *pkg.CheckResult
@@ -195,7 +195,7 @@ func (r *CanaryReconciler) updateStatusWithError(ctx gocontext.Context, namespac
 }
 
 func (r *CanaryReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.Events = mgr.GetEventRecorderFor("canary-checker")
+	r.Events = mgr.GetEventRecorder("canary-checker")
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1.Canary{}).
 		Complete(r)
@@ -294,7 +294,7 @@ func (r *CanaryReconciler) Report() {
 		canary.Status.Status = &payload.Status
 
 		for _, eventMsg := range payload.FailEvents {
-			r.Events.Event(&canary, corev1.EventTypeWarning, "Failed", eventMsg)
+			r.Events.Eventf(&canary, nil, corev1.EventTypeWarning, "Failed", "Reconcile", eventMsg)
 		}
 
 		if err := r.Status().Patch(gocontext.Background(), &canary, patch); err != nil {
