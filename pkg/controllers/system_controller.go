@@ -26,7 +26,7 @@ import (
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/tools/events"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -38,7 +38,7 @@ type TopologyReconciler struct {
 	client.Client
 	Log        logr.Logger
 	Scheme     *runtime.Scheme
-	Events     record.EventRecorder
+	Events     events.EventRecorder
 	RunnerName string
 }
 
@@ -82,7 +82,7 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 }
 
 func (r *TopologyReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.Events = mgr.GetEventRecorderFor("canary-checker")
+	r.Events = mgr.GetEventRecorder("canary-checker")
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1.Topology{}).
 		Complete(r)
