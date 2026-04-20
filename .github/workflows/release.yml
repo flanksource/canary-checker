@@ -20,12 +20,15 @@ on:
           - rc
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
 
 jobs:
   semantic-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     outputs:
       release-version: ${{ env.VERSION  || steps.semantic.outputs.new_release_version }}
       new-release-published: ${{ steps.semantic.outputs.new-release-published }}
@@ -73,6 +76,8 @@ jobs:
   binary:
     runs-on: ubuntu-latest
     needs: semantic-release
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
