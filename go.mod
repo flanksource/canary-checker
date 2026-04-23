@@ -6,7 +6,7 @@ godebug x509negativeserial=1
 
 require (
 	github.com/flanksource/artifacts v1.0.24
-	github.com/flanksource/commons v1.50.2
+	github.com/flanksource/commons v1.50.3
 	github.com/flanksource/deps v1.0.28 // indirect
 	github.com/flanksource/duty v1.0.1288
 	github.com/flanksource/gomplate/v3 v3.24.77
@@ -21,13 +21,13 @@ require (
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.56.2
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.62.2
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.99.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.100.0
 	github.com/c2h5oh/datasize v0.0.0-20231215233829-aa82cc1e6500
 	github.com/dynatrace-ace/dynatrace-go-api-client/api/v2/environment/dynatrace v0.0.0-20210816162345-de2eacc8ac9a
 	github.com/eko/gocache/lib/v4 v4.2.3
 	github.com/eko/gocache/store/bigcache/v4 v4.2.4
 	github.com/elastic/go-elasticsearch/v8 v8.19.4
-	github.com/flanksource/clicky v1.21.4
+	github.com/flanksource/clicky v1.21.5
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.13
 	github.com/go-logr/logr v1.4.3
@@ -84,7 +84,7 @@ require (
 	gopkg.in/flanksource/yaml.v3 v3.2.3
 	gorm.io/gorm v1.31.1
 	k8s.io/api v0.35.4
-	k8s.io/apimachinery v0.35.4
+	k8s.io/apimachinery v0.36.0
 	k8s.io/client-go v0.35.4
 	sigs.k8s.io/controller-runtime v0.23.3
 )
@@ -339,7 +339,6 @@ require (
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
-	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/nats-io/nats.go v1.51.0 // indirect
 	github.com/nats-io/nkeys v0.4.15 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
@@ -447,7 +446,7 @@ require (
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260401024825-9d38bb4040a9 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260414002931-afd174a4e478 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
+	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
@@ -462,7 +461,8 @@ require (
 	k8s.io/apiextensions-apiserver v0.35.2 // indirect
 	k8s.io/cli-runtime v0.31.1 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
-	k8s.io/kube-openapi v0.0.0-20260304202019-5b3e3fdb0acf // indirect
+	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a // indirect
+	k8s.io/streaming v0.36.0 // indirect
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2 // indirect
 	layeh.com/gopher-json v0.0.0-20201124131017-552bb3c4c3bf // indirect
 	modernc.org/libc v1.72.0 // indirect
