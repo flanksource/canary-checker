@@ -6,10 +6,6 @@ on:
       - master
   workflow_dispatch:
     inputs:
-      version:
-        description: New version to create
-        required: false
-        default: ""
       channel:
         description: "Release channel"
         required: true
@@ -24,64 +20,18 @@ permissions:
 
 jobs:
   semantic-release:
-    runs-on: ubuntu-latest
     permissions:
       contents: write
       issues: write
       pull-requests: write
-    outputs:
-      release-version: ${{ env.VERSION  || steps.semantic.outputs.new_release_version }}
-      new-release-published: ${{ steps.semantic.outputs.new-release-published }}
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Set branch variable for semantic release
-        run: |
-          if [[ "${{ inputs.version }}" != "" ]]; then
-            echo "VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-            echo "TAG=v${{ inputs.version }}" >> $GITHUB_ENV
-          else
-            echo "VERSION=" >> $GITHUB_ENV
-          fi
+    uses: flanksource/action-workflows/.github/workflows/create-draft-release.yml@e5cf4306853b95b7e815392359b6105169ecc37a # main
 
-          if [[ ${{ github.event_name == 'workflow_dispatch' }} == true ]]; then
-            if [[  "${{ inputs.channel }}" ==  "stable" ]]; then
-              BRANCHES="['master']"
-            elif [[  "${{ inputs.channel }}" ==  "rc" ]]; then
-              BRANCHES="[{name: 'master', channel: 'rc', prerelease: 'rc'}, {name: 'dummy-release'}]"
-            fi
-          else
-            BRANCHES="[{name: 'master', channel: 'beta', prerelease: 'beta'}, {name: 'dummy-release'}]"
-          fi
-          echo "BRANCHES=$BRANCHES" >> $GITHUB_ENV
-          cat $GITHUB_ENV
-      - uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90 # v6.0.0
-        if: ${{ ! env.TAG }}
-        id: semantic
-        with:
-          branches: ${{ env.BRANCHES }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create tag
-        if: ${{ env.TAG }}
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/${{ env.TAG }}',
-              sha: context.sha
-            })
-  binary:
+  binary-linux:
     runs-on: ubuntu-latest
     needs: semantic-release
+    if: needs.semantic-release.outputs.published == 'true'
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [linux, darwin, windows]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -90,21 +40,76 @@ jobs:
         with:
           go-version: v1.26.x
 
-      - run: make ${{matrix.os}} compress
+      - run: make linux compress
         env:
-          VERSION: v${{ needs.semantic-release.outputs.release-version }}
+          VERSION: ${{ needs.semantic-release.outputs.tag }}
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./.release/*
-          tag: v${{ needs.semantic-release.outputs.release-version }}
+          tag: ${{ needs.semantic-release.outputs.tag }}
+          overwrite: true
+          file_glob: true
+
+  binary-darwin:
+    runs-on: ubuntu-latest
+    needs: semantic-release
+    if: needs.semantic-release.outputs.published == 'true'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version: v1.26.x
+
+      - run: make darwin compress
+        env:
+          VERSION: ${{ needs.semantic-release.outputs.tag }}
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./.release/*
+          tag: ${{ needs.semantic-release.outputs.tag }}
+          overwrite: true
+          file_glob: true
+
+  binary-windows:
+    runs-on: ubuntu-latest
+    needs: semantic-release
+    if: needs.semantic-release.outputs.published == 'true'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version: v1.26.x
+
+      - run: make windows compress
+        env:
+          VERSION: ${{ needs.semantic-release.outputs.tag }}
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./.release/*
+          tag: ${{ needs.semantic-release.outputs.tag }}
           overwrite: true
           file_glob: true
 
   docker:
     needs: semantic-release
+    if: needs.semantic-release.outputs.published == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -166,6 +171,7 @@ jobs:
 
   docker-full:
     needs: semantic-release
+    if: needs.semantic-release.outputs.published == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -227,6 +233,7 @@ jobs:
 
   docker-slim:
     needs: semantic-release
+    if: needs.semantic-release.outputs.published == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -289,7 +296,7 @@ jobs:
   helm:
     runs-on: ubuntu-latest
     needs: [semantic-release, docker, docker-slim, docker-full]
-    if: always()
+    if: always() && needs.semantic-release.outputs.published == 'true'
     outputs:
       release-version: ${{ steps.version.outputs.release-version }}
     steps:
@@ -324,12 +331,31 @@ jobs:
           path: canary-checker-*.tgz
 
   push-helm-chart:
-    needs: helm
-    if: always() && needs.helm.result == 'success'
-    uses: flanksource/action-workflows/.github/workflows/push-helm-chart.yml@4b41aaf6cf7727789c0d21cd0bc262e850ba543f # main
+    needs: [semantic-release, helm]
+    if: always() && needs.semantic-release.outputs.published == 'true' && needs.helm.result == 'success'
+    uses: flanksource/action-workflows/.github/workflows/push-helm-chart.yml@e5cf4306853b95b7e815392359b6105169ecc37a # main
     with:
       filename_regex: "canary-checker-*.tgz"
       version: ${{ needs.helm.outputs.release-version }}
       pr_title: "Release ${{ needs.helm.outputs.release-version }} of ${{ github.repository }}"
     secrets:
       token: ${{ secrets.FLANKBOT }}
+
+  publish-release:
+    needs: [semantic-release, binary-linux, binary-darwin, binary-windows, docker, docker-slim, docker-full, helm, push-helm-chart]
+    if: >-
+      always() &&
+      needs.semantic-release.outputs.published == 'true' &&
+      (
+        needs.binary-linux.result == 'success' ||
+        needs.binary-darwin.result == 'success' ||
+        needs.binary-windows.result == 'success' ||
+        needs.docker.result == 'success' ||
+        needs.docker-slim.result == 'success' ||
+        needs.docker-full.result == 'success'
+      )
+    permissions:
+      contents: write
+    uses: flanksource/action-workflows/.github/workflows/publish-release.yml@e5cf4306853b95b7e815392359b6105169ecc37a # main
+    with:
+      tag: ${{ needs.semantic-release.outputs.tag }}
