@@ -58,6 +58,7 @@ module.exports = {
     [
       '@semantic-release/github',
       {
+        draftRelease: true,
         // From: https://github.com/semantic-release/github/pull/487#issuecomment-1486298997
         successComment: false,
         failTitle: false,
