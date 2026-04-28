@@ -23,7 +23,7 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
-    uses: flanksource/action-workflows/.github/workflows/create-draft-release.yml@e5cf4306853b95b7e815392359b6105169ecc37a # main
+    uses: flanksource/action-workflows/.github/workflows/create-draft-release.yml@e22094854bc7759abafb4ee49cb5585a5ccf91b0 # main
 
   binary-linux:
     runs-on: ubuntu-latest
@@ -43,14 +43,14 @@ jobs:
         env:
           VERSION: ${{ needs.semantic-release.outputs.tag }}
 
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./.release/*
-          tag: ${{ needs.semantic-release.outputs.tag }}
-          overwrite: true
-          file_glob: true
+      - name: Upload binaries to draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.semantic-release.outputs.tag }}
+        run: |
+          gh release upload "$TAG" ./.release/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
 
   binary-darwin:
     runs-on: ubuntu-latest
@@ -70,14 +70,14 @@ jobs:
         env:
           VERSION: ${{ needs.semantic-release.outputs.tag }}
 
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./.release/*
-          tag: ${{ needs.semantic-release.outputs.tag }}
-          overwrite: true
-          file_glob: true
+      - name: Upload binaries to draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.semantic-release.outputs.tag }}
+        run: |
+          gh release upload "$TAG" ./.release/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
 
   binary-windows:
     runs-on: ubuntu-latest
@@ -97,14 +97,14 @@ jobs:
         env:
           VERSION: ${{ needs.semantic-release.outputs.tag }}
 
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./.release/*
-          tag: ${{ needs.semantic-release.outputs.tag }}
-          overwrite: true
-          file_glob: true
+      - name: Upload binaries to draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.semantic-release.outputs.tag }}
+        run: |
+          gh release upload "$TAG" ./.release/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
 
   docker:
     needs: semantic-release
@@ -355,6 +355,6 @@ jobs:
       )
     permissions:
       contents: write
-    uses: flanksource/action-workflows/.github/workflows/publish-release.yml@e5cf4306853b95b7e815392359b6105169ecc37a # main
+    uses: flanksource/action-workflows/.github/workflows/publish-release.yml@e22094854bc7759abafb4ee49cb5585a5ccf91b0 # main
     with:
       tag: ${{ needs.semantic-release.outputs.tag }}
