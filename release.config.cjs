@@ -58,13 +58,6 @@ module.exports = {
     [
       '@semantic-release/github',
       {
-        assets: [
-          { path: './.bin/canary-checker-amd64', name: 'canary-checker-amd64' },
-          { path: './.bin/canary-checker.exe', name: 'canary-checker.exe' },
-          { path: './.bin/canary-checker_osx-amd64', name: 'canary-checker_osx-amd64' },
-          { path: './.bin/canary-checker_osx-arm64', name: 'canary-checker_osx-arm64' },
-          { path: './.bin/release.yaml', name: 'release.yaml' },
-        ],
         // From: https://github.com/semantic-release/github/pull/487#issuecomment-1486298997
         successComment: false,
         failTitle: false,
