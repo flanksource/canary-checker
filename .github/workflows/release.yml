@@ -24,6 +24,8 @@ jobs:
       issues: write
       pull-requests: write
     uses: flanksource/action-workflows/.github/workflows/create-draft-release.yml@e22094854bc7759abafb4ee49cb5585a5ccf91b0 # main
+    with:
+      pre_release: ${{ github.event_name != 'workflow_dispatch' || inputs.channel != 'stable' }}
 
   binary-linux:
     runs-on: ubuntu-latest
