@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26.1-bookworm@sha256:ab3d6955bbc813a0f3fdf220c1d817dd89c0b3f283777db8ece4a32fe7858edd AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26.2-bookworm@sha256:47ce5636e9936b2c5cbf708925578ef386b4f8872aec74a67bd13a627d242b19 AS builder
 WORKDIR /app
 
 ARG TARGETOS
@@ -15,7 +15,7 @@ RUN go mod download
 COPY ./ ./
 RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM flanksource/base-image-canary-checker:0.7.1@sha256:010f16e33084db3b94a4b741b5c895fa1274a3b5864bdc05b924940289c456cc
+FROM flanksource/base-image-canary-checker:0.8.0@sha256:797b46e29717839c08612807b9762bce19a6062858c6d4cfe36f98e7a89cb949
 ARG TARGETARCH
 
 WORKDIR /app
