@@ -10,7 +10,7 @@ require (
 	github.com/flanksource/deps v1.0.28 // indirect
 	github.com/flanksource/duty v1.0.1295
 	github.com/flanksource/gomplate/v3 v3.24.77
-	github.com/flanksource/is-healthy v1.0.86
+	github.com/flanksource/is-healthy v1.0.87
 	github.com/flanksource/kommons v0.31.7
 )
 
@@ -412,6 +412,9 @@ require (
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
+	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
+	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
+	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
