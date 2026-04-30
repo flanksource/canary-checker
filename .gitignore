@@ -35,5 +35,4 @@ canary-checker.properties
 data/
 *.har
 out.*
-.*/
 canary-checker
