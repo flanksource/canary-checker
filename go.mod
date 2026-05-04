@@ -9,7 +9,7 @@ require (
 	github.com/flanksource/commons v1.51.3
 	github.com/flanksource/deps v1.0.28 // indirect
 	github.com/flanksource/duty v1.0.1299
-	github.com/flanksource/gomplate/v3 v3.24.78
+	github.com/flanksource/gomplate/v3 v3.24.79
 	github.com/flanksource/is-healthy v1.0.87
 	github.com/flanksource/kommons v0.31.7
 )
