@@ -97,6 +97,9 @@ func sortChecksByDependency(checks []external.Check) ([]external.Check, error) {
 		if name == "" {
 			continue
 		}
+		if _, exists := checkMap[name]; exists {
+			return nil, fmt.Errorf("duplicate check name '%s'", name)
+		}
 		checkMap[name] = check
 	}
 
