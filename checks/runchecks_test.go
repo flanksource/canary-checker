@@ -83,6 +83,16 @@ func TestSortChecksByDependency(t *testing.T) {
 			wantErr:     true,
 			errContains: "must have a name",
 		},
+		{
+			name: "duplicate check names should error",
+			checks: []external.Check{
+				v1.HTTPCheck{Description: v1.Description{Name: "a"}},
+				v1.HTTPCheck{Description: v1.Description{Name: "a"}},
+				v1.HTTPCheck{Description: v1.Description{Name: "b", DependsOn: []string{"a"}}},
+			},
+			wantErr:     true,
+			errContains: "duplicate check name 'a'",
+		},
 	}
 
 	for _, tt := range tests {
