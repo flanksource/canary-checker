@@ -9179,6 +9179,9 @@ spec:
               type: object
             status:
               properties:
+                observedGeneration:
+                  format: int64
+                  type: integer
                 status:
                   type: string
               type: object

@@ -1263,6 +1263,10 @@
     },
     "ComponentStatus": {
       "properties": {
+        "observedGeneration": {
+          "type": "integer",
+          "description": "+optional"
+        },
         "status": {
           "$ref": "#/$defs/ComponentStatus"
         }

@@ -559,6 +559,14 @@ func (c Canary) GetPersistedID() string {
 	return string(c.GetUID())
 }
 
+func (c *Canary) SetObservedGeneration(generation int64) {
+	c.Status.ObservedGeneration = generation
+}
+
+func (c *Canary) GetObservedGeneration() int64 {
+	return c.Status.ObservedGeneration
+}
+
 func (c Canary) NextRuntime(lastRuntime time.Time) (*time.Time, error) {
 	if c.Spec.Schedule != "" {
 		schedule, err := cron.ParseStandard(c.Spec.Schedule)
