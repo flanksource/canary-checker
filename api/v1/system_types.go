@@ -94,6 +94,14 @@ func (t Topology) GetPersistedID() string {
 	return string(t.GetUID())
 }
 
+func (t *Topology) SetObservedGeneration(generation int64) {
+	t.Status.ObservedGeneration = generation
+}
+
+func (t *Topology) GetObservedGeneration() int64 {
+	return t.Status.ObservedGeneration
+}
+
 type Selector struct {
 	Name   string            `json:"name,omitempty"`
 	Labels map[string]string `json:"labels,omitempty"`

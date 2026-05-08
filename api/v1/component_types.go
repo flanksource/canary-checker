@@ -116,7 +116,17 @@ type ParentLookup struct {
 }
 
 type ComponentStatus struct {
-	Status types.ComponentStatus `json:"status,omitempty"`
+	// +optional
+	ObservedGeneration int64                 `json:"observedGeneration,omitempty" protobuf:"varint,3,opt,name=observedGeneration"`
+	Status             types.ComponentStatus `json:"status,omitempty"`
+}
+
+func (c *Component) SetObservedGeneration(generation int64) {
+	c.Status.ObservedGeneration = generation
+}
+
+func (c *Component) GetObservedGeneration() int64 {
+	return c.Status.ObservedGeneration
 }
 
 type RelationshipSpec struct {
