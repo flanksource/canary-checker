@@ -9,6 +9,7 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/canary-checker/pkg/prometheus"
+	dutyConnection "github.com/flanksource/duty/connection"
 	"github.com/prometheus/common/model"
 )
 
@@ -35,6 +36,17 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	//nolint:staticcheck
 	if check.Host != "" {
 		return results.Failf("host field is deprecated, use url field instead")
+	}
+
+	// Apply TLS configuration if specified
+	if check.TLSConfig != nil {
+		check.HTTPConnection.TLS = dutyConnection.TLSConfig{
+			InsecureSkipVerify: check.TLSConfig.InsecureSkipVerify,
+			CA:                 check.TLSConfig.CA,
+			Cert:               check.TLSConfig.Cert,
+			Key:                check.TLSConfig.Key,
+		}
+		check.HTTPConnection.TLS.HandshakeTimeout, _ = check.TLSConfig.HandshakeTimeout.GetDurationOr(time.Second * 10)
 	}
 
 	if _, err := check.HTTPConnection.Hydrate(ctx, ctx.GetNamespace()); err != nil {

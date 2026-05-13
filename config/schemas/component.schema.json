@@ -4956,6 +4956,10 @@
         "query": {
           "type": "string",
           "description": "PromQL query"
+        },
+        "tlsConfig": {
+          "$ref": "#/$defs/TLSConfig",
+          "description": "TLS Config"
         }
       },
       "additionalProperties": false,

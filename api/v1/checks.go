@@ -796,6 +796,8 @@ type PrometheusCheck struct {
 	connection.HTTPConnection `yaml:",inline" json:",inline"`
 	// PromQL query
 	Query string `yaml:"query" json:"query" template:"true"`
+	// TLS Config
+	TLSConfig *TLSConfig `yaml:"tlsConfig,omitempty" json:"tlsConfig,omitempty"`
 }
 
 func (c PrometheusCheck) GetType() string {
@@ -1475,14 +1477,14 @@ type CloudWatch struct {
 [include:k8s/containerd_pull_pass.yaml]
 */
 type ContainerdPull struct {
-	ContainerdPullCheck `yaml:",inline" json:",inline"`
+	ContainerdPullCheck `yaml:",inline" json:"inline"`
 }
 
 /*
 [include:k8s/containerd_push_pass.yaml]
 */
 type ContainerdPush struct {
-	ContainerdPushCheck `yaml:",inline" json:",inline"`
+	ContainerdPushCheck `yaml:",inline" json:"inline"`
 }
 
 /*
