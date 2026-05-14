@@ -1491,7 +1491,7 @@ type ContainerdPush struct {
 [include:k8s/kubernetes_pass.yaml]
 */
 type Kubernetes struct {
-	KubernetesCheck `yaml:",inline" json:",inline"`
+	KubernetesCheck `yaml:",inline" json:"inline"`
 }
 
 /*
