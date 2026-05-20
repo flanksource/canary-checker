@@ -265,10 +265,6 @@
           "$ref": "#/$defs/CheckRelationship",
           "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
         },
-        "host": {
-          "type": "string",
-          "description": "Deprecated: use `url` instead"
-        },
         "connection": {
           "type": "string"
         },
@@ -307,6 +303,10 @@
         },
         "awsSigV4": {
           "$ref": "#/$defs/AWSSigV4"
+        },
+        "host": {
+          "type": "string",
+          "description": "Deprecated: use `url` instead"
         },
         "query": {
           "type": "string",

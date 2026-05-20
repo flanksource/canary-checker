@@ -2,9 +2,7 @@ package prometheus
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/flanksource/duty/connection"
@@ -42,12 +40,16 @@ func (p PrometheusClient) GetUptime(checkKey, duration string) (float64, error) 
 	return 100 - float64(uptime.(model.Vector)[0].Value), nil
 }
 
-func NewPrometheusAPI(ctx dutyContext.Context, conn connection.HTTPConnection) (*PrometheusClient, error) {
+func NewPrometheusAPI(ctx dutyContext.Context, conn connection.PrometheusConnection) (*PrometheusClient, error) {
 	if conn.URL == "" {
 		return nil, nil
 	}
 
-	roundTripper := prometheusapi.DefaultRoundTripper
+	roundTripper, err := conn.HTTPConnection.TransportWithContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if !conn.Username.IsEmpty() {
 		username, err := ctx.GetEnvValueFromCache(conn.Username, ctx.GetNamespace())
 		if err != nil {
@@ -97,21 +99,15 @@ func NewPrometheusAPI(ctx dutyContext.Context, conn connection.HTTPConnection) (
 			roundTripper)
 	}
 
-	transportConfig := roundTripper.(*http.Transport)
-	transportConfig.TLSClientConfig = &tls.Config{
-		InsecureSkipVerify: true,
-	}
-
-	cfg := prometheusapi.Config{
+	client, err := prometheusapi.NewClient(prometheusapi.Config{
 		Address:      conn.URL,
-		RoundTripper: transportConfig,
-	}
-	client, err := prometheusapi.NewClient(cfg)
+		RoundTripper: roundTripper,
+	})
 	if err != nil {
 		return nil, err
 	}
-	promapi := promV1.NewAPI(client)
+
 	return &PrometheusClient{
-		API: promapi,
+		API: promV1.NewAPI(client),
 	}, nil
 }

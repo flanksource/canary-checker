@@ -74,7 +74,7 @@ var Root = &cobra.Command{
 			logger.Infof("Setting default prometheus: %s", prometheus.PrometheusURL)
 			runner.Prometheus, _ = prometheus.NewPrometheusAPI(
 				context.New(),
-				connection.HTTPConnection{URL: prometheus.PrometheusURL},
+				connection.PrometheusConnection{HTTPConnection: connection.HTTPConnection{URL: prometheus.PrometheusURL}},
 			)
 		}
 
