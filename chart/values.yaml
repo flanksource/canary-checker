@@ -109,7 +109,15 @@ disablePostgrest: false
 # required: false
 # @schema
 # --  Set to true to enable prometheus service monitor
-serviceMonitor: false
+serviceMonitor:
+  enabled: false
+
+  # @schema
+  # required: false
+  # additionalProperties: true
+  # @schema
+  labels: {}
+
 # @schema
 # required: false
 # @schema
@@ -141,12 +149,6 @@ serviceMonitorTlsConfig:
   # @schema
   # --  skip TLS verification for the ServiceMonitor
   insecureSkipVerify: false
-
-# @schema
-# required: false
-# additionalProperties: true
-# @schema
-serviceMonitorLabels: {}
 
 # @schema
 # required: false
