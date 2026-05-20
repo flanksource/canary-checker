@@ -37,7 +37,7 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 		return results.Failf("host field is deprecated, use url field instead")
 	}
 
-	if _, err := check.HTTPConnection.Hydrate(ctx, ctx.GetNamespace()); err != nil {
+	if _, err := check.PrometheusConnection.Hydrate(ctx, ctx.GetNamespace()); err != nil {
 		return results.Failf("error hydrating connection: %v", err)
 	}
 
@@ -46,11 +46,11 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 		check.URL = prometheus.PrometheusURL
 	}
 
-	if check.HTTPConnection.URL == "" {
+	if check.PrometheusConnection.URL == "" {
 		return results.Failf("Must specify a URL")
 	}
 
-	promClient, err := prometheus.NewPrometheusAPI(ctx.Context, check.HTTPConnection)
+	promClient, err := prometheus.NewPrometheusAPI(ctx.Context, check.PrometheusConnection)
 	if err != nil {
 		return results.ErrorMessage(err)
 	}
