@@ -1,0 +1,26 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: prometheus-mtls
+spec:
+  schedule: "@every 1m"
+  prometheus:
+    - name: Prometheus mutual TLS
+      url: https://prometheus.example.com
+      query: up
+      tls:
+        ca:
+          valueFrom:
+            secretKeyRef:
+              name: prometheus-mtls
+              key: ca.crt
+        cert:
+          valueFrom:
+            secretKeyRef:
+              name: prometheus-mtls
+              key: client.crt
+        key:
+          valueFrom:
+            secretKeyRef:
+              name: prometheus-mtls
+              key: client.key
