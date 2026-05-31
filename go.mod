@@ -10,7 +10,7 @@ require (
 	github.com/flanksource/deps v1.0.28 // indirect
 	github.com/flanksource/duty v1.0.1317
 	github.com/flanksource/gomplate/v3 v3.24.81
-	github.com/flanksource/is-healthy v1.0.87
+	github.com/flanksource/is-healthy v1.0.88
 	github.com/flanksource/kommons v0.31.7
 )
 
@@ -83,9 +83,9 @@ require (
 	google.golang.org/grpc v1.80.0
 	gopkg.in/flanksource/yaml.v3 v3.2.3
 	gorm.io/gorm v1.31.1
-	k8s.io/api v0.35.4
-	k8s.io/apimachinery v0.36.0
-	k8s.io/client-go v0.35.4
+	k8s.io/api v0.36.1
+	k8s.io/apimachinery v0.36.1
+	k8s.io/client-go v0.36.1
 	sigs.k8s.io/controller-runtime v0.23.3
 )
 
@@ -281,7 +281,6 @@ require (
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
 	github.com/gosimple/slug v1.15.0 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
-	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/hairyhenderson/toml v0.4.2-0.20210923231440-40456b8e66cf // indirect
 	github.com/hairyhenderson/yaml v0.0.0-20220618171115-2d35fca545ce // indirect
@@ -462,11 +461,11 @@ require (
 	gorm.io/driver/sqlserver v1.6.3 // indirect
 	gorm.io/plugin/dbresolver v1.6.2 // indirect
 	gorm.io/plugin/prometheus v0.1.0 // indirect
-	k8s.io/apiextensions-apiserver v0.35.2 // indirect
+	k8s.io/apiextensions-apiserver v0.36.1 // indirect
 	k8s.io/cli-runtime v0.31.1 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a // indirect
-	k8s.io/streaming v0.36.0 // indirect
+	k8s.io/streaming v0.36.1 // indirect
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2 // indirect
 	layeh.com/gopher-json v0.0.0-20201124131017-552bb3c4c3bf // indirect
 	modernc.org/libc v1.72.0 // indirect
