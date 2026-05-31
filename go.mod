@@ -6,9 +6,9 @@ godebug x509negativeserial=1
 
 require (
 	github.com/flanksource/artifacts v1.0.24
-	github.com/flanksource/commons v1.51.6
+	github.com/flanksource/commons v1.52.0
 	github.com/flanksource/deps v1.0.28 // indirect
-	github.com/flanksource/duty v1.0.1316
+	github.com/flanksource/duty v1.0.1317
 	github.com/flanksource/gomplate/v3 v3.24.81
 	github.com/flanksource/is-healthy v1.0.87
 	github.com/flanksource/kommons v0.31.7
