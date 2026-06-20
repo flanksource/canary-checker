@@ -14,6 +14,7 @@ import (
 	checkContext "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	dutyCtx "github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/types"
 )
 
 func TestRedisChecker_Ping(t *testing.T) {
@@ -157,12 +158,8 @@ func startRedisTLS(t *testing.T) (addr string, caPEM []byte) {
 
 // TestRedisCheckerTLS verifies that the redis check can talk to a TLS-only
 // redis server: the check must negotiate TLS to succeed.
-//
-// Today the check has no way to enable TLS, so it performs a plaintext dial
-// against a TLS-only server and fails -- this test is the red state; the fix
-// (wiring a TLSConfig into go-redis) turns it green.
 func TestRedisCheckerTLS(t *testing.T) {
-	addr, _ := startRedisTLS(t)
+	addr, caPEM := startRedisTLS(t)
 
 	canaryCtx := &checkContext.Context{
 		Context:     dutyCtx.New(),
@@ -174,6 +171,11 @@ func TestRedisCheckerTLS(t *testing.T) {
 	check := v1.RedisCheck{
 		Connection: v1.Connection{
 			URL: addr,
+		},
+		TLSConfig: &v1.SwitchableTLSConfig{
+			TLSConfig: v1.TLSConfig{
+				CA: types.EnvVar{ValueStatic: string(caPEM)},
+			},
 		},
 	}
 
@@ -213,5 +215,38 @@ func TestRedisCheckerTLSRejectedWithoutTLSConfig(t *testing.T) {
 	}
 	if results[0].Pass {
 		t.Fatalf("expected redis check without TLS to fail against a TLS-only server, but it passed")
+	}
+}
+
+// TestRedisCheckerTLSInsecureSkipVerify verifies that the check can talk to a
+// TLS-only server when TLS is enabled with certificate verification skipped. No
+// CA is needed because the server certificate is not validated.
+func TestRedisCheckerTLSInsecureSkipVerify(t *testing.T) {
+	addr, _ := startRedisTLS(t)
+
+	canaryCtx := &checkContext.Context{
+		Context:     dutyCtx.New(),
+		Namespace:   "default",
+		Canary:      v1.Canary{},
+		Environment: map[string]any{},
+	}
+
+	check := v1.RedisCheck{
+		Connection: v1.Connection{
+			URL: addr,
+		},
+		TLSConfig: &v1.SwitchableTLSConfig{
+			TLSConfig: v1.TLSConfig{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
+	results := (&RedisChecker{}).Check(canaryCtx, check)
+	if len(results) == 0 {
+		t.Fatalf("expected at least one result, got none")
+	}
+	if !results[0].Pass {
+		t.Fatalf("expected redis TLS check with insecureSkipVerify to pass, but it failed: %s", results[0].Error)
 	}
 }
