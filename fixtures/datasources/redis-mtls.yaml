@@ -8,18 +8,21 @@ spec:
     - name: redis mtls
       url: "redis-tls.canaries.svc.cluster.local:6379"
       tlsConfig:
+        # Server CA certificate
         ca:
           valueFrom:
             secretKeyRef:
               name: redis-tls-ca
               key: ca.crt
+        # Client certificate
         cert:
           valueFrom:
             secretKeyRef:
               name: redis-tls-client
-              key: tls.crt
+              key: client.crt
+        # Client private key
         key:
           valueFrom:
             secretKeyRef:
               name: redis-tls-client
-              key: tls.key
+              key: client.key
