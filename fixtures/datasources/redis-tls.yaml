@@ -1,0 +1,11 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: redis-tls
+spec:
+  schedule: "@every 5m"
+  redis:
+    - name: redis tls
+      url: "redis-tls.canaries.svc.cluster.local:6379"
+      tlsConfig:
+        enable: true

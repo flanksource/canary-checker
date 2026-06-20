@@ -1,12 +1,11 @@
 apiVersion: canaries.flanksource.com/v1
 kind: Canary
 metadata:
-  name: redis-tls
+  name: redis-mtls
 spec:
   schedule: "@every 5m"
   redis:
-    # CA from a secret for proper certificate verification
-    - name: redis tls with ca
+    - name: redis mtls
       url: "redis-tls.canaries.svc.cluster.local:6379"
       tlsConfig:
         ca:
@@ -24,9 +23,3 @@ spec:
             secretKeyRef:
               name: redis-tls-client
               key: tls.key
-
-    # Skip certificate verification when no CA is available
-    - name: redis tls insecure
-      url: "redis-tls.canaries.svc.cluster.local:6379"
-      tlsConfig:
-        insecureSkipVerify: true
