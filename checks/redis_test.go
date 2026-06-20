@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/mdelapenya/tlscert"
 	"github.com/testcontainers/testcontainers-go"
 	tcredis "github.com/testcontainers/testcontainers-go/modules/redis"
-	"github.com/mdelapenya/tlscert"
 
 	checkContext "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"

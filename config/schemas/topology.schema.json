@@ -5257,6 +5257,10 @@
         },
         "db": {
           "type": "integer"
+        },
+        "tlsConfig": {
+          "$ref": "#/$defs/SwitchableTLSConfig",
+          "description": "TLSConfig configures TLS for the redis connection. Any non-empty field\n(enable, insecureSkipVerify, ca, cert) implies TLS is enabled."
         }
       },
       "additionalProperties": false,
@@ -5709,6 +5713,37 @@
       },
       "additionalProperties": false,
       "type": "object"
+    },
+    "SwitchableTLSConfig": {
+      "properties": {
+        "enable": {
+          "type": "boolean",
+          "description": "Enable explicitly turns on TLS. Required only when no other TLS\nfield is set (e.g. for publicly-trusted servers that need no CA)."
+        },
+        "insecureSkipVerify": {
+          "type": "boolean",
+          "description": "InsecureSkipVerify controls whether a client verifies the server's\ncertificate chain and host name"
+        },
+        "handshakeTimeout": {
+          "$ref": "#/$defs/Duration",
+          "description": "HandshakeTimeout defaults to 10 seconds"
+        },
+        "ca": {
+          "$ref": "#/$defs/EnvVar",
+          "description": "PEM encoded certificate of the CA to verify the server certificate"
+        },
+        "cert": {
+          "$ref": "#/$defs/EnvVar",
+          "description": "PEM encoded client certificate"
+        },
+        "key": {
+          "$ref": "#/$defs/EnvVar",
+          "description": "PEM encoded client private key"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "description": "SwitchableTLSConfig is a TLSConfig with an explicit enable flag, so that\nturning on TLS does not rely on a non-nil pointer."
     },
     "TCPCheck": {
       "properties": {

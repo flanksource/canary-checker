@@ -444,7 +444,7 @@ type RedisCheck struct {
 type SwitchableTLSConfig struct {
 	// Enable explicitly turns on TLS. Required only when no other TLS
 	// field is set (e.g. for publicly-trusted servers that need no CA).
-	Enable bool `yaml:"enable,omitempty" json:"enable,omitempty"`
+	Enable    bool `yaml:"enable,omitempty" json:"enable,omitempty"`
 	TLSConfig `yaml:",inline" json:",inline"`
 }
 
