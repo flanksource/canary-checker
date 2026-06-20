@@ -5210,7 +5210,7 @@
       "properties": {
         "enable": {
           "type": "boolean",
-          "description": "Enable explicitly turns on TLS. Required only when no other TLS\nfield is set (e.g. for publicly-trusted servers that need no CA)."
+          "description": "Enable explicitly turns on TLS. Required only when no other TLS-enabling\nfield (insecureSkipVerify, CA, or cert) is set. Note: handshakeTimeout\nand key alone do not enable TLS."
         },
         "insecureSkipVerify": {
           "type": "boolean",

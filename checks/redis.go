@@ -72,6 +72,13 @@ func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 			return results.Failf("invalid tls config: %v", err)
 		}
 		redisOpts.TLSConfig = tlsConf
+
+		// Apply handshakeTimeout as DialTimeout if explicitly configured.
+		// go-redis passes DialTimeout to net.Dialer.Timeout, which covers
+		// the full dial including the TLS handshake.
+		if ht, err := check.TLSConfig.HandshakeTimeout.GetDurationOr(0); err == nil && ht > 0 {
+			redisOpts.DialTimeout = ht
+		}
 	}
 
 	rdb := redis.NewClient(redisOpts)

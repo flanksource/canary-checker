@@ -7572,8 +7572,9 @@ spec:
                             type: object
                           enable:
                             description: |-
-                              Enable explicitly turns on TLS. Required only when no other TLS
-                              field is set (e.g. for publicly-trusted servers that need no CA).
+                              Enable explicitly turns on TLS. Required only when no other TLS-enabling
+                              field (insecureSkipVerify, CA, or cert) is set. Note: handshakeTimeout
+                              and key alone do not enable TLS.
                             type: boolean
                           handshakeTimeout:
                             description: HandshakeTimeout defaults to 10 seconds
