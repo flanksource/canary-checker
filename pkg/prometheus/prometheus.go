@@ -33,11 +33,22 @@ func (p PrometheusClient) GetHistogramQuantileLatency(percentile, checkKey, dura
 func (p PrometheusClient) GetUptime(checkKey, duration string) (float64, error) {
 	success := fmt.Sprintf("rate(canary_check_success_count{key='%v'}[%v])", checkKey, duration)
 	failed := fmt.Sprintf("rate(canary_check_failed_count{key='%v'}[%v])", checkKey, duration)
-	uptime, _, err := p.Query(context.TODO(), fmt.Sprintf("%s/%s + %s", failed, failed, success), time.Now())
+	result, _, err := p.Query(context.TODO(), fmt.Sprintf("(%s / (%s + %s)) * 100", success, failed, success), time.Now())
 	if err != nil {
 		return 0, err
 	}
-	return 100 - float64(uptime.(model.Vector)[0].Value), nil
+	if result == nil {
+		return 0, nil
+	}
+	vec, ok := result.(model.Vector)
+	if !ok || len(vec) == 0 {
+		return 0, nil
+	}
+	val := float64(vec[0].Value)
+	if val != val { // NaN check
+		return 0, nil
+	}
+	return val, nil
 }
 
 func NewPrometheusAPI(ctx dutyContext.Context, conn connection.PrometheusConnection) (*PrometheusClient, error) {
