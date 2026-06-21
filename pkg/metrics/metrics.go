@@ -241,7 +241,7 @@ func Record(
 		latency.Append(float64(result.Duration))
 	}
 
-	gaugeLabels := append([]string{key, checkType, canaryName, canaryNamespace, name}, v1.AdditionalCheckMetricLabels...)
+	gaugeLabels := append([]string{key, checkType, canaryName, canaryNamespace, name}, additionalLabels...)
 
 	if result.Pass {
 		pass.Append(1)
