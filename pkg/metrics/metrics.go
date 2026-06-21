@@ -62,7 +62,7 @@ func SetupMetrics() {
 			Name: "canary_check_invalid_count",
 			Help: "The total number of invalid checks",
 		},
-		[]string{"type", "endpoint", "canary_name", "canary_namespace", "owner", "severity", "key", "name"},
+		checkLabels,
 	)
 
 	CanaryCheckInfo = prometheus.NewGaugeVec(
