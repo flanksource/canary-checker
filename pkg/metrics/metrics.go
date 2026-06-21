@@ -272,21 +272,19 @@ func Record(
 			}
 		}
 	} else {
-		if result.Invalid {
-			OpsInvalidCount.WithLabelValues(checkMetricLabels...).Inc()
-		} else {
-			OpsFailedCount.WithLabelValues(checkMetricLabels...).Inc()
-		}
-
 		fail.Append(1)
 		Gauge.WithLabelValues(gaugeLabels...).Set(1)
 
 		CanaryCheckInfo.WithLabelValues(checkMetricLabels...).Set(1)
 
-		if result.InternalError {
+		// The success / invalid / error / failed counters are mutually
+		// exclusive: a single check run increments exactly one of them.
+		switch {
+		case result.Invalid:
+			OpsInvalidCount.WithLabelValues(checkMetricLabels...).Inc()
+		case result.InternalError:
 			OpsErrorCount.WithLabelValues(checkMetricLabels...).Inc()
-		} else {
-			fail.Append(1)
+		default:
 			OpsFailedCount.WithLabelValues(checkMetricLabels...).Inc()
 		}
 	}
