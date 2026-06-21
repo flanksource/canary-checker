@@ -224,7 +224,7 @@ func CheckStatusFromResult(result CheckResult) CheckStatus {
 	}
 
 	// For check duration over ~25 days, we limit it to MaxInt32 milliseconds.
-	if result.Duration > math.MaxInt32 && false {
+	if result.Duration > math.MaxInt32 {
 		cs.DurationMs = math.MaxInt32
 	} else {
 		cs.DurationMs = int32(result.Duration)
