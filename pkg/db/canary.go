@@ -174,12 +174,20 @@ func GetTransformedCheckIDs(ctx context.Context, canaryID string, excludeTypes .
 	return ids, err
 }
 
-func LatestCheckStatus(ctx context.Context, checkID string) (*models.CheckStatus, error) {
+// LatestCheckStatus returns the most recent check_statuses row for the given
+// check that was recorded strictly before the given cutoff. The cutoff must
+// predate the current run's persisted status so that the current result is
+// excluded and the returned row reflects the prior state. This is required
+// because SaveResults commits the current run's status before this lookup.
+func LatestCheckStatus(ctx context.Context, checkID string, before time.Time) (*models.CheckStatus, error) {
 	if checkID == "" || uuid.Nil.String() == checkID {
 		return nil, nil
 	}
 	var status models.CheckStatus
-	if err := ctx.DB().Limit(1).Select("time, created_at, status").Where("check_id = ?", checkID).Order("time DESC").Find(&status).Error; err != nil {
+	err := ctx.DB().Select("time, created_at, status").
+		Where("check_id = ? AND time < ?", checkID, before.UTC().Format(time.RFC3339)).
+		Order("time DESC").Take(&status).Error
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}

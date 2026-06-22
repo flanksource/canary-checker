@@ -17,7 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results []*pkg.CheckResult) {
+func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results []*pkg.CheckResult, now time.Time) {
 	if CanaryStatusChannel == nil {
 		return
 	}
@@ -40,7 +40,6 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 	var highestLatency float64
 	var uptimeAgg dutyTypes.Uptime
 
-	transitioned := false
 	for _, result := range results {
 		// Increment duration
 		duration += result.Duration
@@ -62,26 +61,22 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 			highestLatency = latency.Rolling1H
 		}
 
+		transitioned := false
 		// Transition
 		// q := query.CheckQueryParams{Check: checkID, StatusCount: 1}
 		// if canary.Status.LastTransitionedTime != nil {
 		// 	q.Start = canary.Status.LastTransitionedTime.Format(time.RFC3339)
 		// }
 
-		latestCheckStatus, err := db.LatestCheckStatus(ctx, checkID)
+		latestCheckStatus, err := db.LatestCheckStatus(ctx, checkID, now)
 		if err != nil || latestCheckStatus == nil {
 			transitioned = true
 		} else if latestCheckStatus.Status != result.Pass {
 			transitioned = true
 		}
 		if transitioned {
-			transitionTime := time.Now()
-			if latestCheckStatus != nil {
-				transitionTime = latestCheckStatus.CreatedAt
-			}
-
-			checkStatus[checkID].LastTransitionedTime = &metav1.Time{Time: transitionTime}
-			lastTransitionedTime = &metav1.Time{Time: transitionTime}
+			checkStatus[checkID].LastTransitionedTime = &metav1.Time{Time: now}
+			lastTransitionedTime = &metav1.Time{Time: now}
 		}
 
 		if result.Message != "" {

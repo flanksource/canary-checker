@@ -128,12 +128,16 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		}
 	}
 
+	// Capture the cutoff before SaveResults so LatestCheckStatus excludes the
+	// current run's just-persisted status and compares against the prior state.
+	now := time.Now()
+
 	transformedChecksCreated, checkIDDeleteStrategyMap, err := SaveResults(ctx.Context, results)
 	if err != nil {
 		return fmt.Errorf("failed to save results: %w", err)
 	}
 
-	UpdateCanaryStatusAndEvent(ctx.Context, j.Canary, results)
+	UpdateCanaryStatusAndEvent(ctx.Context, j.Canary, results, now)
 
 	checkDeleteStrategyGroup := make(map[string][]string)
 	checkIDsToRemove := utils.SetDifference(existingTransformedChecks, transformedChecksCreated)
