@@ -19,8 +19,8 @@ spec:
           name: Replicas
           priority: 1
           type: integer
-        - jsonPath: .spec.interval
-          name: Interval
+        - jsonPath: .spec.schedule
+          name: Schedule
           type: string
         - jsonPath: .status.status
           name: Status
