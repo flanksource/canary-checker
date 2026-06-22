@@ -184,23 +184,15 @@ func LatestCheckStatus(ctx context.Context, checkID string, before time.Time) (*
 		return nil, nil
 	}
 	var status models.CheckStatus
-	// Note: GORM's Find does not return ErrRecordNotFound when no rows match
-	// (only First/Take/Last do) — it leaves the destination zero-valued and
-	// returns a non-nil pointer. Check RowsAffected so the first run, which has
-	// no prior check_statuses row, yields nil instead of a zero-value struct
-	// (which would otherwise set LastTransitionedTime to 0001-01-01).
-	res := ctx.DB().Limit(1).Select("time, created_at, status").
+	err := ctx.DB().Select("time, created_at, status").
 		Where("check_id = ? AND time < ?", checkID, before.UTC().Format(time.RFC3339)).
-		Order("time DESC").Find(&status)
-	if res.Error != nil {
-		if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+		Order("time DESC").Take(&status).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 
-		return nil, res.Error
-	}
-	if res.RowsAffected == 0 {
-		return nil, nil
+		return nil, err
 	}
 
 	return &status, nil
