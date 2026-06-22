@@ -1,0 +1,28 @@
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: redis-mtls
+spec:
+  schedule: "@every 5m"
+  redis:
+    - name: redis mtls
+      url: "redis-tls.canaries.svc.cluster.local:6379"
+      tlsConfig:
+        # Server CA certificate
+        ca:
+          valueFrom:
+            secretKeyRef:
+              name: redis-tls-ca
+              key: ca.crt
+        # Client certificate
+        cert:
+          valueFrom:
+            secretKeyRef:
+              name: redis-tls-client
+              key: client.crt
+        # Client private key
+        key:
+          valueFrom:
+            secretKeyRef:
+              name: redis-tls-client
+              key: client.key

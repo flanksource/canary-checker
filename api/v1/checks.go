@@ -2,6 +2,8 @@ package v1
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -95,6 +97,54 @@ type TLSConfig struct {
 	Cert types.EnvVar `json:"cert,omitempty" yaml:"cert,omitempty"`
 	// PEM encoded client private key
 	Key types.EnvVar `json:"key,omitempty" yaml:"key,omitempty"`
+}
+
+// ToTLSConfig resolves any EnvVar references and builds a *tls.Config.
+// ServerName and MinVersion are left unset — callers must set those if needed.
+func (t TLSConfig) ToTLSConfig(ctx checkContext, namespace string) (*tls.Config, error) {
+	cfg := &tls.Config{
+		InsecureSkipVerify: t.InsecureSkipVerify,
+	}
+
+	if !t.CA.IsEmpty() {
+		caPEM, err := ctx.GetEnvValueFromCache(t.CA, namespace)
+		if err != nil {
+			return nil, fmt.Errorf("resolve ca: %w", err)
+		}
+		pool, err := x509.SystemCertPool()
+		if err != nil {
+			return nil, fmt.Errorf("system cert pool: %w", err)
+		}
+		if !pool.AppendCertsFromPEM([]byte(caPEM)) {
+			return nil, fmt.Errorf("failed to append ca certificate")
+		}
+		cfg.RootCAs = pool
+	}
+
+	// Both empty: no client cert needed.
+	if t.Cert.IsEmpty() && t.Key.IsEmpty() {
+		return cfg, nil
+	}
+	// One set but not the other: misconfigured.
+	if t.Cert.IsEmpty() || t.Key.IsEmpty() {
+		return nil, fmt.Errorf("both client certificate and key must be provided")
+	}
+
+	certPEM, err := ctx.GetEnvValueFromCache(t.Cert, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("resolve cert: %w", err)
+	}
+	keyPEM, err := ctx.GetEnvValueFromCache(t.Key, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("resolve key: %w", err)
+	}
+	cert, err := tls.X509KeyPair([]byte(certPEM), []byte(keyPEM))
+	if err != nil {
+		return nil, fmt.Errorf("create client certificate: %w", err)
+	}
+	cfg.Certificates = []tls.Certificate{cert}
+
+	return cfg, nil
 }
 
 type Crawl struct {
@@ -384,6 +434,29 @@ type RedisCheck struct {
 	// Deprecated: Use url instead
 	Addr string `yaml:"addr,omitempty" json:"addr,omitempty" template:"true"`
 	DB   *int   `yaml:"db,omitempty" json:"db,omitempty"`
+	// TLSConfig configures TLS for the redis connection. Any non-empty field
+	// (enable, insecureSkipVerify, ca, cert) implies TLS is enabled.
+	TLSConfig *SwitchableTLSConfig `yaml:"tlsConfig,omitempty" json:"tlsConfig,omitempty"`
+}
+
+// SwitchableTLSConfig is a TLSConfig with an explicit enable flag, so that
+// turning on TLS does not rely on a non-nil pointer.
+type SwitchableTLSConfig struct {
+	// Enable explicitly turns on TLS. Required only when no other TLS-enabling
+	// field (insecureSkipVerify, CA, or cert) is set. Note: handshakeTimeout
+	// and key alone do not enable TLS.
+	Enable    bool `yaml:"enable,omitempty" json:"enable,omitempty"`
+	TLSConfig `yaml:",inline" json:",inline"`
+}
+
+// Enabled reports whether any TLS configuration was provided: enable flag,
+// insecureSkipVerify, CA or client certificate. HandshakeTimeout alone does
+// not trigger TLS.
+func (c *SwitchableTLSConfig) Enabled() bool {
+	if c == nil {
+		return false
+	}
+	return c.Enable || c.InsecureSkipVerify || !c.CA.IsEmpty() || !c.Cert.IsEmpty()
 }
 
 func (c RedisCheck) GetType() string {

@@ -1,6 +1,7 @@
 package checks
 
 import (
+	"crypto/tls"
 	"strconv"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -65,6 +66,21 @@ func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 		}
 	}
 
+	if check.TLSConfig.Enabled() {
+		tlsConf, err := buildRedisTLSConfig(ctx, check.TLSConfig)
+		if err != nil {
+			return results.Failf("invalid tls config: %v", err)
+		}
+		redisOpts.TLSConfig = tlsConf
+
+		// Apply handshakeTimeout as DialTimeout if explicitly configured.
+		// go-redis passes DialTimeout to net.Dialer.Timeout, which covers
+		// the full dial including the TLS handshake.
+		if ht, err := check.TLSConfig.HandshakeTimeout.GetDurationOr(0); err == nil && ht > 0 {
+			redisOpts.DialTimeout = ht
+		}
+	}
+
 	rdb := redis.NewClient(redisOpts)
 	queryResult, err := rdb.Ping(ctx).Result()
 	if err != nil {
@@ -76,4 +92,15 @@ func (c *RedisChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	}
 
 	return results
+}
+
+// buildRedisTLSConfig builds a *tls.Config for a redis connection from the
+// user-supplied SwitchableTLSConfig.
+func buildRedisTLSConfig(ctx *context.Context, tlsConf *v1.SwitchableTLSConfig) (*tls.Config, error) {
+	cfg, err := tlsConf.TLSConfig.ToTLSConfig(ctx, ctx.GetNamespace())
+	if err != nil {
+		return nil, err
+	}
+	cfg.MinVersion = tls.VersionTLS12
+	return cfg, nil
 }
