@@ -97,6 +97,15 @@ rules:
     verbs:
       - create
       - patch
+  # events.k8s.io/v1 Events are written by the controller-runtime v2
+  # EventRecorder (mgr.GetEventRecorder) used by the canary/system controllers.
+  - apiGroups:
+      - "events.k8s.io"
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
   # for leader election
   - apiGroups:
       - ""
