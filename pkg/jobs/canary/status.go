@@ -75,13 +75,8 @@ func UpdateCanaryStatusAndEvent(ctx context.Context, canary v1.Canary, results [
 			transitioned = true
 		}
 		if transitioned {
-			transitionTime := time.Now()
-			if latestCheckStatus != nil {
-				transitionTime = latestCheckStatus.CreatedAt
-			}
-
-			checkStatus[checkID].LastTransitionedTime = &metav1.Time{Time: transitionTime}
-			lastTransitionedTime = &metav1.Time{Time: transitionTime}
+			checkStatus[checkID].LastTransitionedTime = &metav1.Time{Time: now}
+			lastTransitionedTime = &metav1.Time{Time: now}
 		}
 
 		if result.Message != "" {
