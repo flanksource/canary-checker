@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
+	"sync"
 	"time"
 
 	canaryCtx "github.com/flanksource/canary-checker/api/context"
@@ -129,3 +131,118 @@ var _ = ginkgo.Describe("Transformed Canary", ginkgo.Ordered, func() {
 		Expect(transformedCanary.DeletedAt).ToNot(BeNil())
 	})
 })
+
+var _ = ginkgo.Describe("SyncCanaryJob concurrent reschedule", ginkgo.Ordered, func() {
+	var (
+		canaryID uuid.UUID
+		specV1   types.JSON
+		specV2   types.JSON
+		dbCanary pkg.Canary
+	)
+
+	ginkgo.BeforeAll(func() {
+		canaryCtx.DefaultContext = DefaultContext
+		canaryID = uuid.New()
+
+		specV1 = types.JSON(fmt.Sprintf(`{
+			"schedule": "@every 30s",
+			"http": [{
+				"name": "concurrent-test",
+				"endpoint": "http://127.0.0.1:1/v1"
+			}]
+		}`))
+
+		specV2 = types.JSON(fmt.Sprintf(`{
+			"schedule": "@every 30s",
+			"http": [{
+				"name": "concurrent-test",
+				"endpoint": "http://127.0.0.1:1/v2"
+			}]
+		}`))
+
+		model := &models.Canary{
+			ID:        canaryID,
+			Name:      "concurrent-reschedule-test",
+			Namespace: "default",
+			AgentID:   uuid.Nil,
+			Source:    "kubernetes/" + canaryID.String(),
+			Spec:      specV1,
+		}
+		Expect(DefaultContext.DB().Create(model).Error).To(BeNil())
+
+		dbCanary = pkg.Canary{
+			ID:        canaryID,
+			Name:      model.Name,
+			Spec:      specV1,
+			Source:    model.Source,
+			Namespace: model.Namespace,
+		}
+
+		// Initial sync to populate canaryJobs map and cron.
+		Expect(SyncCanaryJob(DefaultContext, dbCanary)).To(BeNil())
+
+		// Clear any entries accumulated before this spec.
+		Unschedule(canaryID.String())
+	})
+
+	ginkgo.It("must create exactly 1 cron entry after concurrent reschedules", func() {
+		// Use spec V2 so DeepEqual detects a change.
+		dbCanaryV2 := dbCanary
+		dbCanaryV2.Spec = specV2
+
+		// Initial sync with V2 — creates a single cron entry.
+		Expect(SyncCanaryJob(DefaultContext, dbCanaryV2)).To(BeNil())
+
+		before := countCronEntriesForCanary(canaryID.String())
+		Expect(before).To(Equal(1), "expected exactly 1 cron entry after initial sync")
+
+		// Simulate concurrent reschedules.  Each goroutine changes the spec
+		// and calls SyncCanaryJob again, mimicking the race between a
+		// controller reconcile and the periodic SyncCanaryJobs job.
+		const goroutines = 10
+		var wg sync.WaitGroup
+		errs := make(chan error, goroutines)
+
+		for i := 0; i < goroutines; i++ {
+			wg.Add(1)
+			go func(i int) {
+				defer wg.Done()
+				// Toggle between V1 and V2 so every call sees a
+				// "changed" spec relative to whatever is in the map.
+				c := dbCanary
+				if i%2 == 0 {
+					c.Spec = specV2
+				} else {
+					c.Spec = specV1
+				}
+				if err := SyncCanaryJob(DefaultContext, c); err != nil {
+					errs <- err
+				}
+			}(i)
+		}
+		wg.Wait()
+		close(errs)
+
+		for err := range errs {
+			ginkgo.Fail(fmt.Sprintf("unexpected error: %v", err))
+		}
+
+		// Verify only one cron entry exists for this canary.
+		after := countCronEntriesForCanary(canaryID.String())
+		Expect(after).To(Equal(1),
+			"expected exactly 1 cron entry after concurrent reschedules, got %d", after)
+	})
+})
+
+// countCronEntriesForCanary returns the number of cron entries whose
+// job carries the given canary Kubernetes UID.
+func countCronEntriesForCanary(canaryUID string) int {
+	count := 0
+	for _, entry := range CanaryScheduler.Entries() {
+		jobUID := string(entry.Job.(*job.Job).GetObjectMeta().UID)
+		if strings.EqualFold(jobUID, canaryUID) {
+			count++
+		}
+	}
+	return count
+}

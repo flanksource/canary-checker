@@ -24,6 +24,19 @@ import (
 
 var canaryJobs sync.Map
 
+// canarySyncLocks provides per-canary-ID mutual exclusion for SyncCanaryJob
+// to prevent a race where two concurrent callers both create cron entries for
+// the same canary, leaving an orphaned entry that fires on every tick and
+// cannot be cleaned up.
+var canarySyncLocks sync.Map
+
+func lockCanarySync(id string) func() {
+	mu := &sync.Mutex{}
+	actual, _ := canarySyncLocks.LoadOrStore(id, mu)
+	actual.(*sync.Mutex).Lock()
+	return actual.(*sync.Mutex).Unlock
+}
+
 const DefaultCanarySchedule = "@every 5m"
 
 func Unschedule(id string) {
@@ -63,6 +76,15 @@ func findJob(dbCanary pkg.Canary) *job.Job {
 
 func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	id := dbCanary.ID.String()
+
+	// Serialize SyncCanaryJob per canary to prevent duplicate cron entries.
+	// Without this lock, concurrent calls can race: one call Unschedule's
+	// and deletes the map entry, another sees nil and creates a new cron
+	// entry, then the first also creates a second cron entry. The orphaned
+	// entry survives all cleanup sweeps because it shares the same UID.
+	unlock := lockCanarySync(id)
+	defer unlock()
+
 	ctx.Logger.V(2).Infof("SyncCanaryJob (id=%s name=%s)", dbCanary.ID, dbCanary.Name)
 
 	if ctx.Properties().On(false, "check.*.disabled") {
