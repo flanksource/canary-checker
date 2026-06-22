@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
@@ -58,6 +59,10 @@ func RunCanaryHandler(c echo.Context) error {
 		return nil
 	}
 
+	// Capture the cutoff before persisting so LatestCheckStatus excludes the
+	// current run's just-saved status and compares against the prior state.
+	now := time.Now()
+
 	for _, result := range results {
 		if _, err := cache.PostgresCache.Add(ctx.Context, pkg.FromV1(result.Canary, result.Check), pkg.CheckStatusFromResult(*result)); err != nil {
 			return errorResponse(c, err, http.StatusInternalServerError)
@@ -68,7 +73,7 @@ func RunCanaryHandler(c echo.Context) error {
 		}
 	}
 
-	canaryJobs.UpdateCanaryStatusAndEvent(ctx.Context, *canary, results)
+	canaryJobs.UpdateCanaryStatusAndEvent(ctx.Context, *canary, results, now)
 	return c.JSON(http.StatusOK, results[0])
 }
 
