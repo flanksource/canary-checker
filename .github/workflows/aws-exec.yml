@@ -22,7 +22,7 @@ jobs:
         with:
           go-version: 1.26.x
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
@@ -46,7 +46,7 @@ jobs:
         run: kubectl wait --for=condition=Ready nodes --all --timeout=300s
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 # v6.1.0
+        uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b # v6.2.0
         with:
           role-to-assume: arn:aws:iam::765618022540:role/canary-checker-github-iam-Role-N9JG51I5V3JJ
           aws-region: us-east-1
@@ -57,7 +57,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CHECKRUNS_TOKEN }}
         run: ./test/e2e.sh fixtures/${{matrix.suite}}
       - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2.23.0
+        uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2.24.0
         if: always() &&  github.event.repository.fork == 'false'
         with:
           files: test/test-results.xml
