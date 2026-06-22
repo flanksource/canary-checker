@@ -272,20 +272,24 @@ func Record(
 			}
 		}
 	} else {
-		if result.Invalid {
-			OpsInvalidCount.WithLabelValues(checkMetricLabels...).Inc()
-		} else {
-			OpsFailedCount.WithLabelValues(checkMetricLabels...).Inc()
-		}
-
-		fail.Append(1)
 		Gauge.WithLabelValues(gaugeLabels...).Set(1)
-
 		CanaryCheckInfo.WithLabelValues(checkMetricLabels...).Set(1)
 
-		if result.InternalError {
+		// The success / invalid / error / failed counters are mutually
+		// exclusive: a single check run increments exactly one of them.
+		//
+		// Only genuine failures append to the fail window (and thus the
+		// in-memory Uptime1H). Invalid configs and internal/DB errors are not
+		// the monitored target's downtime, so they drop out of the uptime
+		// ratio entirely. This keeps the in-memory uptime in agreement with
+		// the Prometheus uptime, which is computed from canary_check_failed_count
+		// and canary_check_success_count only.
+		switch {
+		case result.Invalid:
+			OpsInvalidCount.WithLabelValues(checkMetricLabels...).Inc()
+		case result.InternalError:
 			OpsErrorCount.WithLabelValues(checkMetricLabels...).Inc()
-		} else {
+		default:
 			fail.Append(1)
 			OpsFailedCount.WithLabelValues(checkMetricLabels...).Inc()
 		}
