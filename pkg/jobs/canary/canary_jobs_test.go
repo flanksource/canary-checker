@@ -171,10 +171,10 @@ var _ = ginkgo.Describe("SyncCanaryJob concurrent reschedule", ginkgo.Ordered, f
 		Expect(DefaultContext.DB().Create(model).Error).To(BeNil())
 
 		dbCanary = pkg.Canary{
-			ID:      canaryID,
-			Name:    model.Name,
-			Spec:    specV1,
-			Source:  model.Source,
+			ID:        canaryID,
+			Name:      model.Name,
+			Spec:      specV1,
+			Source:    model.Source,
 			Namespace: model.Namespace,
 		}
 
