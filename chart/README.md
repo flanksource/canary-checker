@@ -6,7 +6,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://flanksource.github.io/charts | flanksource-ui | 1.0.772 |
+| https://flanksource.github.io/charts | flanksource-ui | 1.4.212 |
 
 ## Values
 
@@ -54,6 +54,8 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | db.external.create | bool | `false` | If false and an existing connection must be specified under secretKeyRef If create=false, a prexisting secret containing the URI to an existing postgres database must be provided   The URI must be in the format `postgresql://$user:$password@$host/$database` |
 | db.external.enabled | bool | `false` | Setting to true will disable the embedded DB |
 | db.external.image | string | `"supabase/postgres"` |  |
+| db.external.resources.limits.memory | string | `"4Gi"` |  |
+| db.external.resources.requests.cpu | string | `"200m"` |  |
 | db.external.resources.requests.memory | string | `"2Gi"` |  |
 | db.external.secretKeyRef.key | string | `"DB_URL"` |  |
 | db.external.secretKeyRef.name | string | `"canary-checker-postgres"` | name of secret containing external db credentials |
@@ -74,6 +76,8 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | flanksource-ui.ingress.annotations | object | `{}` |  |
 | flanksource-ui.ingress.enabled | bool | `true` |  |
 | flanksource-ui.ingress.host | string | `"canary-checker-ui.local"` |  |
+| flanksource-ui.ingress.path | string | `"/"` |  |
+| flanksource-ui.ingress.pathType | string | `"ImplementationSpecific"` |  |
 | flanksource-ui.ingress.tls | list | `[]` |  |
 | flanksource-ui.resources.limits.cpu | string | `"200m"` |  |
 | flanksource-ui.resources.limits.memory | string | `"512Mi"` |  |
@@ -95,6 +99,8 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | ingress.className | string | `""` |  |
 | ingress.enabled | bool | `false` | Expose the canary-checker service on an ingress, normally not needed as the service is exposed through `flanksource-ui.ingress` |
 | ingress.host | string | `"canary-checker"` |  |
+| ingress.path | string | `"/"` |  |
+| ingress.pathType | string | `"ImplementationSpecific"` |  |
 | ingress.tls | list | `[]` |  |
 | jsonLogs | bool | `true` |  |
 | labelsAllowList | list | `[]` | List of additional check label keys that should be included in the check metrics |

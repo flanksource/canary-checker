@@ -85,28 +85,7 @@
               "title": "image"
             },
             "resources": {
-              "additionalProperties": false,
-              "properties": {
-                "requests": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "memory": {
-                      "default": "2Gi",
-                      "title": "memory",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "memory"
-                  ],
-                  "title": "requests",
-                  "type": "object"
-                }
-              },
-              "required": [
-                "requests"
-              ],
-              "title": "resources"
+              "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.ResourceRequirements"
             },
             "secretKeyRef": {
               "additionalProperties": false,
