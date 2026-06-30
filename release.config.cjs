@@ -45,6 +45,7 @@ module.exports = {
           { type: 'chore', release: 'patch' },
           { type: 'refactor', release: 'patch' },
           { type: 'feat', release: 'patch' },
+          { type: 'minor', release: 'minor' },
           { type: 'ci', release: false },
           { type: 'style', release: false },
           { type: 'major', release: 'major' },
