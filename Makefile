@@ -3,7 +3,7 @@ CRD_OPTIONS ?= ""
 NAME=canary-checker
 YQ=yq
 OS   ?= $(shell uname -s | tr '[:upper:]' '[:lower:]')
-ARCH ?= $(shell uname -m | sed 's/x86_64/amd64/')
+ARCH ?= $(shell uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')
 LD_FLAGS=-ldflags "-w -s -X \"main.version=$(VERSION_TAG)\""
 ifeq ($(VERSION),)
   VERSION_TAG=$(shell git describe --abbrev=0 --tags || echo latest)
