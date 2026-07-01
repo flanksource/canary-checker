@@ -298,6 +298,9 @@
         },
         "azure": {
           "$ref": "#/$defs/AzureConnection"
+        },
+        "opensearch": {
+          "$ref": "#/$defs/OpensearchConnection"
         }
       },
       "additionalProperties": false,
@@ -486,6 +489,39 @@
         },
         "value": {
           "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
+    "OpensearchConnection": {
+      "properties": {
+        "username": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar"
+        },
+        "ntlm": {
+          "type": "boolean"
+        },
+        "ntlmv2": {
+          "type": "boolean"
+        },
+        "digest": {
+          "type": "boolean"
+        },
+        "urls": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "index": {
+          "type": "string"
+        },
+        "insecureSkipVerify": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false,
