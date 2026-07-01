@@ -157,6 +157,29 @@ spec:
       expectedHttpStatuses: [200, 201, 202]
 ```
 
+### Generic Check Retries
+
+Retry transient failures for any check with `checkRetries`. It can be set once at canary level or overridden per check.
+
+```yaml
+apiVersion: canaries.flanksource.com/v1
+kind: Canary
+metadata:
+  name: api-check
+spec:
+  schedule: "@every 1m"
+  checkRetries:
+    maxRetries: 2
+    interval: 5s
+    timeout: 30s
+  http:
+    - name: api
+      url: https://api.example.com/health
+      checkRetries:
+        maxRetries: 3
+        interval: 2s
+```
+
 ### Backup Checks / Batch File Monitoring
 
 Check that batch file processes are functioning correctly by checking the age and size of files in local file systems, SFTP, SMB, S3 and GCS.

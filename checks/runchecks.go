@@ -197,15 +197,12 @@ func RunChecksNoPersistence(ctx *context.Context) ([]*pkg.CheckResult, error) {
 		if _, ok := disabledChecks[c.Type()]; ok {
 			continue
 		}
-		if !Checks(checks).Includes(c) {
-			continue
-		}
 
-		result := c.Run(ctx)
-		transformedResults := TransformResults(ctx, result)
-		_, filteredResults := filterSecretLookupRateLimitedResults(ctx, transformedResults)
-		results = append(results, filteredResults...)
-		ExportCheckMetrics(ctx, filteredResults, false)
+		for _, check := range checksOfType(checks, c.Type()) {
+			filteredResults, _ := runCheckWithRetries(ctx, c, check)
+			results = append(results, filteredResults...)
+			ExportCheckMetrics(ctx, filteredResults, false)
+		}
 	}
 
 	return results, nil
@@ -218,6 +215,16 @@ func hasDependencies(checks []external.Check) bool {
 		}
 	}
 	return false
+}
+
+func checksOfType(checks []external.Check, checkType string) []external.Check {
+	var filtered []external.Check
+	for _, check := range checks {
+		if check.GetType() == checkType {
+			filtered = append(filtered, check)
+		}
+	}
+	return filtered
 }
 
 func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, RunChecksMeta, error) {
@@ -262,19 +269,11 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, RunChecksMeta, error) 
 				continue
 			}
 
-			singleRunner, ok := checker.(SingleCheckRunner)
-			if !ok {
-				ctx.Warnf("checker %s does not implement SingleCheckRunner, skipping in dependency mode", check.GetType())
-				continue
-			}
-
 			if len(ctx.Outputs) > 0 {
 				ctx.Environment["outputs"] = ctx.GetOutputs()
 			}
 
-			result := singleRunner.Check(ctx, check)
-			transformedResults := TransformResults(ctx, result)
-			skippedCount, filteredResults := filterSecretLookupRateLimitedResults(ctx, transformedResults)
+			filteredResults, skippedCount := runCheckWithRetries(ctx, checker, check)
 			meta.SecretLookupRateLimitSkipped += skippedCount
 			results = append(results, filteredResults...)
 			ExportCheckMetrics(ctx, filteredResults, true)
@@ -288,16 +287,13 @@ func RunChecks(ctx *context.Context) ([]*pkg.CheckResult, RunChecksMeta, error) 
 			if _, ok := disabledChecks[c.Type()]; ok {
 				continue
 			}
-			if !Checks(checks).Includes(c) {
-				continue
-			}
 
-			result := c.Run(ctx)
-			transformedResults := TransformResults(ctx, result)
-			skippedCount, filteredResults := filterSecretLookupRateLimitedResults(ctx, transformedResults)
-			meta.SecretLookupRateLimitSkipped += skippedCount
-			results = append(results, filteredResults...)
-			ExportCheckMetrics(ctx, filteredResults, true)
+			for _, check := range checksOfType(checks, c.Type()) {
+				filteredResults, skippedCount := runCheckWithRetries(ctx, c, check)
+				meta.SecretLookupRateLimitSkipped += skippedCount
+				results = append(results, filteredResults...)
+				ExportCheckMetrics(ctx, filteredResults, true)
+			}
 		}
 	}
 

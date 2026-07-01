@@ -110,6 +110,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -237,6 +241,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -331,6 +339,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -459,6 +471,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -565,6 +581,10 @@
         "replicas": {
           "type": "integer",
           "description": "+optional\nReplicas pauses the canary if = 0."
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for all checks in this canary."
         },
         "env": {
           "additionalProperties": {
@@ -949,6 +969,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -991,6 +1015,32 @@
       "additionalProperties": false,
       "type": "object",
       "description": "CheckRelationship defines a way to link the check results to components and configs\nusing lookup expressions."
+    },
+    "CheckRetries": {
+      "properties": {
+        "delay": {
+          "$ref": "#/$defs/Duration",
+          "description": "Delay is the initial delay before the first check attempt."
+        },
+        "timeout": {
+          "$ref": "#/$defs/Duration",
+          "description": "Timeout is the maximum total duration spent retrying a failed check."
+        },
+        "interval": {
+          "$ref": "#/$defs/Duration",
+          "description": "Interval is the delay between retry attempts."
+        },
+        "maxRetries": {
+          "type": "integer",
+          "description": "MaxRetries is the maximum number of retry attempts after the initial attempt."
+        },
+        "disabled": {
+          "type": "boolean",
+          "description": "Disabled disables retries for this check, even when canary-level checkRetries are configured."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     },
     "CheckStatus": {
       "properties": {
@@ -1065,6 +1115,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "connection": {
           "type": "string"
@@ -1187,6 +1241,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
           "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
@@ -1254,6 +1312,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
@@ -1373,6 +1435,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
           "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
@@ -1455,6 +1521,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -1525,6 +1595,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
           "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
@@ -1593,6 +1667,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
           "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
@@ -1657,6 +1735,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1769,6 +1851,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -1889,6 +1975,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2014,6 +2104,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2291,6 +2385,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -2366,6 +2464,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2445,6 +2547,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -2609,6 +2715,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
           "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
@@ -2690,6 +2800,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
@@ -2773,6 +2887,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
@@ -2859,6 +2977,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "testResults": {
           "type": "string"
@@ -2963,6 +3085,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3096,6 +3222,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -3130,10 +3260,6 @@
           "type": "array",
           "description": "Checks to run against the kubernetes resources."
         },
-        "checkRetries": {
-          "$ref": "#/$defs/KubernetesResourceCheckRetries",
-          "description": "Set initial delays and retry intervals for checks."
-        },
         "clearResources": {
           "type": "boolean",
           "description": "Ensure that the resources are deleted before creating them."
@@ -3163,22 +3289,6 @@
         "name",
         "resources"
       ]
-    },
-    "KubernetesResourceCheckRetries": {
-      "properties": {
-        "delay": {
-          "$ref": "#/$defs/Duration",
-          "description": "Delay is the initial delay"
-        },
-        "timeout": {
-          "$ref": "#/$defs/Duration"
-        },
-        "interval": {
-          "$ref": "#/$defs/Duration"
-        }
-      },
-      "additionalProperties": false,
-      "type": "object"
     },
     "KubernetesResourceCheckWaitFor": {
       "properties": {
@@ -3211,6 +3321,10 @@
         "replicas": {
           "type": "integer",
           "description": "+optional\nReplicas pauses the canary if = 0."
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for all checks in this canary."
         },
         "env": {
           "additionalProperties": {
@@ -3531,6 +3645,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
           "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
@@ -3712,6 +3830,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "connection": {
           "type": "string",
           "description": "Connection name e.g. connection://http/google"
@@ -3776,6 +3898,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3864,6 +3990,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -3970,6 +4100,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
@@ -4219,6 +4353,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -4370,6 +4508,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
           "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
@@ -4479,6 +4621,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -4566,6 +4712,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -4678,6 +4828,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"
@@ -4816,6 +4970,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
           "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
@@ -4953,6 +5111,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
           "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
@@ -5046,6 +5208,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "relationships": {
           "$ref": "#/$defs/CheckRelationship",
@@ -5317,6 +5483,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -5470,6 +5640,10 @@
           },
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"

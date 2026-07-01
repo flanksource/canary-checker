@@ -47,6 +47,10 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
+        "checkRetries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "CheckRetries configures generic retry behavior for this check."
+        },
         "test": {
           "$ref": "#/$defs/Template"
         },
@@ -117,6 +121,32 @@
       "type": "object",
       "description": "CheckRelationship defines a way to link the check results to components and configs\nusing lookup expressions."
     },
+    "CheckRetries": {
+      "properties": {
+        "delay": {
+          "$ref": "#/$defs/Duration",
+          "description": "Delay is the initial delay before the first check attempt."
+        },
+        "timeout": {
+          "$ref": "#/$defs/Duration",
+          "description": "Timeout is the maximum total duration spent retrying a failed check."
+        },
+        "interval": {
+          "$ref": "#/$defs/Duration",
+          "description": "Interval is the delay between retry attempts."
+        },
+        "maxRetries": {
+          "type": "integer",
+          "description": "MaxRetries is the maximum number of retry attempts after the initial attempt."
+        },
+        "disabled": {
+          "type": "boolean",
+          "description": "Disabled disables retries for this check, even when canary-level checkRetries are configured."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
+    },
     "ConfigMapKeySelector": {
       "properties": {
         "name": {
@@ -131,6 +161,10 @@
       "required": [
         "key"
       ]
+    },
+    "Duration": {
+      "type": "string",
+      "description": "Duration e.g. 500ms, 2h, 2m"
     },
     "EnvVar": {
       "properties": {

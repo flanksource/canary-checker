@@ -23,20 +23,21 @@ func (c *KubernetesChecker) Type() string {
 func (c *KubernetesChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Kubernetes {
-		results = append(results, c.Check(*ctx, conf)...)
+		results = append(results, c.Check(ctx, conf)...)
 	}
 
 	return results
 }
 
-func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check) pkg.Results {
+func (c *KubernetesChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
 	check := extConfig.(v1.KubernetesCheck)
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)
 
-	ctx = ctx.WithKubernetesConnection(check.KubernetesConnection)
-	k8sClient, err := ctx.Kubernetes()
+	checkCtx := *ctx
+	checkCtx = checkCtx.WithKubernetesConnection(check.KubernetesConnection)
+	k8sClient, err := checkCtx.Kubernetes()
 	if err != nil {
 		return results.Failf("Kubernetes is not initialized: %v", err)
 	}
@@ -45,7 +46,7 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 	if nsSelector.Wildcard() {
 		namespaces = append(namespaces, "")
 	} else if !nsSelector.IsEmpty() {
-		list, err := k8sClient.QueryResources(ctx, check.Namespace.ToDutySelector().Type("Namespace").MetadataOnly())
+		list, err := k8sClient.QueryResources(checkCtx, check.Namespace.ToDutySelector().Type("Namespace").MetadataOnly())
 		if err != nil {
 			return results.Failf("Failed to get namespaces: %v", err)
 		}
@@ -53,7 +54,7 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 			namespaces = append(namespaces, v.GetName())
 		}
 	} else {
-		namespaces = append(namespaces, ctx.GetNamespace())
+		namespaces = append(namespaces, checkCtx.GetNamespace())
 	}
 
 	var allResources []unstructured.Unstructured
@@ -68,7 +69,7 @@ func (c *KubernetesChecker) Check(ctx context.Context, extConfig external.Check)
 		} else {
 			selector.Types = []string{check.Kind}
 		}
-		resources, err := k8sClient.QueryResources(ctx, selector)
+		resources, err := k8sClient.QueryResources(checkCtx, selector)
 
 		if err != nil {
 			return results.Failf("failed to get resources (%s): %v", selector, err)

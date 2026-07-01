@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
@@ -20,12 +21,13 @@ func (t *OpenSearchChecker) Type() string {
 func (t *OpenSearchChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
 	for _, conf := range ctx.Canary.Spec.Opensearch {
-		results = append(results, t.check(ctx, conf)...)
+		results = append(results, t.Check(ctx, conf)...)
 	}
 	return results
 }
 
-func (t *OpenSearchChecker) check(ctx *context.Context, check v1.OpenSearchCheck) pkg.Results {
+func (t *OpenSearchChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+	check := extConfig.(v1.OpenSearchCheck)
 	result := pkg.Success(check, ctx.Canary)
 
 	var results pkg.Results
