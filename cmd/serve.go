@@ -48,11 +48,11 @@ var Serve = &cobra.Command{
 
 		canaryJobs.StartScanCanaryConfigs(apicontext.DefaultContext, dataFile, configFiles)
 		if executor {
-			jobs.Start()
-
 			shutdown.AddHookWithPriority("check jobs", shutdown.PriorityJobs, func() {
 				canaryJobs.AcquireAllCheckLocks(apicontext.DefaultContext)
 			})
+
+			jobs.Start()
 		}
 
 		serve()
