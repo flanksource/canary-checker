@@ -23,23 +23,46 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-const propertyCheckConcurrency = "check.concurrency"
-
-var (
-	// The maximum number of checks that can run concurrently
-	defaultCheckConcurrency = 50
-
-	// Holds in the lock for every running check.
-	// Can be overwritten by 'check.concurrency' property.
-	globalCheckSemaphore *semaphore.Weighted
+const (
+	propertyCheckConcurrency = "check.concurrency"
+	defaultCheckConcurrency  = 50
 )
 
-// AcquireAllCheckLocks blocks until the global check sempahore is fully acquired.
+var (
+	globalCheckSemaphoreLock sync.Mutex
+
+	// Holds one lock for every running check.
+	// Can be overwritten by the 'check.concurrency' property.
+	globalCheckSemaphore      *semaphore.Weighted
+	globalCheckSemaphoreLimit int64
+)
+
+func getGlobalCheckSemaphore(ctx context.Context) (*semaphore.Weighted, int64) {
+	globalCheckSemaphoreLock.Lock()
+	defer globalCheckSemaphoreLock.Unlock()
+
+	if globalCheckSemaphore != nil {
+		return globalCheckSemaphore, globalCheckSemaphoreLimit
+	}
+
+	concurrency := ctx.Properties().Int(propertyCheckConcurrency, defaultCheckConcurrency)
+	if concurrency < 1 {
+		ctx.Warnf("invalid %s=%d, using default %d", propertyCheckConcurrency, concurrency, defaultCheckConcurrency)
+		concurrency = defaultCheckConcurrency
+	}
+
+	globalCheckSemaphoreLimit = int64(concurrency)
+	globalCheckSemaphore = semaphore.NewWeighted(globalCheckSemaphoreLimit)
+	return globalCheckSemaphore, globalCheckSemaphoreLimit
+}
+
+// AcquireAllCheckLocks blocks until the global check semaphore is fully acquired.
 //
 // This helps to ensure that no checks are currently running.
 func AcquireAllCheckLocks(ctx context.Context) {
 	ctx.Logger.V(6).Infof("acquiring all check locks")
-	if err := globalCheckSemaphore.Acquire(ctx, int64(ctx.Properties().Int(propertyCheckConcurrency, defaultCheckConcurrency))); err != nil {
+	checkSemaphore, limit := getGlobalCheckSemaphore(ctx)
+	if err := checkSemaphore.Acquire(ctx, limit); err != nil {
 		ctx.Logger.Errorf("failed to acquire check semaphores: %v", err)
 	}
 	ctx.Logger.V(6).Infof("acquired all check locks")
@@ -165,21 +188,21 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 	}
 
 	if existingJob == nil {
-		return newCanaryJob(canaryJob)
+		return newCanaryJob(ctx, canaryJob)
 	}
 
 	existingCanary := existingJob.Context.Value("canary")
 	if existingCanary != nil && !reflect.DeepEqual(existingCanary.(v1.Canary).Spec, canary.Spec) {
 		ctx.Debugf("Rescheduling %s canary with updated specs", canary)
 		Unschedule(id)
-		return newCanaryJob(canaryJob)
+		return newCanaryJob(ctx, canaryJob)
 	}
 
 	ctx.Logger.V(2).Infof("canary %s was not rescheduled", canary.Name)
 	return nil
 }
 
-func newCanaryJob(c CanaryJob) error {
+func newCanaryJob(ctx context.Context, c CanaryJob) error {
 	schedule := c.Canary.Spec.Schedule
 	if schedule == "" && c.Canary.Spec.Interval > 0 {
 		schedule = fmt.Sprintf("@every %ds", c.Canary.Spec.Interval)
@@ -187,6 +210,8 @@ func newCanaryJob(c CanaryJob) error {
 	if schedule == "" {
 		schedule = DefaultCanarySchedule
 	}
+
+	checkSemaphore, _ := getGlobalCheckSemaphore(ctx)
 
 	j := &job.Job{
 		Name:                 "Canary",
@@ -198,7 +223,7 @@ func newCanaryJob(c CanaryJob) error {
 		IgnoreSuccessHistory: true,
 		Retention:            job.RetentionBalanced,
 		ResourceID:           c.DBCanary.ID.String(),
-		Semaphores:           []*semaphore.Weighted{globalCheckSemaphore},
+		Semaphores:           []*semaphore.Weighted{checkSemaphore},
 		ResourceType:         "canary",
 		ID:                   fmt.Sprintf("%s/%s", c.Canary.Namespace, c.Canary.Name),
 		Fn:                   c.Run,
@@ -220,9 +245,7 @@ var SyncCanaryJobs = &job.Job{
 	Schedule:   "@every 5m",
 	Retention:  job.RetentionFew,
 	Fn: func(ctx job.JobRuntime) error {
-		if globalCheckSemaphore == nil {
-			globalCheckSemaphore = semaphore.NewWeighted(int64(ctx.Properties().Int(propertyCheckConcurrency, defaultCheckConcurrency)))
-		}
+		getGlobalCheckSemaphore(ctx.Context)
 
 		canaries, err := db.GetAllCanariesForSync(ctx.Context, runner.WatchNamespace)
 		if err != nil {
