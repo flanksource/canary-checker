@@ -33,7 +33,7 @@ func InitContext() (context.Context, error) {
 	if err != nil {
 		return ctx, fmt.Errorf("failed to initialize db: %v", err.Error())
 	}
-	shutdown.AddHookWithPriority("db", 0, closer)
+	shutdown.AddHookWithPriority("db", shutdown.PriorityCritical, closer)
 
 	if err := properties.LoadFile(propertiesFile); err != nil {
 		return ctx, fmt.Errorf("failed to load properties: %v", err)
