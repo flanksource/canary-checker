@@ -51,6 +51,22 @@ func TestCheckResultFailureTypes(t *testing.T) {
 		}
 	})
 
+	t.Run("evaluation error", func(t *testing.T) {
+		result := Success(check, canary)
+		err := errors.New("display template failed")
+		result.EvaluationErrorMessage(err)
+
+		if result.Pass {
+			t.Fatal("expected result to fail")
+		}
+		if result.FailureType != FailureEvaluation {
+			t.Fatalf("expected failure type %q, got %q", FailureEvaluation, result.FailureType)
+		}
+		if result.ErrorObject != err {
+			t.Fatal("expected original error to be preserved")
+		}
+	})
+
 	t.Run("invalid", func(t *testing.T) {
 		result := Success(check, canary)
 		result.Invalidf("missing url")
@@ -80,7 +96,7 @@ func TestFailureTypeFirstClassificationWins(t *testing.T) {
 	result := Success(v1.HTTPCheck{}, v1.Canary{})
 
 	result.AssertionFailuref("expected 404")
-	result.ErrorMessage(errors.New("display template failed"))
+	result.EvaluationErrorMessage(errors.New("display template failed"))
 
 	if result.FailureType != FailureAssertion {
 		t.Fatalf("expected failure type %q, got %q", FailureAssertion, result.FailureType)
@@ -91,5 +107,16 @@ func TestFailureTypeFirstClassificationWins(t *testing.T) {
 
 	if result.FailureType != FailureAssertion {
 		t.Fatalf("expected failure type %q, got %q", FailureAssertion, result.FailureType)
+	}
+}
+
+func TestEvaluationErrorPreservesLegacyUnclassifiedFailure(t *testing.T) {
+	result := Success(v1.HTTPCheck{}, v1.Canary{})
+
+	result.Failf("expected 404")
+	result.EvaluationErrorMessage(errors.New("display template failed"))
+
+	if result.FailureType != FailureNone {
+		t.Fatalf("expected failure type %q, got %q", FailureNone, result.FailureType)
 	}
 }

@@ -357,6 +357,10 @@ const (
 	// failure "doesn't count".
 	FailureRuntime FailureType = "runtime"
 
+	// FailureEvaluation means user-provided evaluation logic failed while processing
+	// check data, e.g. display, test, or transform expressions.
+	FailureEvaluation FailureType = "evaluation"
+
 	// FailureInvalid means the check specification or user-provided configuration is invalid.
 	FailureInvalid FailureType = "invalid"
 

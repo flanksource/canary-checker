@@ -140,6 +140,27 @@ func (result *CheckResult) RuntimeErrorf(message string, args ...interface{}) *C
 	return result.failf(FailureRuntime, message, args...)
 }
 
+func (result *CheckResult) EvaluationErrorf(message string, args ...interface{}) *CheckResult {
+	failureType := FailureEvaluation
+	if !result.Pass && result.FailureType == FailureNone {
+		failureType = FailureNone
+	}
+	return result.failf(failureType, message, args...)
+}
+
+func (result *CheckResult) EvaluationErrorMessage(err error) *CheckResult {
+	if err == nil {
+		return result
+	}
+	result.ErrorObject = err
+	return result.EvaluationErrorf("%s", err.Error())
+}
+
+func (result *CheckResult) ClassifyFailure(failureType FailureType) *CheckResult {
+	result.setFailureType(failureType)
+	return result
+}
+
 func (result *CheckResult) InternalErrorf(message string, args ...interface{}) *CheckResult {
 	result.failf(FailureInternal, message, args...)
 	result.InternalError = true
@@ -202,6 +223,16 @@ func (r Results) AssertionFailuref(msg string, args ...interface{}) Results {
 
 func (r Results) RuntimeErrorf(msg string, args ...interface{}) Results {
 	r[0].RuntimeErrorf(msg, args...)
+	return r
+}
+
+func (r Results) EvaluationErrorf(msg string, args ...interface{}) Results {
+	r[0].EvaluationErrorf(msg, args...)
+	return r
+}
+
+func (r Results) EvaluationErrorMessage(err error) Results {
+	r[0].EvaluationErrorMessage(err)
 	return r
 }
 
