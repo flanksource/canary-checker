@@ -421,6 +421,7 @@ func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.C
 			r.Error = fmt.Sprintf("error transforming result: %s", err.Error())
 			r.Invalid = true
 			r.Pass = false
+			r.ClassifyFailure(pkg.FailureEvaluation)
 		} else {
 			for _, t := range transformed {
 				out = append(out, processTemplates(checkCtx, t))
@@ -523,7 +524,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 		if !v.GetDisplayTemplate().IsEmpty() {
 			message, err := template(ctx, v.GetDisplayTemplate())
 			if err != nil {
-				r.ErrorMessage(ctx.Oops().With(contextMapToSlice(r.GetContext())...).Wrap(err))
+				r.EvaluationErrorMessage(ctx.Oops().With(contextMapToSlice(r.GetContext())...).Wrap(err))
 			} else {
 				r.ResultMessage("%s", message)
 			}
@@ -539,18 +540,18 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 
 		message, err := template(ctx, tpl)
 		if err != nil {
-			r.ErrorMessage(ctx.Oops().With(contextMapToSlice(r.GetContext())...).Wrap(err))
+			r.EvaluationErrorMessage(ctx.Oops().With(contextMapToSlice(r.GetContext())...).Wrap(err))
 		} else if parsed, err := strconv.ParseBool(message); err != nil {
-			r.Failf("test expression did not return a boolean value. got %s", message)
+			r.EvaluationErrorf("test expression did not return a boolean value. got %s", message)
 		} else if !parsed {
 			if details, ok := r.Detail.(shell.ExecDetails); ok {
 				if details.Stderr != "" || details.Stdout != "" {
-					r.Failf("%s", strings.TrimSpace(details.Stderr+" "+details.Stdout))
+					r.AssertionFailuref("%s", strings.TrimSpace(details.Stderr+" "+details.Stdout))
 				} else {
-					r.Failf("exit code %d", details.ExitCode)
+					r.AssertionFailuref("exit code %d", details.ExitCode)
 				}
 			} else {
-				r.Failf("test failed")
+				r.AssertionFailuref("test failed")
 			}
 		}
 	}
