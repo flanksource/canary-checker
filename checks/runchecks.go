@@ -512,7 +512,7 @@ func contextMapToSlice(c map[string]any) []any {
 }
 
 func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult {
-	if r.Invalid {
+	if !r.Pass || r.Invalid {
 		return r
 	}
 	if r.Duration == 0 && r.GetDuration() > 0 {

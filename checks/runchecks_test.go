@@ -4,8 +4,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
+	dutycontext "github.com/flanksource/duty/context"
 )
 
 func TestSortChecksByDependency(t *testing.T) {
@@ -156,5 +159,60 @@ func TestSortChecksByDependency(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestProcessTemplatesSkipsFailedResults(t *testing.T) {
+	canary := v1.Canary{}
+	canary.Name = "test-canary"
+	canary.Namespace = "default"
+
+	check := v1.HTTPCheck{
+		Description: v1.Description{Name: "http"},
+		Templatable: v1.Templatable{
+			Display: v1.Template{Expression: "'display overwritten'"},
+			Test:    v1.Template{Expression: "false"},
+		},
+	}
+
+	result := pkg.Success(check, canary)
+	result.Failf("original failure")
+
+	ctx := context.New(dutycontext.New(), canary).WithCheckResult(result)
+	got := processTemplates(ctx, result)
+
+	if got.Message != "" {
+		t.Fatalf("expected failed result message to stay empty, got %q", got.Message)
+	}
+
+	if got.Error != "original failure" {
+		t.Fatalf("expected failed result error to stay unchanged, got %q", got.Error)
+	}
+}
+
+func TestProcessTemplatesAppliesTemplatesToPassedResults(t *testing.T) {
+	canary := v1.Canary{}
+	canary.Name = "test-canary"
+	canary.Namespace = "default"
+
+	check := v1.HTTPCheck{
+		Description: v1.Description{Name: "http"},
+		Templatable: v1.Templatable{
+			Display: v1.Template{Expression: "'display rendered'"},
+			Test:    v1.Template{Expression: "true"},
+		},
+	}
+
+	result := pkg.Success(check, canary)
+
+	ctx := context.New(dutycontext.New(), canary).WithCheckResult(result)
+	got := processTemplates(ctx, result)
+
+	if !got.Pass {
+		t.Fatalf("expected passed result to remain passing, got error %q", got.Error)
+	}
+
+	if got.Message != "display rendered" {
+		t.Fatalf("expected display template to render, got %q", got.Message)
 	}
 }
