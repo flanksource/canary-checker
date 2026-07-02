@@ -14,11 +14,12 @@ type Results []*CheckResult
 
 func Invalid(check external.Check, canary v1.Canary, reason string) Results {
 	return Results{&CheckResult{
-		Start:   time.Now(),
-		Pass:    false,
-		Invalid: true,
-		Error:   reason,
-		Check:   check,
+		Start:       time.Now(),
+		Pass:        false,
+		Invalid:     true,
+		FailureType: FailureInvalid,
+		Error:       reason,
+		Check:       check,
 		Data: map[string]interface{}{
 			"results": make(map[string]interface{}),
 		},
@@ -30,12 +31,13 @@ func SetupError(canary v1.Canary, err error) Results {
 	var results Results
 	for _, check := range canary.Spec.GetAllChecks() {
 		results = append(results, &CheckResult{
-			Start:   time.Now(),
-			Pass:    false,
-			Invalid: true,
-			Error:   err.Error(),
-			Check:   check,
-			Data:    make(map[string]interface{}),
+			Start:       time.Now(),
+			Pass:        false,
+			Invalid:     true,
+			FailureType: FailureInvalid,
+			Error:       err.Error(),
+			Check:       check,
+			Data:        make(map[string]interface{}),
 		})
 	}
 	return results
@@ -63,7 +65,7 @@ func (result *CheckResult) ErrorMessage(err error) *CheckResult {
 		return result
 	}
 	result.ErrorObject = err
-	return result.Failf("%s", err.Error())
+	return result.RuntimeErrorf("%s", err.Error())
 }
 
 func (result *CheckResult) UpdateCheck(check external.Check) *CheckResult {
@@ -104,20 +106,69 @@ func (result *CheckResult) TextResults(textResults bool) *CheckResult {
 	return result
 }
 
-func (result *CheckResult) Failf(message string, args ...interface{}) *CheckResult {
+func (result *CheckResult) setFailureType(failureType FailureType) {
+	if result.FailureType == FailureNone && failureType != FailureNone {
+		result.FailureType = failureType
+	}
+}
+
+func (result *CheckResult) failf(failureType FailureType, message string, args ...interface{}) *CheckResult {
 	if result.Error != "" {
 		result.Error += ", "
 	}
 
-	result.InternalError = db.IsDBError(fmt.Errorf(message, args...))
+	if db.IsDBError(fmt.Errorf(message, args...)) {
+		result.InternalError = true
+		failureType = FailureInternal
+	}
 
 	result.Pass = false
+	result.setFailureType(failureType)
 	result.Error += fmt.Sprintf(message, args...)
 	return result
 }
 
+func (result *CheckResult) Failf(message string, args ...interface{}) *CheckResult {
+	return result.failf(FailureNone, message, args...)
+}
+
+func (result *CheckResult) AssertionFailuref(message string, args ...interface{}) *CheckResult {
+	return result.failf(FailureAssertion, message, args...)
+}
+
+func (result *CheckResult) RuntimeErrorf(message string, args ...interface{}) *CheckResult {
+	return result.failf(FailureRuntime, message, args...)
+}
+
+func (result *CheckResult) EvaluationErrorf(message string, args ...interface{}) *CheckResult {
+	failureType := FailureEvaluation
+	if !result.Pass && result.FailureType == FailureNone {
+		failureType = FailureNone
+	}
+	return result.failf(failureType, message, args...)
+}
+
+func (result *CheckResult) EvaluationErrorMessage(err error) *CheckResult {
+	if err == nil {
+		return result
+	}
+	result.ErrorObject = err
+	return result.EvaluationErrorf("%s", err.Error())
+}
+
+func (result *CheckResult) ClassifyFailure(failureType FailureType) *CheckResult {
+	result.setFailureType(failureType)
+	return result
+}
+
+func (result *CheckResult) InternalErrorf(message string, args ...interface{}) *CheckResult {
+	result.failf(FailureInternal, message, args...)
+	result.InternalError = true
+	return result
+}
+
 func (result *CheckResult) Invalidf(message string, args ...interface{}) Results {
-	result = result.Failf(message, args...)
+	result = result.failf(FailureInvalid, message, args...)
 	result.Invalid = true
 	return Results{result}
 }
@@ -162,6 +213,31 @@ func (result *CheckResult) AddData(data map[string]interface{}) *CheckResult {
 
 func (r Results) Failf(msg string, args ...interface{}) Results {
 	r[0].Failf(msg, args...)
+	return r
+}
+
+func (r Results) AssertionFailuref(msg string, args ...interface{}) Results {
+	r[0].AssertionFailuref(msg, args...)
+	return r
+}
+
+func (r Results) RuntimeErrorf(msg string, args ...interface{}) Results {
+	r[0].RuntimeErrorf(msg, args...)
+	return r
+}
+
+func (r Results) EvaluationErrorf(msg string, args ...interface{}) Results {
+	r[0].EvaluationErrorf(msg, args...)
+	return r
+}
+
+func (r Results) EvaluationErrorMessage(err error) Results {
+	r[0].EvaluationErrorMessage(err)
+	return r
+}
+
+func (r Results) InternalErrorf(msg string, args ...interface{}) Results {
+	r[0].InternalErrorf(msg, args...)
 	return r
 }
 
