@@ -339,6 +339,31 @@ type URL struct {
 
 type SystemResult struct{}
 
+// FailureType classifies why a non-passing check result did not pass.
+type FailureType string
+
+const (
+	// FailureNone means the result has no classified failure.
+	FailureNone FailureType = ""
+
+	// FailureAssertion means the check ran successfully, but its expected condition failed.
+	FailureAssertion FailureType = "assertion"
+
+	// FailureRuntime means the check could not complete due to an execution error,
+	// e.g. connection refused, DNS lookup failure, request timeout, or API client error.
+	//
+	// A FailureRuntime result is still Pass=false and counts as downtime by default;
+	// it records that the check's assertions were never evaluated, not that the
+	// failure "doesn't count".
+	FailureRuntime FailureType = "runtime"
+
+	// FailureInvalid means the check specification or user-provided configuration is invalid.
+	FailureInvalid FailureType = "invalid"
+
+	// FailureInternal means canary-checker itself or an internal dependency failed.
+	FailureInternal FailureType = "internal"
+)
+
 type ArtifactResult struct {
 	ContentType string
 	Path        string
@@ -351,6 +376,7 @@ type CheckResult struct {
 	Start       time.Time              `json:"start,omitempty"`
 	Pass        bool                   `json:"pass,omitempty"`
 	Invalid     bool                   `json:"invalid,omitempty"`
+	FailureType FailureType            `json:"failureType,omitempty"`
 	Detail      interface{}            `json:"detail,omitempty"`
 	Data        map[string]interface{} `json:"data,omitempty"`
 	Labels      map[string]string      `json:"labels,omitempty"`
@@ -371,6 +397,7 @@ type CheckResult struct {
 	ParentCheck external.Check `json:"-"`
 	ErrorObject error          `json:"-"`
 
+	// Deprecated: use FailureType == FailureInternal.
 	InternalError bool `json:"-"`
 
 	CanaryResult []TransformedCanaryResult
@@ -472,6 +499,7 @@ type TransformedCheckResult struct {
 	Start                   *time.Time             `json:"start,omitempty"`
 	Pass                    *bool                  `json:"pass,omitempty"`
 	Invalid                 *bool                  `json:"invalid,omitempty"`
+	FailureType             FailureType            `json:"failureType,omitempty"`
 	Detail                  interface{}            `json:"detail,omitempty"`
 	Data                    map[string]interface{} `json:"data,omitempty"`
 	DeletedAt               *time.Time             `json:"deletedAt,omitempty"`
@@ -515,6 +543,7 @@ func (t TransformedCheckResult) ToCheckResult() CheckResult {
 		Start:       utils.Deref(t.Start, time.Now()),
 		Pass:        utils.Deref(t.Pass, false),
 		Invalid:     utils.Deref(t.Invalid, false),
+		FailureType: t.FailureType,
 		Detail:      t.Detail,
 		Data:        t.Data,
 		Duration:    utils.Deref(t.Duration, 0),
