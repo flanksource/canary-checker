@@ -19,6 +19,7 @@ GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
 
 ## Tool Versions
 GOLANGCI_LINT_VERSION ?= v2.8.0
+FUZZTIME ?= 30s
 
 # Image URL to use all building/pushing image targets
 IMG_F ?= docker.io/flanksource/canary-checker-full:${VERSION_TAG}
@@ -40,6 +41,10 @@ all: manager
 .PHONY: test
 test: manifests generate fmt ginkgo
 	ginkgo -vv -r  --cover  --keep-going --junit-report junit-report.xml --
+
+.PHONY: fuzz
+fuzz:
+	go test ./pkg -run=FuzzParseConfig -fuzz=FuzzParseConfig -fuzztime=$(FUZZTIME)
 
 .PHONY: test\:fixtures
 test\:fixtures:
