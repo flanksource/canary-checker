@@ -31,7 +31,7 @@ const app = "canary-checker"
 func InitContext() (context.Context, error) {
 	ctx, closer, err := duty.Start(app, duty.SkipChangelogMigration, duty.SkipMigrationByDefaultMode)
 	if closer != nil {
-		shutdown.AddHookWithPriority("db", 0, closer)
+		shutdown.AddHookWithPriority("db", shutdown.PriorityCritical, closer)
 	}
 	if err != nil {
 		return ctx, fmt.Errorf("failed to initialize db: %v", err.Error())
