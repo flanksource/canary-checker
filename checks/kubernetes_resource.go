@@ -69,7 +69,8 @@ func (c *KubernetesResourceChecker) Run(ctx *context.Context) pkg.Results {
 }
 
 func (c *KubernetesResourceChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
-	return c.check(*ctx, extConfig.(v1.KubernetesResourceCheck))
+	check := extConfig.(v1.KubernetesResourceCheck)
+	return c.check(*ctx, *check.DeepCopy())
 }
 
 func (c *KubernetesResourceChecker) check(ctx context.Context, check v1.KubernetesResourceCheck) pkg.Results {
@@ -326,16 +327,16 @@ func (c *KubernetesResourceChecker) validate(ctx context.Context, check v1.Kuber
 		return fmt.Errorf("waitFor.interval: %s", err)
 	}
 
-	if err := check.CheckRetries.Timeout.Validate(); err != nil {
+	if _, err := check.CheckRetries.GetTimeout(); err != nil {
 		return fmt.Errorf("timeout: %s", err)
 	}
 
 	if _, err := check.CheckRetries.GetInterval(); err != nil {
-		return fmt.Errorf("timeout: %s", err)
+		return fmt.Errorf("interval: %s", err)
 	}
 
 	if _, err := check.CheckRetries.GetDelay(); err != nil {
-		return fmt.Errorf("timeout: %s", err)
+		return fmt.Errorf("delay: %s", err)
 	}
 
 	maxResourcesAllowed := ctx.Properties().Int("checks.kubernetesResource.maxResources", defaultMaxResourcesAllowed)

@@ -9,6 +9,8 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	dutyContext "github.com/flanksource/duty/context"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
 
 func TestSortChecksByDependency(t *testing.T) {
@@ -280,6 +282,44 @@ func TestKubernetesResourceCheckRetriesUseDescriptionField(t *testing.T) {
 	}
 	if retries.MaxRetries == nil || *retries.MaxRetries != maxRetries {
 		t.Fatalf("expected maxRetries=%d, got %#v", maxRetries, retries.MaxRetries)
+	}
+}
+
+func TestKubernetesResourceValidateAllowsNilCheckRetries(t *testing.T) {
+	ctx := newRetryTestContext(nil)
+	if err := (&KubernetesResourceChecker{}).validate(*ctx, v1.KubernetesResourceCheck{}); err != nil {
+		t.Fatalf("expected nil checkRetries to validate, got %v", err)
+	}
+}
+
+func TestKubernetesResourceCheckDoesNotMutateOriginalSpec(t *testing.T) {
+	ctx := newRetryTestContext(nil)
+	ctx.Canary.Name = "canary"
+	ctx.Canary.Namespace = "default"
+	ctx.Canary.UID = k8sTypes.UID("canary-id")
+	ctx.Canary.Status.Checks = map[string]string{"kubernetes-resource": "check-id"}
+
+	resource := unstructured.Unstructured{}
+	resource.SetAPIVersion("v1")
+	resource.SetKind("ConfigMap")
+	resource.SetName("cm")
+	resource.SetNamespace("default")
+	resource.SetLabels(map[string]string{"existing": "true"})
+
+	check := v1.KubernetesResourceCheck{
+		Description: v1.Description{Name: "kubernetes-resource"},
+		Resources:   []unstructured.Unstructured{resource},
+		WaitFor:     v1.KubernetesResourceCheckWaitFor{Disable: true},
+	}
+
+	_ = (&KubernetesResourceChecker{}).Check(ctx, check)
+
+	labels := check.Resources[0].GetLabels()
+	if len(labels) != 1 || labels["existing"] != "true" {
+		t.Fatalf("expected original labels to remain unchanged, got %#v", labels)
+	}
+	if ownerRefs := check.Resources[0].GetOwnerReferences(); len(ownerRefs) != 0 {
+		t.Fatalf("expected original owner references to remain unchanged, got %#v", ownerRefs)
 	}
 }
 
