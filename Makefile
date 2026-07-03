@@ -182,7 +182,7 @@ lint: $(GOLANGCI_LINT)
 .PHONY: golangci-lint
 golangci-lint: $(GOLANGCI_LINT)
 $(GOLANGCI_LINT): $(LOCALBIN)
-	test -s $(LOCALBIN)/golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(LOCALBIN) $(GOLANGCI_LINT_VERSION)
+	GOBIN=$(LOCALBIN) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 
 .PHONY: build-api-docs
 build-api-docs:
@@ -243,6 +243,9 @@ ginkgo:
 
 $(RELEASE_DIR):
 	mkdir -p $(RELEASE_DIR)
+
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
 
 .bin:
 	mkdir -p .bin
