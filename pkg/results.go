@@ -106,10 +106,15 @@ func (result *CheckResult) TextResults(textResults bool) *CheckResult {
 	return result
 }
 
+func (result *CheckResult) syncFailureCompatibilityFields() {
+	result.InternalError = result.FailureType == FailureInternal
+}
+
 func (result *CheckResult) setFailureType(failureType FailureType) {
 	if result.FailureType == FailureNone && failureType != FailureNone {
 		result.FailureType = failureType
 	}
+	result.syncFailureCompatibilityFields()
 }
 
 func (result *CheckResult) failf(failureType FailureType, message string, args ...interface{}) *CheckResult {
@@ -118,7 +123,6 @@ func (result *CheckResult) failf(failureType FailureType, message string, args .
 	}
 
 	if db.IsDBError(fmt.Errorf(message, args...)) {
-		result.InternalError = true
 		failureType = FailureInternal
 	}
 
@@ -162,9 +166,7 @@ func (result *CheckResult) ClassifyFailure(failureType FailureType) *CheckResult
 }
 
 func (result *CheckResult) InternalErrorf(message string, args ...interface{}) *CheckResult {
-	result.failf(FailureInternal, message, args...)
-	result.InternalError = true
-	return result
+	return result.failf(FailureInternal, message, args...)
 }
 
 func (result *CheckResult) Invalidf(message string, args ...interface{}) Results {

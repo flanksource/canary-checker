@@ -104,7 +104,11 @@ func TestFailureTypeFirstClassificationWins(t *testing.T) {
 
 	result.RuntimeErrorf("connection refused")
 	result.Invalidf("missing url")
+	result.InternalErrorf("failed to persist status")
 
+	if result.InternalError {
+		t.Fatal("expected internal error compatibility flag to follow failure type")
+	}
 	if result.FailureType != FailureAssertion {
 		t.Fatalf("expected failure type %q, got %q", FailureAssertion, result.FailureType)
 	}
