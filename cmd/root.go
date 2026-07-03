@@ -30,10 +30,12 @@ const app = "canary-checker"
 
 func InitContext() (context.Context, error) {
 	ctx, closer, err := duty.Start(app, duty.SkipChangelogMigration, duty.SkipMigrationByDefaultMode)
+	if closer != nil {
+		shutdown.AddHookWithPriority("db", 0, closer)
+	}
 	if err != nil {
 		return ctx, fmt.Errorf("failed to initialize db: %v", err.Error())
 	}
-	shutdown.AddHookWithPriority("db", 0, closer)
 
 	if err := properties.LoadFile(propertiesFile); err != nil {
 		return ctx, fmt.Errorf("failed to load properties: %v", err)
