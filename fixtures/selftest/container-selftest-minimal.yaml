@@ -63,7 +63,7 @@ spec:
     - name: startPg
       description: "Start embedded postgres"
       script: |
-        /app/canary-checker serve --db embedded:///tmp/test-db > /tmp/serve.log 2>&1 &
+        /app/canary-checker serve --db embedded:///tmp/test-db --db-migrations > /tmp/serve.log 2>&1 &
         echo $! > /tmp/serve.pid
         for i in $(seq 1 60); do
           PORT=$(sed -n 's/.*localhost:\([0-9]*\)\/.*/\1/p' /tmp/serve.log 2>/dev/null | head -1)
