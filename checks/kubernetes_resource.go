@@ -62,7 +62,7 @@ func (c *KubernetesResourceChecker) HandlesRetriesInternally() bool {
 
 func (c *KubernetesResourceChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
-	for _, conf := range ctx.Canary.DeepCopy().Spec.KubernetesResource {
+	for _, conf := range ctx.Canary.Spec.KubernetesResource {
 		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
