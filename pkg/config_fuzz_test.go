@@ -1,9 +1,6 @@
 package pkg
 
-import (
-	"os"
-	"testing"
-)
+import "testing"
 
 func FuzzParseConfig(f *testing.F) {
 	for _, seed := range []string{
@@ -61,11 +58,6 @@ not: [valid
 			return
 		}
 
-		configFile := t.TempDir() + "/canary.yaml"
-		if err := os.WriteFile(configFile, data, 0o600); err != nil {
-			t.Fatalf("write fuzz config: %v", err)
-		}
-
-		_, _ = ParseConfig(configFile, "")
+		_, _ = parseConfig(string(data))
 	})
 }

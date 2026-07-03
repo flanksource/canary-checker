@@ -112,6 +112,10 @@ func ParseConfig(configfile string, datafile string) ([]v1.Canary, error) {
 		}
 	}
 
+	return parseConfig(configs)
+}
+
+func parseConfig(configs string) ([]v1.Canary, error) {
 	var canaries []v1.Canary
 	re := regexp.MustCompile(`(?m)^---\n`)
 	for _, chunk := range re.Split(configs, -1) {
