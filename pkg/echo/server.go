@@ -1,10 +1,13 @@
 package echo
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
+	"strconv"
+	"time"
 
 	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/duty/canary"
@@ -24,6 +27,22 @@ var Debug bool
 
 var AllowedCORS string
 
+type requestLogEntry struct {
+	Time         string `json:"time"`
+	ID           string `json:"id"`
+	RemoteIP     string `json:"remote_ip"`
+	Host         string `json:"host"`
+	Method       string `json:"method"`
+	URI          string `json:"uri"`
+	UserAgent    string `json:"user_agent"`
+	Status       int    `json:"status"`
+	Error        string `json:"error"`
+	Latency      int64  `json:"latency"`
+	LatencyHuman string `json:"latency_human"`
+	BytesIn      int64  `json:"bytes_in"`
+	BytesOut     int64  `json:"bytes_out"`
+}
+
 func New(ctx context.Context) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -42,10 +61,52 @@ func New(ctx context.Context) *echo.Echo {
 		DoNotUseRequestPathFor404: true,
 	}))
 
-	echoLogConfig := middleware.DefaultLoggerConfig
-	echoLogConfig.Skipper = telemetryURLSkipper
+	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		Skipper:          telemetryURLSkipper,
+		LogLatency:       true,
+		LogRemoteIP:      true,
+		LogHost:          true,
+		LogMethod:        true,
+		LogURI:           true,
+		LogRequestID:     true,
+		LogUserAgent:     true,
+		LogStatus:        true,
+		LogError:         true,
+		LogContentLength: true,
+		LogResponseSize:  true,
+		HandleError:      true,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			errorMessage := ""
+			if v.Error != nil {
+				errorMessage = v.Error.Error()
+			}
 
-	e.Use(middleware.LoggerWithConfig(echoLogConfig)) //nolint:staticcheck
+			bytesIn, err := strconv.ParseInt(v.ContentLength, 10, 64)
+			if err != nil {
+				bytesIn = 0
+			}
+
+			if err := json.NewEncoder(c.Logger().Output()).Encode(requestLogEntry{
+				Time:         time.Now().Format(time.RFC3339Nano),
+				ID:           v.RequestID,
+				RemoteIP:     v.RemoteIP,
+				Host:         v.Host,
+				Method:       v.Method,
+				URI:          v.URI,
+				UserAgent:    v.UserAgent,
+				Status:       v.Status,
+				Error:        errorMessage,
+				Latency:      int64(v.Latency),
+				LatencyHuman: v.Latency.String(),
+				BytesIn:      bytesIn,
+				BytesOut:     v.ResponseSize,
+			}); err != nil {
+				c.Logger().Error(err)
+			}
+
+			return nil
+		},
+	}))
 
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
