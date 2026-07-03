@@ -24,6 +24,8 @@ jobs:
           key: cache-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             cache-
+      - name: Test fuzz seed corpus
+        run: go test ./pkg -run=FuzzParseConfig -count=1
       - name: Test
         run: make test
       - name: Publish Unit Test Results
