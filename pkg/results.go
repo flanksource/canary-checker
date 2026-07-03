@@ -106,15 +106,10 @@ func (result *CheckResult) TextResults(textResults bool) *CheckResult {
 	return result
 }
 
-func (result *CheckResult) syncFailureCompatibilityFields() {
-	result.InternalError = result.FailureType == FailureInternal
-}
-
 func (result *CheckResult) setFailureType(failureType FailureType) {
 	if result.FailureType == FailureNone && failureType != FailureNone {
 		result.FailureType = failureType
 	}
-	result.syncFailureCompatibilityFields()
 }
 
 func (result *CheckResult) failf(failureType FailureType, message string, args ...interface{}) *CheckResult {

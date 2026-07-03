@@ -83,9 +83,6 @@ func TestCheckResultFailureTypes(t *testing.T) {
 		result := Success(check, canary)
 		result.InternalErrorf("failed to persist status")
 
-		if !result.InternalError {
-			t.Fatal("expected result to be marked internal error")
-		}
 		if result.FailureType != FailureInternal {
 			t.Fatalf("expected failure type %q, got %q", FailureInternal, result.FailureType)
 		}
@@ -106,9 +103,6 @@ func TestFailureTypeFirstClassificationWins(t *testing.T) {
 	result.Invalidf("missing url")
 	result.InternalErrorf("failed to persist status")
 
-	if result.InternalError {
-		t.Fatal("expected internal error compatibility flag to follow failure type")
-	}
 	if result.FailureType != FailureAssertion {
 		t.Fatalf("expected failure type %q, got %q", FailureAssertion, result.FailureType)
 	}

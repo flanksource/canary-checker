@@ -401,9 +401,6 @@ type CheckResult struct {
 	ParentCheck external.Check `json:"-"`
 	ErrorObject error          `json:"-"`
 
-	// Deprecated: use FailureType == FailureInternal.
-	InternalError bool `json:"-"`
-
 	CanaryResult []TransformedCanaryResult
 }
 

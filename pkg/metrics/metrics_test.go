@@ -49,14 +49,14 @@ func newFixture(checkName, checkKey string) (v1.Canary, pkg.GenericCheck) {
 	return canary, check
 }
 
-func resultFor(canary v1.Canary, check pkg.GenericCheck, pass, invalid, internalErr bool) *pkg.CheckResult {
+func resultFor(canary v1.Canary, check pkg.GenericCheck, pass, invalid bool, failureType pkg.FailureType) *pkg.CheckResult {
 	return &pkg.CheckResult{
-		Pass:          pass,
-		Invalid:       invalid,
-		InternalError: internalErr,
-		Duration:      10,
-		Check:         check,
-		Canary:        canary,
+		Pass:        pass,
+		Invalid:     invalid,
+		FailureType: failureType,
+		Duration:    10,
+		Check:       check,
+		Canary:      canary,
 	}
 }
 
@@ -80,7 +80,7 @@ func TestRecord_FailedCountNotDoubleRecorded(t *testing.T) {
 		name             string
 		pass             bool
 		invalid          bool
-		internalErr      bool
+		failureType      pkg.FailureType
 		wantFailedDelta  float64
 		wantInvalidDelta float64
 		wantErrorDelta   float64
@@ -106,7 +106,7 @@ func TestRecord_FailedCountNotDoubleRecorded(t *testing.T) {
 		{
 			name:           "internal error failure",
 			pass:           false,
-			internalErr:    true,
+			failureType:    pkg.FailureInternal,
 			wantErrorDelta: 1,
 			// internal errors drop out of the uptime ratio: neither pass nor fail.
 			wantUptimeFailed: 0,
@@ -135,7 +135,7 @@ func TestRecord_FailedCountNotDoubleRecorded(t *testing.T) {
 			beforeError := testutil.ToFloat64(OpsErrorCount.WithLabelValues(labels...))
 			beforeSuccess := testutil.ToFloat64(OpsSuccessCount.WithLabelValues(labels...))
 
-			uptime, _ := Record(ctx, canary, resultFor(canary, check, tc.pass, tc.invalid, tc.internalErr))
+			uptime, _ := Record(ctx, canary, resultFor(canary, check, tc.pass, tc.invalid, tc.failureType))
 
 			if got := testutil.ToFloat64(OpsFailedCount.WithLabelValues(labels...)) - beforeFailed; got != tc.wantFailedDelta {
 				t.Errorf("canary_check_failed_count delta = %v, want %v", got, tc.wantFailedDelta)
