@@ -6,8 +6,10 @@
 
   <p>Kubernetes Native Health Check Platform</p>
   <p>
-    <a href="https://github.com/flanksource/canary-checker/actions"><img src="https://github.com/flanksource/canary-checker/workflows/Test/badge.svg"></a>
-    <a href="https://goreportcard.com/report/github.com/flanksource/canary-checker"><img src="https://goreportcard.com/badge/github.com/flanksource/canary-checker"></a>
+    <a href="https://github.com/flanksource/canary-checker/actions/workflows/test.yml"><img src="https://github.com/flanksource/canary-checker/actions/workflows/test.yml/badge.svg?branch=master"></a>
+    <a href="https://github.com/flanksource/canary-checker/actions/workflows/lint.yml"><img src="https://github.com/flanksource/canary-checker/actions/workflows/lint.yml/badge.svg?branch=master"></a>
+    <a href="https://github.com/flanksource/canary-checker/actions/workflows/codeql.yml"><img src="https://github.com/flanksource/canary-checker/actions/workflows/codeql.yml/badge.svg?branch=master"></a>
+    <a href="https://hub.docker.com/r/flanksource/canary-checker"><img src="https://img.shields.io/docker/pulls/flanksource/canary-checker?logo=docker&style=flat-square"></a>
     <a href="https://securityscorecards.dev/viewer/?uri=github.com/flanksource/canary-checker"><img src="https://api.securityscorecards.dev/projects/github.com/flanksource/canary-checker/badge"></a>
     <img src="https://img.shields.io/github/license/flanksource/canary-checker.svg?style=flat-square"/>
     <a href="https://canarychecker.io"> <img src="https://img.shields.io/badge/☰-Docs-lightgrey.svg"/></a>
