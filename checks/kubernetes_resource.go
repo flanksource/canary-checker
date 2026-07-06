@@ -88,6 +88,11 @@ func (c *KubernetesResourceChecker) check(ctx context.Context, check v1.Kubernet
 		return results.Failf("validation: %v", err)
 	}
 
+	policy, err := newRetryPolicy(mergeCheckRetries(ctx.Canary.Spec.CheckRetries, check.GetCheckRetries()))
+	if err != nil {
+		return results.Failf("validation: checkRetries: %v", err)
+	}
+
 	if check.Kubeconfig != nil {
 		ctx = ctx.WithKubernetesConnection(connection.KubernetesConnection{
 			KubeconfigConnection: connection.KubeconfigConnection{
@@ -188,11 +193,6 @@ func (c *KubernetesResourceChecker) check(ctx context.Context, check v1.Kubernet
 		}
 		if err := templater.Walk(&virtualCanary); err != nil {
 			return results.Failf("error templating checks: %v", err)
-		}
-
-		policy, err := newRetryPolicy(mergeCheckRetries(ctx.Canary.Spec.CheckRetries, check.GetCheckRetries()))
-		if err != nil {
-			return results.Failf("invalid checkRetries: %v", err)
 		}
 
 		if !policy.disabled && policy.delay > 0 {

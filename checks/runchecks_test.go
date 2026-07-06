@@ -292,6 +292,34 @@ func TestKubernetesResourceValidateAllowsNilCheckRetries(t *testing.T) {
 	}
 }
 
+func TestKubernetesResourceCheckRejectsInvalidMergedRetriesBeforeKubernetesAccess(t *testing.T) {
+	interval := v1.Duration("not-a-duration")
+	ctx := newRetryTestContext(&v1.CheckRetries{Interval: &interval})
+
+	resource := unstructured.Unstructured{}
+	resource.SetAPIVersion("v1")
+	resource.SetKind("ConfigMap")
+	resource.SetName("cm")
+	resource.SetNamespace("default")
+
+	check := v1.KubernetesResourceCheck{
+		Description: v1.Description{Name: "kubernetes-resource"},
+		Resources:   []unstructured.Unstructured{resource},
+		WaitFor:     v1.KubernetesResourceCheckWaitFor{Disable: true},
+	}
+
+	results := (&KubernetesResourceChecker{}).Check(ctx, check)
+	if len(results) != 1 {
+		t.Fatalf("expected one result, got %#v", results)
+	}
+	if results[0].Pass {
+		t.Fatalf("expected validation failure, got passing result: %#v", results[0])
+	}
+	if !strings.Contains(results[0].Error, "validation:") || !strings.Contains(results[0].Error, "checkRetries: interval") {
+		t.Fatalf("expected merged retry validation error before kubernetes access, got %q", results[0].Error)
+	}
+}
+
 func TestKubernetesResourceCheckDoesNotMutateOriginalSpec(t *testing.T) {
 	ctx := newRetryTestContext(nil)
 	ctx.Canary.Name = "canary"
