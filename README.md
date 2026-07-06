@@ -305,18 +305,55 @@ Your feedback is always welcome!
 
 ## Check Types
 
-This is the current high-level inventory. See the [reference docs](https://canarychecker.io/reference) for full schemas and examples.
-
-| Category | Current checks |
-| --- | --- |
-| Network | [HTTP(s)](https://canarychecker.io/reference/http), [DNS](https://canarychecker.io/reference/dns), [ICMP](https://canarychecker.io/reference/icmp), [TCP](https://canarychecker.io/reference/tcp) |
-| Data sources | [Postgres, MySQL and SQL Server](https://canarychecker.io/reference/sql), [LDAP](https://canarychecker.io/reference/ldap), [MongoDB](https://canarychecker.io/reference/mongo), [Redis](https://canarychecker.io/reference/redis), [Prometheus](https://canarychecker.io/reference/prometheus), [Elasticsearch](https://canarychecker.io/reference/elasticsearch), OpenSearch |
-| Alerts and integrations | [Alertmanager](https://canarychecker.io/reference/alert-manager), [AWS CloudWatch](https://canarychecker.io/reference/aws-cloudwatch), Dynatrace, [Azure DevOps](https://canarychecker.io/reference/azure-devops), [PubSub](https://canarychecker.io/reference/pubsub), [webhooks](https://canarychecker.io/reference/webhook) |
-| Configuration and cloud | [AWS Config](https://canarychecker.io/reference/aws-config), [AWS Config Rule](https://canarychecker.io/reference/aws-config-rule), [Config DB / catalog](https://canarychecker.io/reference/catalog), [Kubernetes](https://canarychecker.io/reference/kubernetes), [Kubernetes Resource](https://canarychecker.io/reference/kubernetes-resource) |
-| Files and backups | [Folder](https://canarychecker.io/reference/folder) checks for local/NFS, S3, GCS, SFTP and SMB/CIFS; [S3 protocol](https://canarychecker.io/reference/s3-protocol); [GCP database backups](https://canarychecker.io/reference/gcs-database-backup); [Restic](https://canarychecker.io/reference/restic) |
-| Test runners and custom checks | [Exec](https://canarychecker.io/reference/exec), [JMeter](https://canarychecker.io/reference/jmeter), [JUnit / BYO](https://canarychecker.io/reference/junit), plus k6, Newman/Postman and Playwright via JUnit-producing containers |
-
-Legacy compatibility fields still exist in the CRD for `pod`, `namespace`, `docker`, `dockerPush`, `containerd`, `containerdPush`, `helm`, `github` and `gitProtocol`, but the runner reports them as removed. Use `kubernetesResource`, `kubernetes`, `exec`, `junit` or `webhook` checks for those workflows.
+| Protocol                                                     | Status     | Checks                                                       |
+| ------------------------------------------------------------ | ---------- | ------------------------------------------------------------ |
+| [HTTP(s)](https://canarychecker.io/reference/http)           | GA         | Response body, headers and duration                          |
+| [DNS](https://canarychecker.io/reference/dns)                | GA         | Response and duration                                        |
+| [Ping/ICMP](https://canarychecker.io/reference/icmp)         | GA         | Duration and packet loss                                     |
+| [TCP](https://canarychecker.io/reference/tcp)                | GA         | Port is open and connectable                                 |
+| **Data Sources**                                             |            |                                                              |
+| [SQL](https://canarychecker.io/reference/sql) (MySQL, Postgres, SQL Server) | GA | Ability to login, results, duration, health exposed via stored procedures |
+| [LDAP](https://canarychecker.io/reference/ldap)              | GA         | Ability to login, response time                              |
+| [Elasticsearch](https://canarychecker.io/reference/elasticsearch) / OpenSearch | GA | Ability to login, response time, size of search results      |
+| [MongoDB](https://canarychecker.io/reference/mongo)          | Beta       | Ability to login, results, duration                          |
+| [Redis](https://canarychecker.io/reference/redis)            | GA         | Ability to login, results, duration                          |
+| [Prometheus](https://canarychecker.io/reference/prometheus)  | GA         | Ability to login, query results and duration                  |
+| **Alerts / Events**                                          |            |                                                              |
+| [Prometheus Alertmanager](https://canarychecker.io/reference/alert-manager) | GA | Pending and firing alerts                                    |
+| [AWS CloudWatch Alarms](https://canarychecker.io/reference/aws-cloudwatch) | GA | Pending and firing alarms                                    |
+| [Dynatrace Problems](./fixtures/external/dynatrace.yaml)     | Beta       | Problems detected                                            |
+| [PubSub](https://canarychecker.io/reference/pubsub)          | Beta       | Messages received from a Pub/Sub subscription                |
+| [Webhook](https://canarychecker.io/reference/webhook)        | GA         | Passive checks created or updated by HTTP POST requests      |
+| **DevOps**                                                   |            |                                                              |
+| [Azure DevOps](https://canarychecker.io/reference/azure-devops) | Beta    | Pipeline status and duration                                 |
+| Git / GitProtocol                                            | Removed    | Use `exec`, `junit` or `webhook` checks instead              |
+| **Integration Testing**                                      |            |                                                              |
+| [Exec](https://canarychecker.io/reference/exec)              | GA         | Run scripts or commands                                      |
+| [JMeter](https://canarychecker.io/reference/jmeter)          | Beta       | Runs and checks the result of a JMeter test                  |
+| [JUnit / BYO](https://canarychecker.io/reference/junit)      | Beta       | Run a pod that saves JUnit test results                      |
+| [K6](https://canarychecker.io/examples/k6)                   | Beta       | Runs k6 tests that export JUnit via a container              |
+| [Newman](https://canarychecker.io/examples/newman)           | Beta       | Runs Newman / Postman tests that export JUnit via a container |
+| [Playwright](https://canarychecker.io/examples/Playwright)   | Beta       | Runs Playwright tests that export JUnit via a container      |
+| **File Systems / Batch**                                     |            |                                                              |
+| [Local Disk / NFS](https://canarychecker.io/reference/folder) | GA        | Check folders for files that are too few/many, too old/new, too small/large |
+| [S3](https://canarychecker.io/reference/folder#s3)           | GA         | Check contents of AWS S3 buckets                             |
+| [GCS](https://canarychecker.io/reference/folder#gcs)         | GA         | Check contents of Google Cloud Storage buckets               |
+| [SFTP](https://canarychecker.io/reference/folder#sftp)       | GA         | Check contents of folders over SFTP                          |
+| [SMB / CIFS](https://canarychecker.io/reference/folder#smb)  | GA         | Check contents of folders over SMB/CIFS                      |
+| **Config**                                                   |            |                                                              |
+| [AWS Config](https://canarychecker.io/reference/aws-config)  | GA         | Query AWS Config using SQL                                   |
+| [AWS Config Rule](https://canarychecker.io/reference/aws-config-rule) | GA  | AWS Config rules that are firing, custom AWS Config queries  |
+| [Config DB / Catalog](https://canarychecker.io/reference/catalog) | GA    | Custom config queries for Mission Control Config DB          |
+| [Kubernetes](https://canarychecker.io/reference/kubernetes)  | GA         | Kubernetes resources that are missing or in a non-ready state |
+| [Kubernetes Resource](https://canarychecker.io/reference/kubernetes-resource) | GA | Create temporary resources, run nested checks and clean up   |
+| **Backups**                                                  |            |                                                              |
+| [GCP Databases](https://canarychecker.io/reference/gcs-database-backup) | GA | Backup freshness                                             |
+| [Restic](https://canarychecker.io/reference/restic)          | Beta       | Backup freshness and integrity                               |
+| **Infrastructure**                                           |            |                                                              |
+| [S3 Protocol](https://canarychecker.io/reference/s3-protocol) | GA        | Ability to read/write/list objects on an S3 compatible object store |
+| Pod / Namespace                                              | Removed    | Use `kubernetesResource` or `kubernetes` checks instead      |
+| Docker / Containerd                                          | Removed    | Use `kubernetesResource` or `exec` checks instead            |
+| Helm                                                         | Removed    | Use `kubernetesResource` or `exec` checks instead            |
 
 ## Contributing
 
