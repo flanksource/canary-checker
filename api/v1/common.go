@@ -409,8 +409,8 @@ type Description struct {
 	// DependsOn lists the checks that must complete before this one runs
 	DependsOn []string `yaml:"dependsOn,omitempty" json:"dependsOn,omitempty"`
 
-	// CheckRetries configures generic retry behavior for this check.
-	CheckRetries *CheckRetries `yaml:"checkRetries,omitempty" json:"checkRetries,omitempty"`
+	// Retries configures generic retry behavior for this check.
+	Retries *CheckRetries `yaml:"retries,omitempty" json:"retries,omitempty"`
 }
 
 func (d Description) String() string {
@@ -476,8 +476,8 @@ func (d Description) GetDependsOn() []string {
 	return d.DependsOn
 }
 
-func (d Description) GetCheckRetries() *CheckRetries {
-	return d.CheckRetries
+func (d Description) GetRetries() *CheckRetries {
+	return d.Retries
 }
 
 type Connection struct {

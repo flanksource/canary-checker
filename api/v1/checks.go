@@ -1016,6 +1016,11 @@ type KubernetesResourceCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 	Relatable   `yaml:",inline" json:",inline"`
+
+	// Deprecated retry config.
+	// Deprecated: use retries.
+	CheckRetries *CheckRetries `yaml:"checkRetries,omitempty" json:"checkRetries,omitempty"`
+
 	// StaticResources are kubernetes resources that are created & only
 	// cleared when the canary is deleted
 	// +kubebuilder:validation:Schemaless
@@ -1135,6 +1140,13 @@ func (c KubernetesResourceCheck) GetType() string {
 
 func (c KubernetesResourceCheck) GetEndpoint() string {
 	return c.Name
+}
+
+func (c KubernetesResourceCheck) GetRetries() *CheckRetries {
+	if c.Retries != nil {
+		return c.Retries
+	}
+	return c.CheckRetries
 }
 
 type ResourceSelector struct {

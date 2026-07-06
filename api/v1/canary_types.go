@@ -46,8 +46,8 @@ type CanarySpec struct {
 	// Replicas pauses the canary if = 0.
 	Replicas *int `yaml:"replicas,omitempty" json:"replicas,omitempty"`
 
-	// CheckRetries configures generic retry behavior for all checks in this canary.
-	CheckRetries *CheckRetries `yaml:"checkRetries,omitempty" json:"checkRetries,omitempty"`
+	// Retries configures generic retry behavior for all checks in this canary.
+	Retries *CheckRetries `yaml:"retries,omitempty" json:"retries,omitempty"`
 
 	Env                map[string]VarSource      `yaml:"env,omitempty" json:"env,omitempty"`
 	HTTP               []HTTPCheck               `yaml:"http,omitempty" json:"http,omitempty"`

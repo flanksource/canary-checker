@@ -54,7 +54,7 @@ func (c *KubernetesResourceChecker) Type() string {
 	return "kubernetes_resource"
 }
 
-// HandlesRetriesInternally keeps kubernetesResource.checkRetries scoped to
+// HandlesRetriesInternally keeps kubernetesResource retries scoped to
 // embedded virtual checks instead of retrying the full resource lifecycle.
 func (c *KubernetesResourceChecker) HandlesRetriesInternally() bool {
 	return true
@@ -88,9 +88,9 @@ func (c *KubernetesResourceChecker) check(ctx context.Context, check v1.Kubernet
 		return results.Failf("validation: %v", err)
 	}
 
-	policy, err := newRetryPolicy(mergeCheckRetries(ctx.Canary.Spec.CheckRetries, check.GetCheckRetries()))
+	policy, err := newRetryPolicy(mergeCheckRetries(ctx.Canary.Spec.Retries, check.GetRetries()))
 	if err != nil {
-		return results.Failf("validation: checkRetries: %v", err)
+		return results.Failf("validation: retries: %v", err)
 	}
 
 	if check.Kubeconfig != nil {
@@ -327,15 +327,16 @@ func (c *KubernetesResourceChecker) validate(ctx context.Context, check v1.Kuber
 		return fmt.Errorf("waitFor.interval: %s", err)
 	}
 
-	if _, err := check.CheckRetries.GetTimeout(); err != nil {
+	retries := check.GetRetries()
+	if _, err := retries.GetTimeout(); err != nil {
 		return fmt.Errorf("timeout: %s", err)
 	}
 
-	if _, err := check.CheckRetries.GetInterval(); err != nil {
+	if _, err := retries.GetInterval(); err != nil {
 		return fmt.Errorf("interval: %s", err)
 	}
 
-	if _, err := check.CheckRetries.GetDelay(); err != nil {
+	if _, err := retries.GetDelay(); err != nil {
 		return fmt.Errorf("delay: %s", err)
 	}
 

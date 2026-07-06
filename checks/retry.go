@@ -12,8 +12,8 @@ import (
 
 const defaultCheckRetryInterval = time.Second
 
-type checkRetriesProvider interface {
-	GetCheckRetries() *v1.CheckRetries
+type retriesProvider interface {
+	GetRetries() *v1.CheckRetries
 }
 
 type internalRetryHandler interface {
@@ -36,7 +36,7 @@ func runCheckWithRetries(ctx *context.Context, checker Checker, check external.C
 
 	policy, err := getRetryPolicy(ctx, check)
 	if err != nil {
-		return pkg.Invalid(check, ctx.Canary, fmt.Sprintf("invalid checkRetries: %v", err)), 0
+		return pkg.Invalid(check, ctx.Canary, fmt.Sprintf("invalid retries: %v", err)), 0
 	}
 
 	if policy.disabled {
@@ -92,15 +92,15 @@ func runCheckAttempt(ctx *context.Context, checker Checker, check external.Check
 }
 
 func getRetryPolicy(ctx *context.Context, check external.Check) (retryPolicy, error) {
-	return newRetryPolicy(mergeCheckRetries(ctx.Canary.Spec.CheckRetries, getCheckRetries(check)))
+	return newRetryPolicy(mergeCheckRetries(ctx.Canary.Spec.Retries, getRetries(check)))
 }
 
-func getCheckRetries(check external.Check) *v1.CheckRetries {
-	provider, ok := check.(checkRetriesProvider)
+func getRetries(check external.Check) *v1.CheckRetries {
+	provider, ok := check.(retriesProvider)
 	if !ok {
 		return nil
 	}
-	return provider.GetCheckRetries()
+	return provider.GetRetries()
 }
 
 func mergeCheckRetries(defaults, override *v1.CheckRetries) *v1.CheckRetries {
@@ -290,7 +290,7 @@ func addRetryData(results pkg.Results, policy retryPolicy, attempts int, elapsed
 			continue
 		}
 		result.AddData(map[string]interface{}{
-			"checkRetries": data,
+			"retries": data,
 		})
 	}
 }

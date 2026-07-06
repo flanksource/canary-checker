@@ -260,9 +260,9 @@
           "type": "array",
           "description": "DependsOn lists the checks that must complete before this one runs"
         },
-        "checkRetries": {
+        "retries": {
           "$ref": "#/$defs/CheckRetries",
-          "description": "CheckRetries configures generic retry behavior for this check."
+          "description": "Retries configures generic retry behavior for this check."
         },
         "test": {
           "$ref": "#/$defs/Template"

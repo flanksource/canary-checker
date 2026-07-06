@@ -188,7 +188,7 @@ func (c *retryTestChecker) Check(ctx *canaryContext.Context, check external.Chec
 	return pkg.Results{result}
 }
 
-func newRetryTestContext(checkRetries *v1.CheckRetries) *canaryContext.Context {
+func newRetryTestContext(retries *v1.CheckRetries) *canaryContext.Context {
 	return &canaryContext.Context{
 		Context:     dutyContext.New(),
 		Namespace:   "default",
@@ -196,7 +196,7 @@ func newRetryTestContext(checkRetries *v1.CheckRetries) *canaryContext.Context {
 		Outputs:     map[string]*pkg.CheckResult{},
 		Canary: v1.Canary{
 			Spec: v1.CanarySpec{
-				CheckRetries: checkRetries,
+				Retries: retries,
 			},
 		},
 	}
@@ -220,9 +220,9 @@ func TestRunCheckWithRetriesRetriesUntilSuccess(t *testing.T) {
 		t.Fatalf("expected final result to pass, got %#v", results)
 	}
 
-	retryData, ok := results[0].Data["checkRetries"].(map[string]interface{})
+	retryData, ok := results[0].Data["retries"].(map[string]interface{})
 	if !ok {
-		t.Fatalf("expected checkRetries data, got %#v", results[0].Data["checkRetries"])
+		t.Fatalf("expected retries data, got %#v", results[0].Data["retries"])
 	}
 	if retryData["attempts"] != 2 || retryData["retries"] != 1 {
 		t.Fatalf("unexpected retry data: %#v", retryData)
@@ -235,8 +235,8 @@ func TestRunCheckWithRetriesDisabledPerCheck(t *testing.T) {
 	disabled := true
 	ctx := newRetryTestContext(&v1.CheckRetries{Interval: &interval, MaxRetries: &maxRetries})
 	check := v1.HTTPCheck{Description: v1.Description{
-		Name:         "no-retry",
-		CheckRetries: &v1.CheckRetries{Disabled: &disabled},
+		Name:    "no-retry",
+		Retries: &v1.CheckRetries{Disabled: &disabled},
 	}}
 	checker := &retryTestChecker{passOnAttempt: 2}
 
@@ -256,8 +256,8 @@ func TestRunCheckWithRetriesCanReenablePerCheck(t *testing.T) {
 	enabled := false
 	ctx := newRetryTestContext(&v1.CheckRetries{Interval: &interval, MaxRetries: &maxRetries, Disabled: &disabled})
 	check := v1.HTTPCheck{Description: v1.Description{
-		Name:         "retry-me",
-		CheckRetries: &v1.CheckRetries{Disabled: &enabled},
+		Name:    "retry-me",
+		Retries: &v1.CheckRetries{Disabled: &enabled},
 	}}
 	checker := &retryTestChecker{passOnAttempt: 2}
 
@@ -305,17 +305,17 @@ func TestInternalRetryHandlerSkipsOuterRetry(t *testing.T) {
 	}
 }
 
-func TestKubernetesResourceCheckRetriesUseDescriptionField(t *testing.T) {
+func TestKubernetesResourceRetriesUseDescriptionField(t *testing.T) {
 	maxRetries := 2
 	disabled := true
 	check := v1.KubernetesResourceCheck{
 		Description: v1.Description{
-			Name:         "kubernetes-resource",
-			CheckRetries: &v1.CheckRetries{MaxRetries: &maxRetries, Disabled: &disabled},
+			Name:    "kubernetes-resource",
+			Retries: &v1.CheckRetries{MaxRetries: &maxRetries, Disabled: &disabled},
 		},
 	}
 
-	retries := check.GetCheckRetries()
+	retries := check.GetRetries()
 	if retries == nil {
 		t.Fatalf("expected retry config")
 	}
@@ -327,10 +327,30 @@ func TestKubernetesResourceCheckRetriesUseDescriptionField(t *testing.T) {
 	}
 }
 
+func TestKubernetesResourceCheckRetriesLegacyFallback(t *testing.T) {
+	legacyMaxRetries := 2
+	newMaxRetries := 3
+	check := v1.KubernetesResourceCheck{
+		Description:  v1.Description{Name: "kubernetes-resource", Retries: &v1.CheckRetries{MaxRetries: &newMaxRetries}},
+		CheckRetries: &v1.CheckRetries{MaxRetries: &legacyMaxRetries},
+	}
+
+	retries := check.GetRetries()
+	if retries == nil || retries.MaxRetries == nil || *retries.MaxRetries != newMaxRetries {
+		t.Fatalf("expected retries to override legacy checkRetries, got %#v", retries)
+	}
+
+	check.Retries = nil
+	retries = check.GetRetries()
+	if retries == nil || retries.MaxRetries == nil || *retries.MaxRetries != legacyMaxRetries {
+		t.Fatalf("expected legacy checkRetries fallback, got %#v", retries)
+	}
+}
+
 func TestKubernetesResourceValidateAllowsNilCheckRetries(t *testing.T) {
 	ctx := newRetryTestContext(nil)
 	if err := (&KubernetesResourceChecker{}).validate(*ctx, v1.KubernetesResourceCheck{}); err != nil {
-		t.Fatalf("expected nil checkRetries to validate, got %v", err)
+		t.Fatalf("expected nil retries to validate, got %v", err)
 	}
 }
 
@@ -357,7 +377,7 @@ func TestKubernetesResourceCheckRejectsInvalidMergedRetriesBeforeKubernetesAcces
 	if results[0].Pass {
 		t.Fatalf("expected validation failure, got passing result: %#v", results[0])
 	}
-	if !strings.Contains(results[0].Error, "validation:") || !strings.Contains(results[0].Error, "checkRetries: interval") {
+	if !strings.Contains(results[0].Error, "validation:") || !strings.Contains(results[0].Error, "retries: interval") {
 		t.Fatalf("expected merged retry validation error before kubernetes access, got %q", results[0].Error)
 	}
 }

@@ -366,8 +366,8 @@ func (in *CanarySpec) DeepCopyInto(out *CanarySpec) {
 		*out = new(int)
 		**out = **in
 	}
-	if in.CheckRetries != nil {
-		in, out := &in.CheckRetries, &out.CheckRetries
+	if in.Retries != nil {
+		in, out := &in.Retries, &out.Retries
 		*out = new(CheckRetries)
 		(*in).DeepCopyInto(*out)
 	}
@@ -1563,8 +1563,8 @@ func (in *Description) DeepCopyInto(out *Description) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.CheckRetries != nil {
-		in, out := &in.CheckRetries, &out.CheckRetries
+	if in.Retries != nil {
+		in, out := &in.Retries, &out.Retries
 		*out = new(CheckRetries)
 		(*in).DeepCopyInto(*out)
 	}
@@ -2358,6 +2358,11 @@ func (in *KubernetesResourceCheck) DeepCopyInto(out *KubernetesResourceCheck) {
 	in.Description.DeepCopyInto(&out.Description)
 	out.Templatable = in.Templatable
 	in.Relatable.DeepCopyInto(&out.Relatable)
+	if in.CheckRetries != nil {
+		in, out := &in.CheckRetries, &out.CheckRetries
+		*out = new(CheckRetries)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.StaticResources != nil {
 		in, out := &in.StaticResources, &out.StaticResources
 		*out = make([]unstructured.Unstructured, len(*in))

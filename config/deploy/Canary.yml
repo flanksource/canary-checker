@@ -86,25 +86,6 @@ spec:
                         items:
                           type: string
                         type: array
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
@@ -222,6 +203,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       test:
                         properties:
                           expr:
@@ -342,25 +342,6 @@ spec:
                         type: string
                       assumeRole:
                         type: string
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
@@ -431,6 +412,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       secretKey:
                         properties:
                           name:
@@ -591,25 +591,6 @@ spec:
                         type: object
                       assumeRole:
                         type: string
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       complianceTypes:
                         description: Filters the results by compliance. The allowed values are INSUFFICIENT_DATA, NON_COMPLIANT, NOT_APPLICABLE, COMPLIANT
                         items:
@@ -688,6 +669,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       rules:
                         description: Specify one or more Config rule names to filter the results by rule.
                         items:
@@ -813,25 +813,6 @@ spec:
                         items:
                           type: string
                         type: array
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         type: string
                       dependsOn:
@@ -942,6 +923,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       test:
                         properties:
                           expr:
@@ -987,25 +987,6 @@ spec:
                 catalog:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       dependsOn:
                         description: DependsOn lists the checks that must complete before this one runs
                         items:
@@ -1067,6 +1048,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       selector:
                         items:
                           properties:
@@ -1155,25 +1155,6 @@ spec:
                       - selector
                     type: object
                   type: array
-                checkRetries:
-                  description: CheckRetries configures generic retry behavior for all checks in this canary.
-                  properties:
-                    delay:
-                      description: Delay is the initial delay before the first check attempt.
-                      type: string
-                    disabled:
-                      description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                      type: boolean
-                    interval:
-                      description: Interval is the delay between retry attempts.
-                      type: string
-                    maxRetries:
-                      description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                      type: integer
-                    timeout:
-                      description: Timeout is the maximum total duration spent retrying a failed check.
-                      type: string
-                  type: object
                 cloudwatch:
                   items:
                     properties:
@@ -1228,25 +1209,6 @@ spec:
                         type: array
                       assumeRole:
                         type: string
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
@@ -1315,6 +1277,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       secretKey:
                         properties:
                           name:
@@ -1445,25 +1426,6 @@ spec:
                 databaseBackup:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       dependsOn:
                         description: DependsOn lists the checks that must complete before this one runs
                         items:
@@ -1591,6 +1553,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       test:
                         properties:
                           expr:
@@ -1622,25 +1603,6 @@ spec:
                 dns:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       dependsOn:
                         description: DependsOn lists the checks that must complete before this one runs
                         items:
@@ -1703,6 +1665,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       server:
                         type: string
                       thresholdMillis:
@@ -1771,25 +1752,6 @@ spec:
                                 type: string
                             type: object
                         type: object
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         type: string
                       dependsOn:
@@ -1855,6 +1817,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       scheme:
                         type: string
                       test:
@@ -1888,25 +1869,6 @@ spec:
                 elasticsearch:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
@@ -2018,6 +1980,25 @@ spec:
                         x-kubernetes-preserve-unknown-fields: true
                       results:
                         type: integer
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       test:
                         properties:
                           expr:
@@ -2170,25 +2151,6 @@ spec:
                             - path
                           type: object
                         type: array
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       checkout:
                         description: Checkout details the git repository that should be mounted to the process
                         properties:
@@ -3159,6 +3121,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       script:
                         description: |-
                           Script can be a inline script or a path to a script that needs to be executed
@@ -3345,25 +3326,6 @@ spec:
                             description: 'Use path style path: http://s3.amazonaws.com/BUCKET/KEY instead of http://BUCKET.s3.amazonaws.com/KEY'
                             type: boolean
                         type: object
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       dependsOn:
                         description: DependsOn lists the checks that must complete before this one runs
                         items:
@@ -3522,6 +3484,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       sftpConnection:
                         properties:
                           connection:
@@ -3907,25 +3888,6 @@ spec:
                       body:
                         description: Request Body Contents
                         type: string
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
@@ -4212,6 +4174,25 @@ spec:
                           - path
                           - value
                         type: object
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       templateBody:
                         description: Template the request body
                         type: boolean
@@ -4431,25 +4412,6 @@ spec:
                 icmp:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       dependsOn:
                         description: DependsOn lists the checks that must complete before this one runs
                         items:
@@ -4507,6 +4469,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       thresholdMillis:
                         format: int64
                         type: integer
@@ -4525,25 +4506,6 @@ spec:
                 jmeter:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       dependsOn:
                         description: DependsOn lists the checks that must complete before this one runs
                         items:
@@ -4651,6 +4613,25 @@ spec:
                       responseDuration:
                         description: ResponseDuration under which the all the test should pass
                         type: string
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       systemProperties:
                         description: SystemProperties defines the java system property
                         items:
@@ -4679,25 +4660,6 @@ spec:
                             - path
                           type: object
                         type: array
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       dependsOn:
                         description: DependsOn lists the checks that must complete before this one runs
                         items:
@@ -4759,6 +4721,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       spec:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
@@ -4805,25 +4786,6 @@ spec:
                           APIVersion is the Kubernetes API version for the resource (e.g., "v1", "apps/v1", "serving.knative.dev/v1").
                           Used to distinguish between resources with the same Kind but different API groups.
                         type: string
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       cnrm:
                         properties:
                           clusterResource:
@@ -5254,6 +5216,25 @@ spec:
                           search:
                             type: string
                         type: object
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       test:
                         properties:
                           expr:
@@ -5287,7 +5268,9 @@ spec:
                   items:
                     properties:
                       checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
+                        description: |-
+                          Deprecated retry config.
+                          Deprecated: use retries.
                         properties:
                           delay:
                             description: Delay is the initial delay before the first check attempt.
@@ -5710,6 +5693,25 @@ spec:
                           Resources are kubernetes resources that are created & cleared
                           after every check run.
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       staticResources:
                         description: |-
                           StaticResources are kubernetes resources that are created & only
@@ -5774,25 +5776,6 @@ spec:
                     properties:
                       bindDN:
                         type: string
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
@@ -5887,6 +5870,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       skipTLSVerify:
                         type: boolean
                       transformDeleteStrategy:
@@ -5945,25 +5947,6 @@ spec:
                 mongodb:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
@@ -6055,6 +6038,25 @@ spec:
                                 type: string
                             type: object
                         type: object
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       transformDeleteStrategy:
                         type: string
                       url:
@@ -6108,25 +6110,6 @@ spec:
                 mssql:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
@@ -6237,6 +6220,25 @@ spec:
                       results:
                         description: Number rows to check for
                         type: integer
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       test:
                         properties:
                           expr:
@@ -6314,25 +6316,6 @@ spec:
                 mysql:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
@@ -6443,6 +6426,25 @@ spec:
                       results:
                         description: Number rows to check for
                         type: integer
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       test:
                         properties:
                           expr:
@@ -6526,25 +6528,6 @@ spec:
                 opensearch:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
@@ -6657,6 +6640,25 @@ spec:
                       results:
                         format: int64
                         type: integer
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       test:
                         properties:
                           expr:
@@ -6742,25 +6744,6 @@ spec:
                 postgres:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
@@ -6871,6 +6854,25 @@ spec:
                       results:
                         description: Number rows to check for
                         type: integer
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       test:
                         properties:
                           expr:
@@ -7129,25 +7131,6 @@ spec:
                                 type: string
                             type: object
                         type: object
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         type: string
                       dependsOn:
@@ -7402,6 +7385,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       test:
                         properties:
                           expr:
@@ -7615,25 +7617,6 @@ spec:
                 pubsub:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       dependsOn:
                         description: DependsOn lists the checks that must complete before this one runs
                         items:
@@ -7804,6 +7787,25 @@ spec:
                           - port
                           - queue
                           - username
+                        type: object
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
                         type: object
                       sqs:
                         properties:
@@ -7987,25 +7989,6 @@ spec:
                       addr:
                         description: 'Deprecated: Use url instead'
                         type: string
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: Connection name e.g. connection://http/google
                         type: string
@@ -8102,6 +8085,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       tlsConfig:
                         description: |-
                           TLSConfig configures TLS for the redis connection. Any non-empty field
@@ -8356,25 +8358,6 @@ spec:
                       checkIntegrity:
                         description: CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry
                         type: boolean
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: Name of the connection used to derive restic password.
                         type: string
@@ -8476,6 +8459,25 @@ spec:
                       repository:
                         description: 'Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name'
                         type: string
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       secretKey:
                         description: SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss
                         properties:
@@ -8529,6 +8531,25 @@ spec:
                   type: array
                 resultMode:
                   type: string
+                retries:
+                  description: Retries configures generic retry behavior for all checks in this canary.
+                  properties:
+                    delay:
+                      description: Delay is the initial delay before the first check attempt.
+                      type: string
+                    disabled:
+                      description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                      type: boolean
+                    interval:
+                      description: Interval is the delay between retry attempts.
+                      type: string
+                    maxRetries:
+                      description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                      type: integer
+                    timeout:
+                      description: Timeout is the maximum total duration spent retrying a failed check.
+                      type: string
+                  type: object
                 s3:
                   items:
                     properties:
@@ -8579,25 +8600,6 @@ spec:
                         type: string
                       bucketName:
                         type: string
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       connection:
                         description: ConnectionName of the connection. It'll be used to populate the endpoint, accessKey and secretKey.
                         type: string
@@ -8658,6 +8660,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       secretKey:
                         properties:
                           name:
@@ -8765,25 +8786,6 @@ spec:
                 tcp:
                   items:
                     properties:
-                      checkRetries:
-                        description: CheckRetries configures generic retry behavior for this check.
-                        properties:
-                          delay:
-                            description: Delay is the initial delay before the first check attempt.
-                            type: string
-                          disabled:
-                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                            type: boolean
-                          interval:
-                            description: Interval is the delay between retry attempts.
-                            type: string
-                          maxRetries:
-                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                            type: integer
-                          timeout:
-                            description: Timeout is the maximum total duration spent retrying a failed check.
-                            type: string
-                        type: object
                       dependsOn:
                         description: DependsOn lists the checks that must complete before this one runs
                         items:
@@ -8847,6 +8849,25 @@ spec:
                       relationships:
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      retries:
+                        description: Retries configures generic retry behavior for this check.
+                        properties:
+                          delay:
+                            description: Delay is the initial delay before the first check attempt.
+                            type: string
+                          disabled:
+                            description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                            type: boolean
+                          interval:
+                            description: Interval is the delay between retry attempts.
+                            type: string
+                          maxRetries:
+                            description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                            type: integer
+                          timeout:
+                            description: Timeout is the maximum total duration spent retrying a failed check.
+                            type: string
+                        type: object
                       test:
                         properties:
                           expr:
@@ -8880,25 +8901,6 @@ spec:
                   type: array
                 webhook:
                   properties:
-                    checkRetries:
-                      description: CheckRetries configures generic retry behavior for this check.
-                      properties:
-                        delay:
-                          description: Delay is the initial delay before the first check attempt.
-                          type: string
-                        disabled:
-                          description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
-                          type: boolean
-                        interval:
-                          description: Interval is the delay between retry attempts.
-                          type: string
-                        maxRetries:
-                          description: MaxRetries is the maximum number of retry attempts after the initial attempt.
-                          type: integer
-                        timeout:
-                          description: Timeout is the maximum total duration spent retrying a failed check.
-                          type: string
-                      type: object
                     dependsOn:
                       description: DependsOn lists the checks that must complete before this one runs
                       items:
@@ -9146,6 +9148,25 @@ spec:
                                 type: object
                             type: object
                           type: array
+                      type: object
+                    retries:
+                      description: Retries configures generic retry behavior for this check.
+                      properties:
+                        delay:
+                          description: Delay is the initial delay before the first check attempt.
+                          type: string
+                        disabled:
+                          description: Disabled disables retries. Set false on a check to override canary-level disabled retries.
+                          type: boolean
+                        interval:
+                          description: Interval is the delay between retry attempts.
+                          type: string
+                        maxRetries:
+                          description: MaxRetries is the maximum number of retry attempts after the initial attempt.
+                          type: integer
+                        timeout:
+                          description: Timeout is the maximum total duration spent retrying a failed check.
+                          type: string
                       type: object
                     test:
                       properties:
