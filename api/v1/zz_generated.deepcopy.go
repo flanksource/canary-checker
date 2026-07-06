@@ -838,6 +838,11 @@ func (in *CheckRetries) DeepCopyInto(out *CheckRetries) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.Disabled != nil {
+		in, out := &in.Disabled, &out.Disabled
+		*out = new(bool)
+		**out = **in
+	}
 	if in.parsedDelay != nil {
 		in, out := &in.parsedDelay, &out.parsedDelay
 		*out = new(timex.Duration)

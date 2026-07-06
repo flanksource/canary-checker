@@ -75,7 +75,7 @@
         },
         "disabled": {
           "type": "boolean",
-          "description": "Disabled disables retries for this check, even when canary-level checkRetries are configured."
+          "description": "Disabled disables retries. Set false on a check to override canary-level disabled retries."
         }
       },
       "additionalProperties": false,

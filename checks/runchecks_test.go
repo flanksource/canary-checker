@@ -232,10 +232,11 @@ func TestRunCheckWithRetriesRetriesUntilSuccess(t *testing.T) {
 func TestRunCheckWithRetriesDisabledPerCheck(t *testing.T) {
 	interval := v1.Duration("1ms")
 	maxRetries := 2
+	disabled := true
 	ctx := newRetryTestContext(&v1.CheckRetries{Interval: &interval, MaxRetries: &maxRetries})
 	check := v1.HTTPCheck{Description: v1.Description{
 		Name:         "no-retry",
-		CheckRetries: &v1.CheckRetries{Disabled: true},
+		CheckRetries: &v1.CheckRetries{Disabled: &disabled},
 	}}
 	checker := &retryTestChecker{passOnAttempt: 2}
 
@@ -245,6 +246,46 @@ func TestRunCheckWithRetriesDisabledPerCheck(t *testing.T) {
 	}
 	if len(results) != 1 || results[0].Pass {
 		t.Fatalf("expected final result to fail, got %#v", results)
+	}
+}
+
+func TestRunCheckWithRetriesCanReenablePerCheck(t *testing.T) {
+	interval := v1.Duration("1ms")
+	maxRetries := 2
+	disabled := true
+	enabled := false
+	ctx := newRetryTestContext(&v1.CheckRetries{Interval: &interval, MaxRetries: &maxRetries, Disabled: &disabled})
+	check := v1.HTTPCheck{Description: v1.Description{
+		Name:         "retry-me",
+		CheckRetries: &v1.CheckRetries{Disabled: &enabled},
+	}}
+	checker := &retryTestChecker{passOnAttempt: 2}
+
+	results, _ := runCheckWithRetries(ctx, checker, check)
+	if checker.attempts != 2 {
+		t.Fatalf("expected 2 attempts, got %d", checker.attempts)
+	}
+	if len(results) != 1 || !results[0].Pass {
+		t.Fatalf("expected final result to pass, got %#v", results)
+	}
+}
+
+func TestRunCheckWithRetriesRejectsZeroIntervalWithTimeout(t *testing.T) {
+	interval := v1.Duration("0s")
+	timeout := v1.Duration("1s")
+	ctx := newRetryTestContext(&v1.CheckRetries{Interval: &interval, Timeout: &timeout})
+	check := v1.HTTPCheck{Description: v1.Description{Name: "zero-interval"}}
+	checker := &retryTestChecker{passOnAttempt: 2}
+
+	results, _ := runCheckWithRetries(ctx, checker, check)
+	if checker.attempts != 0 {
+		t.Fatalf("expected no attempts for invalid retry policy, got %d", checker.attempts)
+	}
+	if len(results) != 1 || !results[0].Invalid {
+		t.Fatalf("expected invalid result, got %#v", results)
+	}
+	if !strings.Contains(results[0].Error, "interval must be greater than zero") {
+		t.Fatalf("expected interval validation error, got %q", results[0].Error)
 	}
 }
 
@@ -266,10 +307,11 @@ func TestInternalRetryHandlerSkipsOuterRetry(t *testing.T) {
 
 func TestKubernetesResourceCheckRetriesUseDescriptionField(t *testing.T) {
 	maxRetries := 2
+	disabled := true
 	check := v1.KubernetesResourceCheck{
 		Description: v1.Description{
 			Name:         "kubernetes-resource",
-			CheckRetries: &v1.CheckRetries{MaxRetries: &maxRetries, Disabled: true},
+			CheckRetries: &v1.CheckRetries{MaxRetries: &maxRetries, Disabled: &disabled},
 		},
 	}
 
@@ -277,7 +319,7 @@ func TestKubernetesResourceCheckRetriesUseDescriptionField(t *testing.T) {
 	if retries == nil {
 		t.Fatalf("expected retry config")
 	}
-	if !retries.Disabled {
+	if retries.Disabled == nil || !*retries.Disabled {
 		t.Fatalf("expected disabled flag to be returned")
 	}
 	if retries.MaxRetries == nil || *retries.MaxRetries != maxRetries {

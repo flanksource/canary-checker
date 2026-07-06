@@ -962,8 +962,8 @@ type CheckRetries struct {
 	Interval *Duration `json:"interval,omitempty" yaml:"interval,omitempty"`
 	// MaxRetries is the maximum number of retry attempts after the initial attempt.
 	MaxRetries *int `json:"maxRetries,omitempty" yaml:"maxRetries,omitempty"`
-	// Disabled disables retries for this check, even when canary-level checkRetries are configured.
-	Disabled bool `json:"disabled,omitempty" yaml:"disabled,omitempty"`
+	// Disabled disables retries. Set false on a check to override canary-level disabled retries.
+	Disabled *bool `json:"disabled,omitempty" yaml:"disabled,omitempty"`
 
 	parsedDelay    *time.Duration `json:"-" yaml:"-"`
 	parsedTimeout  *time.Duration `json:"-" yaml:"-"`

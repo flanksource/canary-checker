@@ -107,9 +107,6 @@ func mergeCheckRetries(defaults, override *v1.CheckRetries) *v1.CheckRetries {
 	if defaults == nil && override == nil {
 		return nil
 	}
-	if override != nil && override.Disabled {
-		return &v1.CheckRetries{Disabled: true}
-	}
 
 	merged := &v1.CheckRetries{}
 	if defaults != nil {
@@ -132,6 +129,9 @@ func mergeCheckRetries(defaults, override *v1.CheckRetries) *v1.CheckRetries {
 		if override.MaxRetries != nil {
 			merged.MaxRetries = override.MaxRetries
 		}
+		if override.Disabled != nil {
+			merged.Disabled = override.Disabled
+		}
 	}
 
 	return merged
@@ -144,8 +144,10 @@ func newRetryPolicy(config *v1.CheckRetries) (retryPolicy, error) {
 
 	policy := retryPolicy{
 		configured: true,
-		disabled:   config.Disabled,
 		maxRetries: config.MaxRetries,
+	}
+	if config.Disabled != nil {
+		policy.disabled = *config.Disabled
 	}
 	if policy.disabled {
 		return policy, nil
@@ -173,6 +175,9 @@ func newRetryPolicy(config *v1.CheckRetries) (retryPolicy, error) {
 	}
 	if policy.maxRetries != nil && *policy.maxRetries < 0 {
 		return policy, fmt.Errorf("maxRetries cannot be negative")
+	}
+	if policy.timeout > 0 && config.Interval != nil && policy.interval == 0 {
+		return policy, fmt.Errorf("interval must be greater than zero when timeout is configured")
 	}
 
 	if policy.retryEnabled() && policy.interval == 0 && config.Interval == nil {
