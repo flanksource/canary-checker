@@ -17,7 +17,7 @@
 </div>
 
 ---
-Canary Checker is a Kubernetes-native platform for monitoring application and infrastructure health using both active synthetic checks and passive signal ingestion.
+Canary Checker is a Kubernetes-native platform for monitoring health across applications and infrastructure using both passive and active (synthetic) mechanisms.
 
 ## Features
 
