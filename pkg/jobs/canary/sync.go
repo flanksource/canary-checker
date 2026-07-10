@@ -176,13 +176,14 @@ func newCanaryJob(c CanaryJob) error {
 		Retention:            job.RetentionBalanced,
 		ResourceID:           c.DBCanary.ID.String(),
 		ResourceType:         "canary",
-		ID:                   fmt.Sprintf("%s/%s", c.Canary.Namespace, c.Canary.Name),
+		Aliases:              []string{fmt.Sprintf("%s/%s", c.Canary.Namespace, c.Canary.Name)},
 		Fn:                   c.Run,
 	}
 
 	if err := j.AddToScheduler(CanaryScheduler); err != nil {
-		return fmt.Errorf("failed to schedule canary %s: %w", j.ID, err)
+		return fmt.Errorf("failed to schedule canary %s (alias: %v): %w", j.ID(), j.Aliases, err)
 	}
+
 	canaryJobs.Store(c.DBCanary.ID.String(), j)
 
 	return nil
