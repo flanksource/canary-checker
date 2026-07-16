@@ -10,6 +10,8 @@ spec:
       display:
         expr: missing.join("\n")
       crawl:
+        disallowedURLFilters:
+          - /cdn-cgi/
         parallelism: 2
         delay: 100ms
         randomDelay: 50ms
