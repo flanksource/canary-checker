@@ -12,7 +12,7 @@ export ROOT=$(pwd)
 echo "::group::Provisioning"
 
 ## starting the postgres as docker container
-docker run --rm -p 5433:5432  --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres:14.1
+docker run --rm -p 5433:5432  --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres:17
 
 curl https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh -o wait-for-it.sh;
 chmod +x wait-for-it.sh;
