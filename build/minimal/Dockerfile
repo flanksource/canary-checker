@@ -15,7 +15,7 @@ RUN go mod download
 COPY ./ ./
 RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM flanksource/base-image:0.7.1@sha256:5e819e83199855d20ba5b988e8a6f369c6f4332fa6f07c184c99838d06a77cc8
+FROM flanksource/base-image:0.8.0@sha256:b0cf87d5baa8fcfaad1294a09168f4215b1d2e98cec9ff93a49e48f2dd8fb0a6
 ARG TARGETARCH
 
 WORKDIR /app
