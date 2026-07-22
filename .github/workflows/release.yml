@@ -332,7 +332,7 @@ jobs:
   push-helm-chart:
     needs: [semantic-release, helm]
     if: always() && needs.semantic-release.outputs.published == 'true' && needs.helm.result == 'success'
-    uses: flanksource/action-workflows/.github/workflows/push-helm-chart.yml@e5cf4306853b95b7e815392359b6105169ecc37a # main
+    uses: flanksource/action-workflows/.github/workflows/push-helm-chart.yml@9fd60679e9076cb97698a5582d0de65d9f5f99d9 # main
     with:
       filename_regex: "canary-checker-*.tgz"
       version: ${{ needs.helm.outputs.release-version }}
@@ -355,6 +355,6 @@ jobs:
       )
     permissions:
       contents: write
-    uses: flanksource/action-workflows/.github/workflows/publish-release.yml@e22094854bc7759abafb4ee49cb5585a5ccf91b0 # main
+    uses: flanksource/action-workflows/.github/workflows/publish-release.yml@9fd60679e9076cb97698a5582d0de65d9f5f99d9 # main
     with:
       tag: ${{ needs.semantic-release.outputs.tag }}
