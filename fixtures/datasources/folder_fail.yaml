@@ -9,6 +9,13 @@ spec:
       name: min count fail
       minCount: 100000
       maxAge: 4m
+      metrics:
+        - name: folder_error
+          type: counter
+          value: 'pass ? 0 : 1'
+          labels:
+            - name: error_type
+              valueExpr: 'pass ? "none" : (errorType != "" ? errorType : "unknown")'
     - path: /etc/
       recursive: true
       name: min count recursive

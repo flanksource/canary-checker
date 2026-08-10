@@ -244,6 +244,9 @@ func (ctx *Context) Tracef(format string, args ...interface{}) {
 func (ctx *Context) WithCheckResult(result *pkg.CheckResult) *Context {
 	ctx = ctx.WithCheck(result.Check)
 	ctx.Environment["duration"] = result.Duration
+	ctx.Environment["error"] = result.Error
+	ctx.Environment["message"] = result.Message
+	ctx.Environment["pass"] = result.Pass
 	for k, v := range result.Data {
 		ctx.Environment[k] = v
 	}

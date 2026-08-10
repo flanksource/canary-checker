@@ -11,18 +11,17 @@ import (
 )
 
 func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
-	result := pkg.Success(check, ctx.Canary)
-	var results pkg.Results
-	results = append(results, result)
+	result := newFolderResult(ctx, check)
+	results := result.ToSlice()
 
 	serverPath := strings.TrimPrefix(check.Path, "smb://")
 	server, share, path, err := extractServerDetails(serverPath)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return errorFolder(results, folderConnectionError, err)
 	}
 
 	if err := check.SMBConnection.Populate(ctx); err != nil {
-		return results.Failf("failed to populate SMB connection: %v", err)
+		return failFolder(results, folderConnectionError, "failed to populate SMB connection: %v", err)
 	}
 
 	if server != "" {
@@ -35,12 +34,13 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	fs, err := artifacts.GetFSForConnection(ctx.Context, check.SMBConnection.ToModel())
 	if err != nil {
-		return results.ErrorMessage(err)
+		return errorFolder(results, folderConnectionError, err)
 	}
 
 	folders, err := genericFolderCheck(ctx, fs, path, check.Recursive, check.Filter)
+	result.AddDetails(folders)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return errorFolder(results, folderListingError, err)
 	}
 
 	var totalBlockCount, freeBlockCount, blockSize int // TODO:
@@ -49,10 +49,7 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	result.AddDetails(folders)
 
-	if test := folders.Test(check.FolderTest); test != "" {
-		return results.Failf("%s", test)
-	}
-	return results
+	return applyFolderTest(results, folders, check.FolderTest)
 }
 
 func extractServerDetails(serverPath string) (server, sharename, searchPath string, err error) {

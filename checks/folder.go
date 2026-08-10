@@ -1,7 +1,6 @@
 package checks
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"strings"
@@ -50,6 +49,34 @@ func init() {
 type FolderChecker struct {
 }
 
+const (
+	folderConfigurationError = "configuration_error"
+	folderConnectionError    = "connection_error"
+	folderListingError       = "listing_error"
+)
+
+func newFolderResult(ctx *context.Context, check v1.FolderCheck) *pkg.CheckResult {
+	return pkg.Success(check, ctx.Canary).AddData(map[string]interface{}{"errorType": ""})
+}
+
+func failFolder(results pkg.Results, errorType, message string, args ...interface{}) pkg.Results {
+	results[0].Data["errorType"] = errorType
+	return results.Failf(message, args...)
+}
+
+func errorFolder(results pkg.Results, errorType string, err error) pkg.Results {
+	results[0].Data["errorType"] = errorType
+	return results.ErrorMessage(err)
+}
+
+func applyFolderTest(results pkg.Results, folders FolderCheck, test v1.FolderTest) pkg.Results {
+	errorType, message := folders.test(test)
+	if message == "" {
+		return results
+	}
+	return failFolder(results, errorType, "%s", message)
+}
+
 func (c *FolderChecker) Type() string {
 	return "folder"
 }
@@ -67,7 +94,9 @@ func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) pk
 	ctx = ctx.WithCheck(check)
 	if ctx.CanTemplate() {
 		if err := ctx.TemplateStruct(&check); err != nil {
-			return pkg.Invalid(check, ctx.Canary, fmt.Sprintf("failed to template check: %v", err))
+			result := newFolderResult(ctx, check)
+			result.Invalid = true
+			return failFolder(result.ToSlice(), folderConfigurationError, "failed to template check: %v", err)
 		}
 	}
 	path := strings.ToLower(check.Path)
@@ -89,29 +118,25 @@ func (c *FolderChecker) Check(ctx *context.Context, extConfig external.Check) pk
 }
 
 func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
-	result := pkg.Success(check, ctx.Canary)
-	var results pkg.Results
-	results = append(results, result)
+	result := newFolderResult(ctx, check)
+	results := result.ToSlice()
 
 	// Form a dummy connection to get a local filesystem
 	localFS, err := artifacts.GetFSForConnection(ctx.Context, models.Connection{
 		Type: models.ConnectionTypeFolder,
 	})
 	if err != nil {
-		return results.ErrorMessage(err)
+		return errorFolder(results, folderConnectionError, err)
 	}
 
 	folders, err := genericFolderCheck(ctx, localFS, check.Path, check.Recursive, check.Filter)
 	result.AddDetails(folders)
 
 	if err != nil {
-		return results.ErrorMessage(err)
+		return errorFolder(results, folderListingError, err)
 	}
 
-	if test := folders.Test(check.FolderTest); test != "" {
-		return results.Failf("%s", test)
-	}
-	return results
+	return applyFolderTest(results, folders, check.FolderTest)
 }
 
 func genericFolderCheck(ctx *context.Context, dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {

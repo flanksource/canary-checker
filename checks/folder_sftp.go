@@ -8,28 +8,23 @@ import (
 )
 
 func CheckSFTP(ctx *context.Context, check v1.FolderCheck) pkg.Results {
-	result := pkg.Success(check, ctx.Canary)
-	var results pkg.Results
-	results = append(results, result)
+	result := newFolderResult(ctx, check)
+	results := result.ToSlice()
 
 	if err := check.SFTPConnection.HydrateConnection(ctx); err != nil {
-		return results.Failf("failed to populate SFTP connection: %v", err)
+		return failFolder(results, folderConnectionError, "failed to populate SFTP connection: %v", err)
 	}
 
 	fs, err := artifacts.GetFSForConnection(ctx.Context, check.SFTPConnection.ToModel())
 	if err != nil {
-		return results.ErrorMessage(err)
+		return errorFolder(results, folderConnectionError, err)
 	}
 
 	folders, err := genericFolderCheck(ctx, fs, check.Path, check.Recursive, check.Filter)
-	if err != nil {
-		return results.ErrorMessage(err)
-	}
 	result.AddDetails(folders)
-
-	if test := folders.Test(check.FolderTest); test != "" {
-		return results.Failf("%s", test)
+	if err != nil {
+		return errorFolder(results, folderListingError, err)
 	}
 
-	return results
+	return applyFolderTest(results, folders, check.FolderTest)
 }
