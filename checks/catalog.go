@@ -2,6 +2,7 @@ package checks
 
 import (
 	canaryContext "github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/duty/query"
@@ -22,7 +23,8 @@ func (c *CatalogChecker) Run(ctx *canaryContext.Context) pkg.Results {
 	return results
 }
 
-func (c *CatalogChecker) Check(ctx *canaryContext.Context, check v1.CatalogCheck) pkg.Results {
+func (c *CatalogChecker) Check(ctx *canaryContext.Context, extConfig external.Check) pkg.Results {
+	check := extConfig.(v1.CatalogCheck)
 	result := pkg.Success(check, ctx.Canary)
 
 	var results pkg.Results

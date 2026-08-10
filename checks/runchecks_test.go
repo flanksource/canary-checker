@@ -4,8 +4,13 @@ import (
 	"strings"
 	"testing"
 
+	canaryContext "github.com/flanksource/canary-checker/api/context"
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
+	dutyContext "github.com/flanksource/duty/context"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	k8sTypes "k8s.io/apimachinery/pkg/types"
 )
 
 func TestSortChecksByDependency(t *testing.T) {
@@ -156,5 +161,262 @@ func TestSortChecksByDependency(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+type retryTestChecker struct {
+	attempts      int
+	passOnAttempt int
+}
+
+type internalRetryTestChecker struct {
+	retryTestChecker
+}
+
+func (c *internalRetryTestChecker) HandlesRetriesInternally() bool { return true }
+
+func (c *retryTestChecker) Type() string { return "http" }
+func (c *retryTestChecker) Run(ctx *canaryContext.Context) pkg.Results {
+	return nil
+}
+func (c *retryTestChecker) Check(ctx *canaryContext.Context, check external.Check) pkg.Results {
+	c.attempts++
+	result := pkg.Success(check, ctx.Canary)
+	if c.passOnAttempt == 0 || c.attempts < c.passOnAttempt {
+		result.Failf("attempt %d failed", c.attempts)
+	}
+	return pkg.Results{result}
+}
+
+func newRetryTestContext(retries *v1.CheckRetries) *canaryContext.Context {
+	return &canaryContext.Context{
+		Context:     dutyContext.New(),
+		Namespace:   "default",
+		Environment: map[string]interface{}{},
+		Outputs:     map[string]*pkg.CheckResult{},
+		Canary: v1.Canary{
+			Spec: v1.CanarySpec{
+				Retries: retries,
+			},
+		},
+	}
+}
+
+func TestRunCheckWithRetriesRetriesUntilSuccess(t *testing.T) {
+	interval := v1.Duration("1ms")
+	maxRetries := 2
+	ctx := newRetryTestContext(&v1.CheckRetries{Interval: &interval, MaxRetries: &maxRetries})
+	check := v1.HTTPCheck{Description: v1.Description{Name: "retry-me"}}
+	checker := &retryTestChecker{passOnAttempt: 2}
+
+	results, skipped := runCheckWithRetries(ctx, checker, check)
+	if skipped != 0 {
+		t.Fatalf("expected no skipped results, got %d", skipped)
+	}
+	if checker.attempts != 2 {
+		t.Fatalf("expected 2 attempts, got %d", checker.attempts)
+	}
+	if len(results) != 1 || !results[0].Pass {
+		t.Fatalf("expected final result to pass, got %#v", results)
+	}
+
+	retryData, ok := results[0].Data["retries"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected retries data, got %#v", results[0].Data["retries"])
+	}
+	if retryData["attempts"] != 2 || retryData["retries"] != 1 {
+		t.Fatalf("unexpected retry data: %#v", retryData)
+	}
+}
+
+func TestRunCheckWithRetriesDisabledPerCheck(t *testing.T) {
+	interval := v1.Duration("1ms")
+	maxRetries := 2
+	disabled := true
+	ctx := newRetryTestContext(&v1.CheckRetries{Interval: &interval, MaxRetries: &maxRetries})
+	check := v1.HTTPCheck{Description: v1.Description{
+		Name:    "no-retry",
+		Retries: &v1.CheckRetries{Disabled: &disabled},
+	}}
+	checker := &retryTestChecker{passOnAttempt: 2}
+
+	results, _ := runCheckWithRetries(ctx, checker, check)
+	if checker.attempts != 1 {
+		t.Fatalf("expected 1 attempt, got %d", checker.attempts)
+	}
+	if len(results) != 1 || results[0].Pass {
+		t.Fatalf("expected final result to fail, got %#v", results)
+	}
+}
+
+func TestRunCheckWithRetriesCanReenablePerCheck(t *testing.T) {
+	interval := v1.Duration("1ms")
+	maxRetries := 2
+	disabled := true
+	enabled := false
+	ctx := newRetryTestContext(&v1.CheckRetries{Interval: &interval, MaxRetries: &maxRetries, Disabled: &disabled})
+	check := v1.HTTPCheck{Description: v1.Description{
+		Name:    "retry-me",
+		Retries: &v1.CheckRetries{Disabled: &enabled},
+	}}
+	checker := &retryTestChecker{passOnAttempt: 2}
+
+	results, _ := runCheckWithRetries(ctx, checker, check)
+	if checker.attempts != 2 {
+		t.Fatalf("expected 2 attempts, got %d", checker.attempts)
+	}
+	if len(results) != 1 || !results[0].Pass {
+		t.Fatalf("expected final result to pass, got %#v", results)
+	}
+}
+
+func TestRunCheckWithRetriesRejectsZeroIntervalWithTimeout(t *testing.T) {
+	interval := v1.Duration("0s")
+	timeout := v1.Duration("1s")
+	ctx := newRetryTestContext(&v1.CheckRetries{Interval: &interval, Timeout: &timeout})
+	check := v1.HTTPCheck{Description: v1.Description{Name: "zero-interval"}}
+	checker := &retryTestChecker{passOnAttempt: 2}
+
+	results, _ := runCheckWithRetries(ctx, checker, check)
+	if checker.attempts != 0 {
+		t.Fatalf("expected no attempts for invalid retry policy, got %d", checker.attempts)
+	}
+	if len(results) != 1 || !results[0].Invalid {
+		t.Fatalf("expected invalid result, got %#v", results)
+	}
+	if !strings.Contains(results[0].Error, "interval must be greater than zero") {
+		t.Fatalf("expected interval validation error, got %q", results[0].Error)
+	}
+}
+
+func TestInternalRetryHandlerSkipsOuterRetry(t *testing.T) {
+	interval := v1.Duration("1ms")
+	maxRetries := 2
+	ctx := newRetryTestContext(&v1.CheckRetries{Interval: &interval, MaxRetries: &maxRetries})
+	check := v1.HTTPCheck{Description: v1.Description{Name: "internal-retry"}}
+	checker := &internalRetryTestChecker{retryTestChecker: retryTestChecker{passOnAttempt: 2}}
+
+	results, _ := runCheckWithRetries(ctx, checker, check)
+	if checker.attempts != 1 {
+		t.Fatalf("expected outer retry wrapper to skip internal retry handler, got %d attempts", checker.attempts)
+	}
+	if len(results) != 1 || results[0].Pass {
+		t.Fatalf("expected single failed result, got %#v", results)
+	}
+}
+
+func TestKubernetesResourceRetriesUseDescriptionField(t *testing.T) {
+	maxRetries := 2
+	disabled := true
+	check := v1.KubernetesResourceCheck{
+		Description: v1.Description{
+			Name:    "kubernetes-resource",
+			Retries: &v1.CheckRetries{MaxRetries: &maxRetries, Disabled: &disabled},
+		},
+	}
+
+	retries := check.GetRetries()
+	if retries == nil {
+		t.Fatalf("expected retry config")
+	}
+	if retries.Disabled == nil || !*retries.Disabled {
+		t.Fatalf("expected disabled flag to be returned")
+	}
+	if retries.MaxRetries == nil || *retries.MaxRetries != maxRetries {
+		t.Fatalf("expected maxRetries=%d, got %#v", maxRetries, retries.MaxRetries)
+	}
+}
+
+func TestKubernetesResourceCheckRetriesLegacyFallback(t *testing.T) {
+	legacyMaxRetries := 2
+	newMaxRetries := 3
+	check := v1.KubernetesResourceCheck{
+		Description:  v1.Description{Name: "kubernetes-resource", Retries: &v1.CheckRetries{MaxRetries: &newMaxRetries}},
+		CheckRetries: &v1.CheckRetries{MaxRetries: &legacyMaxRetries},
+	}
+
+	retries := check.GetRetries()
+	if retries == nil || retries.MaxRetries == nil || *retries.MaxRetries != newMaxRetries {
+		t.Fatalf("expected retries to override legacy checkRetries, got %#v", retries)
+	}
+
+	check.Retries = nil
+	retries = check.GetRetries()
+	if retries == nil || retries.MaxRetries == nil || *retries.MaxRetries != legacyMaxRetries {
+		t.Fatalf("expected legacy checkRetries fallback, got %#v", retries)
+	}
+}
+
+func TestKubernetesResourceValidateAllowsNilCheckRetries(t *testing.T) {
+	ctx := newRetryTestContext(nil)
+	if err := (&KubernetesResourceChecker{}).validate(*ctx, v1.KubernetesResourceCheck{}); err != nil {
+		t.Fatalf("expected nil retries to validate, got %v", err)
+	}
+}
+
+func TestKubernetesResourceCheckRejectsInvalidMergedRetriesBeforeKubernetesAccess(t *testing.T) {
+	interval := v1.Duration("not-a-duration")
+	ctx := newRetryTestContext(&v1.CheckRetries{Interval: &interval})
+
+	resource := unstructured.Unstructured{}
+	resource.SetAPIVersion("v1")
+	resource.SetKind("ConfigMap")
+	resource.SetName("cm")
+	resource.SetNamespace("default")
+
+	check := v1.KubernetesResourceCheck{
+		Description: v1.Description{Name: "kubernetes-resource"},
+		Resources:   []unstructured.Unstructured{resource},
+		WaitFor:     v1.KubernetesResourceCheckWaitFor{Disable: true},
+	}
+
+	results := (&KubernetesResourceChecker{}).Check(ctx, check)
+	if len(results) != 1 {
+		t.Fatalf("expected one result, got %#v", results)
+	}
+	if results[0].Pass {
+		t.Fatalf("expected validation failure, got passing result: %#v", results[0])
+	}
+	if !strings.Contains(results[0].Error, "validation:") || !strings.Contains(results[0].Error, "retries: interval") {
+		t.Fatalf("expected merged retry validation error before kubernetes access, got %q", results[0].Error)
+	}
+}
+
+func TestKubernetesResourceCheckDoesNotMutateOriginalSpec(t *testing.T) {
+	ctx := newRetryTestContext(nil)
+	ctx.Canary.Name = "canary"
+	ctx.Canary.Namespace = "default"
+	ctx.Canary.UID = k8sTypes.UID("canary-id")
+	ctx.Canary.Status.Checks = map[string]string{"kubernetes-resource": "check-id"}
+
+	resource := unstructured.Unstructured{}
+	resource.SetAPIVersion("v1")
+	resource.SetKind("ConfigMap")
+	resource.SetName("cm")
+	resource.SetNamespace("default")
+	resource.SetLabels(map[string]string{"existing": "true"})
+
+	check := v1.KubernetesResourceCheck{
+		Description: v1.Description{Name: "kubernetes-resource"},
+		Resources:   []unstructured.Unstructured{resource},
+		WaitFor:     v1.KubernetesResourceCheckWaitFor{Disable: true},
+	}
+
+	_ = (&KubernetesResourceChecker{}).Check(ctx, check)
+
+	labels := check.Resources[0].GetLabels()
+	if len(labels) != 1 || labels["existing"] != "true" {
+		t.Fatalf("expected original labels to remain unchanged, got %#v", labels)
+	}
+	if ownerRefs := check.Resources[0].GetOwnerReferences(); len(ownerRefs) != 0 {
+		t.Fatalf("expected original owner references to remain unchanged, got %#v", ownerRefs)
+	}
+}
+
+func TestAllCheckersImplementSingleCheckRunner(t *testing.T) {
+	for _, checker := range All {
+		if _, ok := checker.(SingleCheckRunner); !ok {
+			t.Errorf("checker %s does not implement SingleCheckRunner", checker.Type())
+		}
 	}
 }

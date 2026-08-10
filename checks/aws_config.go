@@ -5,6 +5,7 @@ package checks
 import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/duty/connection"
@@ -28,7 +29,8 @@ func (c *AwsConfigChecker) Type() string {
 	return "awsconfig"
 }
 
-func (c *AwsConfigChecker) Check(ctx *context.Context, check v1.AwsConfigCheck) pkg.Results {
+func (c *AwsConfigChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+	check := extConfig.(v1.AwsConfigCheck)
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)

@@ -953,33 +953,39 @@ type KubernetesResourceChecks struct {
 	CanarySpec `yaml:",inline" json:",inline"`
 }
 
-type KubernetesResourceCheckRetries struct {
-	// Delay is the initial delay
-	Delay    *Duration `json:"delay,omitempty"`
-	Timeout  *Duration `json:"timeout,omitempty"`
-	Interval *Duration `json:"interval,omitempty"`
+type CheckRetries struct {
+	// Delay is the initial delay before the first check attempt.
+	Delay *Duration `json:"delay,omitempty" yaml:"delay,omitempty"`
+	// Timeout is the maximum total duration spent retrying a failed check.
+	Timeout *Duration `json:"timeout,omitempty" yaml:"timeout,omitempty"`
+	// Interval is the delay between retry attempts.
+	Interval *Duration `json:"interval,omitempty" yaml:"interval,omitempty"`
+	// MaxRetries is the maximum number of retry attempts after the initial attempt.
+	MaxRetries *int `json:"maxRetries,omitempty" yaml:"maxRetries,omitempty"`
+	// Disabled disables retries. Set false on a check to override canary-level disabled retries.
+	Disabled *bool `json:"disabled,omitempty" yaml:"disabled,omitempty"`
 
-	parsedDelay    *time.Duration `json:"-"`
-	parsedTimeout  *time.Duration `json:"-"`
-	parsedInterval *time.Duration `json:"-"`
+	parsedDelay    *time.Duration `json:"-" yaml:"-"`
+	parsedTimeout  *time.Duration `json:"-" yaml:"-"`
+	parsedInterval *time.Duration `json:"-" yaml:"-"`
 }
 
-func (t *KubernetesResourceCheckRetries) GetDelay() (time.Duration, error) {
-	if t.Delay == nil {
+func (t *CheckRetries) GetDelay() (time.Duration, error) {
+	if t == nil || t.Delay == nil {
 		return time.Duration(0), nil
 	}
 	return t.Delay.GetDurationOrZero()
 }
 
-func (t *KubernetesResourceCheckRetries) GetTimeout() (time.Duration, error) {
-	if t.Timeout == nil {
+func (t *CheckRetries) GetTimeout() (time.Duration, error) {
+	if t == nil || t.Timeout == nil {
 		return time.Duration(0), nil
 	}
 	return t.Timeout.GetDurationOrZero()
 }
 
-func (t *KubernetesResourceCheckRetries) GetInterval() (time.Duration, error) {
-	if t.Interval == nil {
+func (t *CheckRetries) GetInterval() (time.Duration, error) {
+	if t == nil || t.Interval == nil {
 		return time.Duration(0), nil
 	}
 	return t.Interval.GetDurationOrZero()
@@ -1010,6 +1016,11 @@ type KubernetesResourceCheck struct {
 	Description `yaml:",inline" json:",inline"`
 	Templatable `yaml:",inline" json:",inline"`
 	Relatable   `yaml:",inline" json:",inline"`
+
+	// Deprecated retry config.
+	// Deprecated: use retries.
+	CheckRetries *CheckRetries `yaml:"checkRetries,omitempty" json:"checkRetries,omitempty"`
+
 	// StaticResources are kubernetes resources that are created & only
 	// cleared when the canary is deleted
 	// +kubebuilder:validation:Schemaless
@@ -1025,9 +1036,6 @@ type KubernetesResourceCheck struct {
 	// Checks to run against the kubernetes resources.
 	// +kubebuilder:validation:XPreserveUnknownFields
 	Checks []KubernetesResourceChecks `json:"checks,omitempty"`
-
-	// Set initial delays and retry intervals for checks.
-	CheckRetries KubernetesResourceCheckRetries `json:"checkRetries,omitempty"`
 
 	// Ensure that the resources are deleted before creating them.
 	ClearResources bool `json:"clearResources,omitempty"`
@@ -1132,6 +1140,13 @@ func (c KubernetesResourceCheck) GetType() string {
 
 func (c KubernetesResourceCheck) GetEndpoint() string {
 	return c.Name
+}
+
+func (c KubernetesResourceCheck) GetRetries() *CheckRetries {
+	if c.Retries != nil {
+		return c.Retries
+	}
+	return c.CheckRetries
 }
 
 type ResourceSelector struct {

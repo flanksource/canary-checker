@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
+	"github.com/flanksource/canary-checker/api/external"
 	"github.com/flanksource/commons/utils"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -58,7 +59,8 @@ func (c *S3Checker) Type() string {
 	return "s3"
 }
 
-func (c *S3Checker) Check(ctx *context.Context, check v1.S3Check) pkg.Results {
+func (c *S3Checker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+	check := extConfig.(v1.S3Check)
 	result := pkg.Success(check, ctx.Canary)
 	var results pkg.Results
 	results = append(results, result)

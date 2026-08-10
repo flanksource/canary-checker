@@ -18,11 +18,14 @@ func (c *removedChecker) Type() string { return c.typeName }
 func (c *removedChecker) Run(ctx *context.Context) pkg.Results {
 	var results pkg.Results
 	for _, conf := range c.specFn(ctx) {
-		result := pkg.Success(conf, ctx.Canary)
-		results = append(results, result)
-		results.Failf(removedMessage)
+		results = append(results, c.Check(ctx, conf)...)
 	}
 	return results
+}
+
+func (c *removedChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
+	result := pkg.Success(extConfig, ctx.Canary)
+	return pkg.Results{result}.Failf(removedMessage)
 }
 
 func toChecks[T external.Check](items []T) []external.Check {
