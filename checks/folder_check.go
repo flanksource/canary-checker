@@ -65,6 +65,11 @@ func (f *FolderCheck) Append(osFile os.FileInfo) {
 	f.Files = append(f.Files, *file)
 }
 
+func (f FolderCheck) Test(test v1.FolderTest) string {
+	_, message := f.test(test)
+	return message
+}
+
 func (f FolderCheck) test(test v1.FolderTest) (errorType, message string) {
 	minAge, err := test.GetMinAge()
 	if err != nil {

@@ -173,6 +173,9 @@ func TestFolderTestErrorTypes(t *testing.T) {
 			if (message != "") != tt.wantFailed {
 				t.Errorf("message = %q, wantFailed = %v", message, tt.wantFailed)
 			}
+			if got := tt.folder.Test(tt.test); got != message {
+				t.Errorf("Test() = %q, want %q", got, message)
+			}
 		})
 	}
 }
@@ -281,5 +284,41 @@ func TestFolderInfrastructureErrorTypes(t *testing.T) {
 	}
 	if _, ok := listingResults[0].Data["results"].(FolderCheck); !ok {
 		t.Errorf("listing results = %#v, want FolderCheck details", listingResults[0].Data["results"])
+	}
+}
+
+func TestUnsupportedFolderCapacityIsIndependentOfContents(t *testing.T) {
+	ctx := checkContext.New(dutyContext.New(), v1.Canary{})
+	capacityTests := []struct {
+		name string
+		test v1.FolderTest
+	}{
+		{name: "available-size", test: v1.FolderTest{AvailableSize: "2b"}},
+		{name: "total-size", test: v1.FolderTest{TotalSize: "2b"}},
+	}
+	for _, tt := range capacityTests {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, withFile := range []bool{false, true} {
+				name := "empty"
+				dir := t.TempDir()
+				if withFile {
+					name = "non-empty"
+					if err := os.WriteFile(dir+"/one.txt", []byte("test"), 0o600); err != nil {
+						t.Fatalf("failed to create test file: %v", err)
+					}
+				}
+
+				t.Run(name, func(t *testing.T) {
+					results := checkLocalFolder(ctx, v1.FolderCheck{
+						Description: v1.Description{Name: name},
+						Path:        dir,
+						FolderTest:  tt.test,
+					})
+					if got := results[0].Data["errorType"]; got != folderConfigurationError {
+						t.Errorf("errorType = %#v, want %q", got, folderConfigurationError)
+					}
+				})
+			}
+		})
 	}
 }

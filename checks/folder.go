@@ -140,7 +140,10 @@ func checkLocalFolder(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 }
 
 func genericFolderCheck(ctx *context.Context, dirFS artifactFS.Filesystem, path string, recursive bool, filter v1.FolderFilter) (FolderCheck, error) {
-	result := FolderCheck{}
+	result := FolderCheck{
+		AvailableSize: SizeNotSupported,
+		TotalSize:     SizeNotSupported,
+	}
 	_filter, err := filter.New()
 	if err != nil {
 		return result, err
@@ -161,15 +164,13 @@ func genericFolderCheck(ctx *context.Context, dirFS artifactFS.Filesystem, path 
 		}
 
 		if fileInfo == nil {
-			return FolderCheck{}, nil
+			return result, nil
 		}
 
 		// listing is empty, returning duration of directory
-		return FolderCheck{
-			Oldest:        newFile(fileInfo),
-			Newest:        newFile(fileInfo),
-			AvailableSize: SizeNotSupported,
-			TotalSize:     SizeNotSupported}, nil
+		result.Oldest = newFile(fileInfo)
+		result.Newest = newFile(fileInfo)
+		return result, nil
 	}
 
 	for _, file := range files {

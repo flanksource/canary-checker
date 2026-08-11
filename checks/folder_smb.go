@@ -38,11 +38,6 @@ func CheckSmb(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	}
 
 	folders, err := genericFolderCheck(ctx, fs, path, check.Recursive, check.Filter)
-	if err == nil {
-		var totalBlockCount, freeBlockCount, blockSize int // TODO:
-		folders.AvailableSize = int64(freeBlockCount * blockSize)
-		folders.TotalSize = int64(totalBlockCount * blockSize)
-	}
 	result.AddDetails(folders)
 
 	if err != nil {
