@@ -75,10 +75,11 @@ func TestWithCheckResultExposesResultFields(t *testing.T) {
 	ctx := New(dutyCtx.New(), canary).WithCheckResult(result)
 
 	want := map[string]any{
-		"duration": int64(123),
-		"error":    "failure reason",
-		"message":  "display message",
-		"pass":     false,
+		"duration":  int64(123),
+		"error":     "failure reason",
+		"errorType": "",
+		"message":   "display message",
+		"pass":      false,
 	}
 	for key, expected := range want {
 		if actual := ctx.Environment[key]; actual != expected {
@@ -91,9 +92,10 @@ func TestWithCheckResultDataTakesPrecedence(t *testing.T) {
 	check := v1.FolderCheck{Description: v1.Description{Name: "folder"}}
 	canary := v1.Canary{}
 	data := map[string]any{
-		"error":   "data error",
-		"message": "data message",
-		"pass":    "data pass",
+		"error":     "data error",
+		"errorType": "min_count",
+		"message":   "data message",
+		"pass":      "data pass",
 	}
 	result := pkg.Success(check, canary).AddData(data)
 

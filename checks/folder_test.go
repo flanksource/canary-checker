@@ -7,6 +7,7 @@ import (
 
 	checkContext "github.com/flanksource/canary-checker/api/context"
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 	dutyContext "github.com/flanksource/duty/context"
 	. "github.com/onsi/gomega"
 )
@@ -50,59 +51,115 @@ func TestFolderTestErrorTypes(t *testing.T) {
 			wantFailed: false,
 		},
 		{
+			name:       "invalid minimum age",
+			folder:     FolderCheck{},
+			test:       v1.FolderTest{MinAge: "5x"},
+			errorType:  folderConfigurationError,
+			wantFailed: true,
+		},
+		{
+			name:       "invalid maximum age",
+			folder:     FolderCheck{},
+			test:       v1.FolderTest{MaxAge: "5x"},
+			errorType:  folderConfigurationError,
+			wantFailed: true,
+		},
+		{
 			name:       "minimum count",
 			folder:     FolderCheck{Files: []File{newFile}},
 			test:       v1.FolderTest{MinCount: &minCount},
-			errorType:  "min_count",
+			errorType:  folderMinCountError,
 			wantFailed: true,
 		},
 		{
 			name:       "maximum count",
 			folder:     FolderCheck{Files: []File{newFile, oldFile}},
 			test:       v1.FolderTest{MaxCount: &maxCount},
-			errorType:  "max_count",
+			errorType:  folderMaxCountError,
 			wantFailed: true,
 		},
 		{
 			name:       "minimum age",
 			folder:     FolderCheck{Files: []File{newFile}, Newest: &newFile, Oldest: &newFile},
 			test:       v1.FolderTest{MinAge: "1h"},
-			errorType:  "min_age",
+			errorType:  folderMinAgeError,
 			wantFailed: true,
 		},
 		{
 			name:       "maximum age",
 			folder:     FolderCheck{Files: []File{oldFile}, Newest: &oldFile, Oldest: &oldFile},
 			test:       v1.FolderTest{MaxAge: "1h"},
-			errorType:  "max_age",
+			errorType:  folderMaxAgeError,
 			wantFailed: true,
 		},
 		{
 			name:       "minimum size",
 			folder:     FolderCheck{Files: []File{newFile}, Newest: &newFile, Oldest: &newFile, MinSize: &newFile, MaxSize: &newFile},
 			test:       v1.FolderTest{MinSize: "2b"},
-			errorType:  "min_size",
+			errorType:  folderMinSizeError,
 			wantFailed: true,
 		},
 		{
 			name:       "maximum size",
 			folder:     FolderCheck{Files: []File{oldFile}, Newest: &oldFile, Oldest: &oldFile, MinSize: &oldFile, MaxSize: &oldFile},
 			test:       v1.FolderTest{MaxSize: "2b"},
-			errorType:  "max_size",
+			errorType:  folderMaxSizeError,
 			wantFailed: true,
 		},
 		{
 			name:       "available size",
 			folder:     FolderCheck{AvailableSize: 1},
 			test:       v1.FolderTest{AvailableSize: "2b"},
-			errorType:  "available_size",
+			errorType:  folderAvailableSizeError,
 			wantFailed: true,
 		},
 		{
 			name:       "total size",
 			folder:     FolderCheck{TotalSize: 1},
 			test:       v1.FolderTest{TotalSize: "2b"},
-			errorType:  "total_size",
+			errorType:  folderTotalSizeError,
+			wantFailed: true,
+		},
+		{
+			name:       "available size not supported",
+			folder:     FolderCheck{AvailableSize: SizeNotSupported},
+			test:       v1.FolderTest{AvailableSize: "2b"},
+			errorType:  folderConfigurationError,
+			wantFailed: true,
+		},
+		{
+			name:       "invalid available size",
+			folder:     FolderCheck{AvailableSize: 1},
+			test:       v1.FolderTest{AvailableSize: "5x"},
+			errorType:  folderConfigurationError,
+			wantFailed: true,
+		},
+		{
+			name:       "total size not supported",
+			folder:     FolderCheck{TotalSize: SizeNotSupported},
+			test:       v1.FolderTest{TotalSize: "2b"},
+			errorType:  folderConfigurationError,
+			wantFailed: true,
+		},
+		{
+			name:       "invalid total size",
+			folder:     FolderCheck{TotalSize: 1},
+			test:       v1.FolderTest{TotalSize: "5x"},
+			errorType:  folderConfigurationError,
+			wantFailed: true,
+		},
+		{
+			name:       "invalid minimum size",
+			folder:     FolderCheck{Files: []File{newFile}, MinSize: &newFile, MaxSize: &newFile},
+			test:       v1.FolderTest{MinSize: "5x"},
+			errorType:  folderConfigurationError,
+			wantFailed: true,
+		},
+		{
+			name:       "invalid maximum size",
+			folder:     FolderCheck{Files: []File{newFile}, MinSize: &newFile, MaxSize: &newFile},
+			test:       v1.FolderTest{MaxSize: "5x"},
+			errorType:  folderConfigurationError,
 			wantFailed: true,
 		},
 	}
@@ -174,6 +231,32 @@ func TestFolderResultErrorTypeIsAvailableToTemplates(t *testing.T) {
 	}
 	if value != "none" {
 		t.Errorf("passing template value = %q, want none", value)
+	}
+}
+
+func TestErrorTypeIsAvailableToTemplatesForGenericResults(t *testing.T) {
+	check := v1.FolderCheck{Description: v1.Description{Name: "folder"}}
+	canary := v1.Canary{}
+	tests := []struct {
+		name   string
+		result *pkg.CheckResult
+		want   string
+	}{
+		{name: "success", result: pkg.Success(check, canary), want: "none"},
+		{name: "invalid", result: pkg.Invalid(check, canary, "invalid retries: boom")[0], want: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := checkContext.New(dutyContext.New(), canary).WithCheckResult(tt.result)
+			value, err := template(ctx, v1.Template{Expression: `pass ? "none" : errorType`})
+			if err != nil {
+				t.Fatalf("failed to evaluate errorType: %v", err)
+			}
+			if value != tt.want {
+				t.Errorf("template value = %q, want %q", value, tt.want)
+			}
+		})
 	}
 }
 

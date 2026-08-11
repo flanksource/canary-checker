@@ -65,19 +65,14 @@ func (f *FolderCheck) Append(osFile os.FileInfo) {
 	f.Files = append(f.Files, *file)
 }
 
-func (f FolderCheck) Test(test v1.FolderTest) string {
-	_, message := f.test(test)
-	return message
-}
-
 func (f FolderCheck) test(test v1.FolderTest) (errorType, message string) {
 	minAge, err := test.GetMinAge()
 	if err != nil {
-		return folderMinAgeError, fmt.Sprintf("invalid duration %s: %v", test.MinAge, err)
+		return folderConfigurationError, fmt.Sprintf("invalid duration %s: %v", test.MinAge, err)
 	}
 	maxAge, err := test.GetMaxAge()
 	if err != nil {
-		return folderMaxAgeError, fmt.Sprintf("invalid duration %s: %v", test.MaxAge, err)
+		return folderConfigurationError, fmt.Sprintf("invalid duration %s: %v", test.MaxAge, err)
 	}
 
 	if test.MinCount != nil && len(f.Files) < *test.MinCount {
@@ -89,11 +84,11 @@ func (f FolderCheck) test(test v1.FolderTest) (errorType, message string) {
 
 	if test.AvailableSize != "" {
 		if f.AvailableSize == SizeNotSupported {
-			return folderAvailableSizeError, "available size not supported"
+			return folderConfigurationError, "available size not supported"
 		}
 		size, err := test.AvailableSize.Value()
 		if err != nil {
-			return folderAvailableSizeError, fmt.Sprintf("%s is an invalid size: %s", test.AvailableSize, err)
+			return folderConfigurationError, fmt.Sprintf("%s is an invalid size: %s", test.AvailableSize, err)
 		}
 		if f.AvailableSize < *size {
 			return folderAvailableSizeError, fmt.Sprintf("available size too small: %v < %v", mb(f.AvailableSize), test.AvailableSize)
@@ -102,11 +97,11 @@ func (f FolderCheck) test(test v1.FolderTest) (errorType, message string) {
 
 	if test.TotalSize != "" {
 		if f.TotalSize == SizeNotSupported {
-			return folderTotalSizeError, "total size not supported"
+			return folderConfigurationError, "total size not supported"
 		}
 		size, err := test.TotalSize.Value()
 		if err != nil {
-			return folderTotalSizeError, fmt.Sprintf("%s is an invalid size: %s", test.TotalSize, err)
+			return folderConfigurationError, fmt.Sprintf("%s is an invalid size: %s", test.TotalSize, err)
 		}
 		if f.TotalSize < *size {
 			return folderTotalSizeError, fmt.Sprintf("total size too small: %v < %v", mb(f.TotalSize), test.TotalSize)
@@ -127,7 +122,7 @@ func (f FolderCheck) test(test v1.FolderTest) (errorType, message string) {
 	if test.MinSize != "" {
 		size, err := test.MinSize.Value()
 		if err != nil {
-			return folderMinSizeError, fmt.Sprintf("%s is an invalid size: %s", test.MinSize, err)
+			return folderConfigurationError, fmt.Sprintf("%s is an invalid size: %s", test.MinSize, err)
 		}
 		if f.MinSize.Size < *size {
 			return folderMinSizeError, fmt.Sprintf("%s is too small: %v < %v", f.MinSize.Name, mb(f.MinSize.Size), test.MinSize)
@@ -137,7 +132,7 @@ func (f FolderCheck) test(test v1.FolderTest) (errorType, message string) {
 	if test.MaxSize != "" {
 		size, err := test.MaxSize.Value()
 		if err != nil {
-			return folderMaxSizeError, fmt.Sprintf("%s is an invalid size: %s", test.MaxSize, err)
+			return folderConfigurationError, fmt.Sprintf("%s is an invalid size: %s", test.MaxSize, err)
 		}
 		if f.MaxSize.Size > *size {
 			return folderMaxSizeError, fmt.Sprintf("%s is too large: %v > %v", f.MaxSize.Name, mb(f.MaxSize.Size), test.MaxSize)
