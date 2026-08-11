@@ -125,9 +125,9 @@ func (f FolderCheck) test(test v1.FolderTest) (errorType, message string) {
 	if test.MaxSize != "" {
 		size, err := test.MaxSize.Value()
 		if err != nil {
-			return "max_size", fmt.Sprintf("%s is an invalid size: %s", test.MinSize, err)
+			return "max_size", fmt.Sprintf("%s is an invalid size: %s", test.MaxSize, err)
 		}
-		if f.MaxSize.Size < *size {
+		if f.MaxSize.Size > *size {
 			return "max_size", fmt.Sprintf("%s is too large: %v > %v", f.MaxSize.Name, mb(f.MaxSize.Size), test.MaxSize)
 		}
 	}

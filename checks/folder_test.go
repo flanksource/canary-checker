@@ -85,6 +85,13 @@ func TestFolderTestErrorTypes(t *testing.T) {
 			wantFailed: true,
 		},
 		{
+			name:       "maximum size",
+			folder:     FolderCheck{Files: []File{oldFile}, Newest: &oldFile, Oldest: &oldFile, MinSize: &oldFile, MaxSize: &oldFile},
+			test:       v1.FolderTest{MaxSize: "2b"},
+			errorType:  "max_size",
+			wantFailed: true,
+		},
+		{
 			name:       "available size",
 			folder:     FolderCheck{AvailableSize: 1},
 			test:       v1.FolderTest{AvailableSize: "2b"},
