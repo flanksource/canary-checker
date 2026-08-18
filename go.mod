@@ -9,8 +9,8 @@ require (
 	github.com/flanksource/commons v1.53.1
 	github.com/flanksource/deps v1.0.35 // indirect
 	github.com/flanksource/duty v1.0.1351
-	github.com/flanksource/gomplate/v3 v3.24.84
-	github.com/flanksource/is-healthy v1.0.88
+	github.com/flanksource/gomplate/v3 v3.24.89
+	github.com/flanksource/is-healthy v1.0.90
 	github.com/flanksource/kommons v0.31.7
 )
 
@@ -34,7 +34,7 @@ require (
 	github.com/go-sql-driver/mysql v1.10.0
 	github.com/gobwas/glob v0.2.3
 	github.com/gocolly/colly/v2 v2.3.0
-	github.com/google/cel-go v0.28.1
+	github.com/google/cel-go v0.31.0
 	github.com/google/uuid v1.6.0
 	github.com/invopop/jsonschema v0.14.0
 	github.com/jackc/pgx/v5 v5.10.0
@@ -87,7 +87,7 @@ require (
 	gopkg.in/flanksource/yaml.v3 v3.2.3
 	gorm.io/gorm v1.31.1
 	k8s.io/api v0.36.1
-	k8s.io/apimachinery v0.36.1
+	k8s.io/apimachinery v0.36.2
 	k8s.io/client-go v0.36.1
 	sigs.k8s.io/controller-runtime v0.24.1
 )
@@ -428,6 +428,9 @@ require (
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
+	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
+	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
+	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8 // indirect
 	github.com/xlab/treeprint v1.2.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
@@ -487,7 +490,7 @@ require (
 	k8s.io/cli-runtime v0.31.1 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a // indirect
-	k8s.io/streaming v0.36.1 // indirect
+	k8s.io/streaming v0.36.2 // indirect
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2 // indirect
 	layeh.com/gopher-json v0.0.0-20201124131017-552bb3c4c3bf // indirect
 	modernc.org/libc v1.72.3 // indirect
