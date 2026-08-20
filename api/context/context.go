@@ -244,6 +244,14 @@ func (ctx *Context) Tracef(format string, args ...interface{}) {
 func (ctx *Context) WithCheckResult(result *pkg.CheckResult) *Context {
 	ctx = ctx.WithCheck(result.Check)
 	ctx.Environment["duration"] = result.Duration
+	ctx.Environment["error"] = result.Error
+	ctx.Environment["message"] = result.Message
+	ctx.Environment["pass"] = result.Pass
+	// errorType is a stable, low-cardinality alternative to the human-readable error
+	// for metric labels and alerts. Folder checks populate it today, but generic failure
+	// paths do not. Declare it here because CEL resolves identifiers at compile time,
+	// including identifiers in conditional branches that are not evaluated.
+	ctx.Environment["errorType"] = ""
 	for k, v := range result.Data {
 		ctx.Environment[k] = v
 	}

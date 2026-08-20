@@ -20,19 +20,18 @@ type S3 struct {
 }
 
 func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
-	result := pkg.Success(check, ctx.Canary)
-	var results pkg.Results
-	results = append(results, result)
+	result := newFolderResult(ctx, check)
+	results := result.ToSlice()
 
 	if check.S3Connection == nil {
-		return results.ErrorMessage(errors.New("missing AWS connection"))
+		return errorFolder(results, folderConnectionError, errors.New("missing AWS connection"))
 	}
 
 	var bucket string
 	bucket, check.Path = parseS3Path(check.Path)
 
 	if err := check.S3Connection.Populate(ctx); err != nil {
-		return results.ErrorMessage(err)
+		return errorFolder(results, folderConnectionError, err)
 	}
 
 	conn := check.S3Connection.ToModel()
@@ -40,7 +39,7 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	fs, err := artifacts.GetFSForConnection(ctx.Context, conn)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return errorFolder(results, folderConnectionError, err)
 	}
 
 	if limitFS, ok := fs.(artifactFS.ListItemLimiter); ok {
@@ -48,16 +47,12 @@ func CheckS3Bucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 	}
 
 	folders, err := genericFolderCheck(ctx, fs, check.Path, check.Recursive, check.Filter)
-	if err != nil {
-		return results.ErrorMessage(err)
-	}
 	result.AddDetails(folders)
-
-	if test := folders.Test(check.FolderTest); test != "" {
-		return results.Failf("%s", test)
+	if err != nil {
+		return errorFolder(results, folderListingError, err)
 	}
 
-	return results
+	return applyFolderTest(results, folders, check.FolderTest)
 }
 
 // parseS3Path returns the bucket name and the actual path stripping of the s3:// prefix and the bucket name.

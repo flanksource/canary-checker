@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 	dutyCtx "github.com/flanksource/duty/context"
 )
 
@@ -60,5 +61,49 @@ func TestGetConnectionPreservesConnectionKeys(t *testing.T) {
 	// Connection-specific "namespace" (test-ns) should take precedence over environment's
 	if result.URL != "http://test-ns/api" {
 		t.Errorf("got URL %q, want %q", result.URL, "http://test-ns/api")
+	}
+}
+
+func TestWithCheckResultExposesResultFields(t *testing.T) {
+	check := v1.FolderCheck{Description: v1.Description{Name: "folder"}}
+	canary := v1.Canary{}
+	result := pkg.Success(check, canary)
+	result.Duration = 123
+	result.Message = "display message"
+	result.Failf("failure reason")
+
+	ctx := New(dutyCtx.New(), canary).WithCheckResult(result)
+
+	want := map[string]any{
+		"duration":  int64(123),
+		"error":     "failure reason",
+		"errorType": "",
+		"message":   "display message",
+		"pass":      false,
+	}
+	for key, expected := range want {
+		if actual := ctx.Environment[key]; actual != expected {
+			t.Errorf("Environment[%q] = %#v, want %#v", key, actual, expected)
+		}
+	}
+}
+
+func TestWithCheckResultDataTakesPrecedence(t *testing.T) {
+	check := v1.FolderCheck{Description: v1.Description{Name: "folder"}}
+	canary := v1.Canary{}
+	data := map[string]any{
+		"error":     "data error",
+		"errorType": "min_count",
+		"message":   "data message",
+		"pass":      "data pass",
+	}
+	result := pkg.Success(check, canary).AddData(data)
+
+	ctx := New(dutyCtx.New(), canary).WithCheckResult(result)
+
+	for key, expected := range data {
+		if actual := ctx.Environment[key]; actual != expected {
+			t.Errorf("Environment[%q] = %#v, want data value %#v", key, actual, expected)
+		}
 	}
 }

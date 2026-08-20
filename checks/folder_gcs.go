@@ -18,12 +18,11 @@ type GCS struct {
 }
 
 func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
-	result := pkg.Success(check, ctx.Canary)
-	var results pkg.Results
-	results = append(results, result)
+	result := newFolderResult(ctx, check)
+	results := result.ToSlice()
 
 	if check.GCSConnection == nil {
-		return results.ErrorMessage(errors.New("missing GCS connection"))
+		return errorFolder(results, folderConnectionError, errors.New("missing GCS connection"))
 	}
 
 	var bucket string
@@ -31,7 +30,7 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 	connection, err := ctx.HydrateConnectionByURL(check.GCPConnection.ConnectionName)
 	if err != nil {
-		return results.Failf("failed to populate GCS connection: %v", err)
+		return failFolder(results, folderConnectionError, "failed to populate GCS connection: %v", err)
 	} else if connection == nil {
 		connection = &models.Connection{Type: models.ConnectionTypeGCS}
 		if check.GCSConnection.Bucket == "" {
@@ -40,26 +39,22 @@ func CheckGCSBucket(ctx *context.Context, check v1.FolderCheck) pkg.Results {
 
 		connection, err = connection.Merge(ctx, check.GCSConnection)
 		if err != nil {
-			return results.Failf("failed to populate GCS connection: %v", err)
+			return failFolder(results, folderConnectionError, "failed to populate GCS connection: %v", err)
 		}
 	}
 
 	fs, err := artifacts.GetFSForConnection(ctx.Context, *connection)
 	if err != nil {
-		return results.ErrorMessage(err)
+		return errorFolder(results, folderConnectionError, err)
 	}
 
 	folders, err := genericFolderCheck(ctx, fs, check.Path, check.Recursive, check.Filter)
-	if err != nil {
-		return results.ErrorMessage(err)
-	}
 	result.AddDetails(folders)
-
-	if test := folders.Test(check.FolderTest); test != "" {
-		return results.Failf("%s", test)
+	if err != nil {
+		return errorFolder(results, folderListingError, err)
 	}
 
-	return results
+	return applyFolderTest(results, folders, check.FolderTest)
 }
 
 // parseGCSPath returns the bucket name and the actual path stripping of the gcs:// prefix and the bucket name.
