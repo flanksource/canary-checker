@@ -8,7 +8,7 @@ require (
 	github.com/flanksource/artifacts v1.0.24
 	github.com/flanksource/commons v1.56.0
 	github.com/flanksource/deps v1.0.40 // indirect
-	github.com/flanksource/duty v1.0.1368
+	github.com/flanksource/duty v1.0.1371
 	github.com/flanksource/gomplate/v3 v3.24.89
 	github.com/flanksource/is-healthy v1.0.90
 	github.com/flanksource/kommons v0.31.7
