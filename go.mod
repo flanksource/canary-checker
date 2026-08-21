@@ -6,11 +6,11 @@ godebug x509negativeserial=1
 
 require (
 	github.com/flanksource/artifacts v1.0.24
-	github.com/flanksource/commons v1.56.0
-	github.com/flanksource/deps v1.0.40 // indirect
-	github.com/flanksource/duty v1.0.1368
+	github.com/flanksource/commons v1.57.0
+	github.com/flanksource/deps v1.0.41 // indirect
+	github.com/flanksource/duty v1.0.1371
 	github.com/flanksource/gomplate/v3 v3.24.89
-	github.com/flanksource/is-healthy v1.0.90
+	github.com/flanksource/is-healthy v1.0.91
 	github.com/flanksource/kommons v0.31.7
 )
 
@@ -27,7 +27,7 @@ require (
 	github.com/eko/gocache/lib/v4 v4.2.3
 	github.com/eko/gocache/store/bigcache/v4 v4.2.4
 	github.com/elastic/go-elasticsearch/v8 v8.19.4
-	github.com/flanksource/clicky v1.21.55
+	github.com/flanksource/clicky v1.21.56
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.13
 	github.com/go-logr/logr v1.4.3
@@ -48,8 +48,8 @@ require (
 	github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0
 	github.com/microsoft/go-mssqldb v1.10.0
 	github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1
-	github.com/onsi/ginkgo/v2 v2.29.0
-	github.com/onsi/gomega v1.40.0
+	github.com/onsi/ginkgo/v2 v2.32.1
+	github.com/onsi/gomega v1.42.1
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -135,6 +135,7 @@ require (
 	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b // indirect
 	github.com/alecthomas/chroma/v2 v2.23.1 // indirect
+	github.com/alpkeskin/gotoon v0.1.1 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/antchfx/htmlquery v1.3.5 // indirect
 	github.com/antchfx/xmlquery v1.5.1 // indirect
