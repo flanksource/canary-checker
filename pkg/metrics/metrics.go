@@ -287,7 +287,7 @@ func Record(
 		switch {
 		case result.Invalid:
 			OpsInvalidCount.WithLabelValues(checkMetricLabels...).Inc()
-		case result.InternalError:
+		case result.FailureType == pkg.FailureInternal:
 			OpsErrorCount.WithLabelValues(checkMetricLabels...).Inc()
 		default:
 			fail.Append(1)
