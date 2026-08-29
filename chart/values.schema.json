@@ -414,6 +414,9 @@
     "readinessProbe": {
       "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Probe"
     },
+    "startupProbe": {
+      "$ref": "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Probe"
+    },
     "replicas": {
       "default": 1,
       "title": "replicas"
