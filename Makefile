@@ -157,10 +157,11 @@ compress:
 compress-build:
 	upx -5 ./$(RELEASE_DIR)/$(NAME) ./$(RELEASE_DIR)/$(NAME).test
 
-.PHONY: linux
-linux:
-	GOOS=linux GOARCH=amd64 go build  -o ./$(RELEASE_DIR)/$(NAME)_linux_amd64 $(LD_FLAGS)  main.go
-	GOOS=linux GOARCH=arm64 go build  -o ./$(RELEASE_DIR)/$(NAME)_linux_arm64 $(LD_FLAGS)  main.go
+.PHONY: linux linux-amd64 linux-arm64
+linux: linux-amd64 linux-arm64
+
+linux-amd64 linux-arm64: linux-%:
+	GOOS=linux GOARCH=$* go build -o ./$(RELEASE_DIR)/$(NAME)_linux_$* $(LD_FLAGS) main.go
 
 .PHONY: darwin
 darwin:
