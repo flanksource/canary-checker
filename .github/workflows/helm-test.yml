@@ -37,8 +37,8 @@ jobs:
           file: ./build/full/Dockerfile
           push: true
           tags: kind-registry:5000/flanksource/canary-checker:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=helm-full-amd64
+          cache-to: type=gha,scope=helm-full-amd64,mode=max
         env:
           KIND_REGISTRY: kind-registry:5000
 

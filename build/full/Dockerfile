@@ -13,7 +13,9 @@ COPY go.sum /app/go.sum
 RUN go mod download
 
 COPY ./ ./
-RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
+# Keep compiler scratch data out of exported layers; retain the module download layer.
+RUN --mount=type=cache,target=/root/.cache/go-build,id=go-1.26.1-${TARGETOS}-${TARGETARCH} \
+    OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
 FROM flanksource/base-image-canary-checker:0.7.1@sha256:010f16e33084db3b94a4b741b5c895fa1274a3b5864bdc05b924940289c456cc
 ARG TARGETARCH

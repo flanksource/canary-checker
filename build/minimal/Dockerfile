@@ -13,7 +13,9 @@ COPY go.sum /app/go.sum
 RUN go mod download
 
 COPY ./ ./
-RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
+# Keep compiler scratch data out of exported layers; retain the module download layer.
+RUN --mount=type=cache,target=/root/.cache/go-build,id=go-1.26.1-${TARGETOS}-${TARGETARCH} \
+    OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
 FROM flanksource/base-image:0.7.1@sha256:5e819e83199855d20ba5b988e8a6f369c6f4332fa6f07c184c99838d06a77cc8
 ARG TARGETARCH
