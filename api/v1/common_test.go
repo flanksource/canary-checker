@@ -17,6 +17,7 @@ func TestDescriptionGetNamespace(t *testing.T) {
 		{name: "empty string", namespace: `""`},
 		{name: "escaped string", namespace: `"netpol\u002dprobe-a"`, want: "netpol-probe-a"},
 		{name: "legacy selector", namespace: `{"name":"netpol-probe-a"}`, want: "netpol-probe-a"},
+		{name: "legacy selector with whitespace", namespace: " \n\t{\"name\":\"netpol-probe-a\"}", want: "netpol-probe-a"},
 		{name: "invalid JSON", namespace: `"unterminated`},
 	} {
 		t.Run(tt.name, func(t *testing.T) {

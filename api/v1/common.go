@@ -450,7 +450,7 @@ func (d Description) GetHash() string {
 }
 
 func (d Description) GetNamespace() string {
-	s := string(d.Namespace)
+	s := strings.TrimSpace(string(d.Namespace))
 	if s == "" || s == "{}" {
 		return ""
 	}
