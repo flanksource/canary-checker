@@ -112,13 +112,13 @@ func (r *CanaryReconciler) reconcile(ctx dutyContext.Context, canary *v1.Canary,
 	if !controllerutil.ContainsFinalizer(canary, FinalizerName) {
 		controllerutil.AddFinalizer(canary, FinalizerName)
 		if err := r.Client.Update(ctx, canary); err != nil {
-			return ctrl.Result{Requeue: true}, fmt.Errorf("failed to update finalizers: %w", err)
+			return ctrl.Result{}, fmt.Errorf("failed to update finalizers: %w", err)
 		}
 	}
 
 	if !canary.DeletionTimestamp.IsZero() {
 		if err := db.DeleteCanary(ctx, canary.GetPersistedID()); err != nil {
-			return ctrl.Result{Requeue: true}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to delete canary")
+			return ctrl.Result{}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to delete canary")
 		}
 
 		canaryJobs.Unschedule(canary.GetPersistedID())
@@ -128,13 +128,13 @@ func (r *CanaryReconciler) reconcile(ctx dutyContext.Context, canary *v1.Canary,
 
 	dbCanary, err := r.updateCanaryInDB(ctx, canary)
 	if err != nil {
-		return ctrl.Result{Requeue: true}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to update canary in DB")
+		return ctrl.Result{}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to update canary in DB")
 	}
 
 	// Sync jobs if canary is created or updated
 	if canary.Generation == 1 {
 		if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to sync canary job")
+			return ctrl.Result{RequeueAfter: 2 * time.Minute}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to sync canary job")
 		}
 	}
 
@@ -142,7 +142,7 @@ func (r *CanaryReconciler) reconcile(ctx dutyContext.Context, canary *v1.Canary,
 	var canaryForStatus v1.Canary
 	err = r.Get(ctx, namespacedName, &canaryForStatus)
 	if err != nil {
-		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, fmt.Errorf("error fetching canary for status update: %w", err)
+		return ctrl.Result{RequeueAfter: 2 * time.Minute}, fmt.Errorf("error fetching canary for status update: %w", err)
 	}
 	patch := client.MergeFrom(canaryForStatus.DeepCopy())
 
@@ -153,12 +153,12 @@ func (r *CanaryReconciler) reconcile(ctx dutyContext.Context, canary *v1.Canary,
 		}
 
 		if err := canaryJobs.TriggerAt(ctx, *dbCanary, *runAt); err != nil {
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to trigger canary")
+			return ctrl.Result{RequeueAfter: 2 * time.Minute}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to trigger canary")
 		}
 
 		delete(canary.Annotations, "next-runtime")
 		if err := r.Update(ctx, canary); err != nil {
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, fmt.Errorf("failed to update canary: %w", err)
+			return ctrl.Result{RequeueAfter: 2 * time.Minute}, fmt.Errorf("failed to update canary: %w", err)
 		}
 	}
 
@@ -167,7 +167,7 @@ func (r *CanaryReconciler) reconcile(ctx dutyContext.Context, canary *v1.Canary,
 			canaryJobs.Unschedule(canary.GetPersistedID())
 		} else {
 			if err := canaryJobs.SyncCanaryJob(ctx, *dbCanary); err != nil {
-				return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to sync canary job")
+				return ctrl.Result{RequeueAfter: 2 * time.Minute}, ctx.Oops().Tags(errTagStatusReportable).Wrapf(err, "failed to sync canary job")
 			}
 		}
 
@@ -177,7 +177,7 @@ func (r *CanaryReconciler) reconcile(ctx dutyContext.Context, canary *v1.Canary,
 	canaryForStatus.Status.Checks = dbCanary.Checks
 	canaryForStatus.Status.ObservedGeneration = canary.Generation
 	if err = r.Status().Patch(ctx, &canaryForStatus, patch); err != nil {
-		return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, fmt.Errorf("failed to update status for canary: %w", err)
+		return ctrl.Result{RequeueAfter: 2 * time.Minute}, fmt.Errorf("failed to update status for canary: %w", err)
 	}
 
 	return ctrl.Result{}, nil

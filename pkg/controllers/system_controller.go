@@ -66,7 +66,7 @@ func (r *TopologyReconciler) Reconcile(ctx gocontext.Context, req ctrl.Request) 
 		logger.Info("Deleting topology", "id", topology.GetPersistedID())
 		if err := db.DeleteTopology(dCtx.DB(), topology.GetPersistedID()); err != nil {
 			logger.Error(err, "failed to delete topology")
-			return ctrl.Result{Requeue: true, RequeueAfter: 2 * time.Minute}, err
+			return ctrl.Result{RequeueAfter: 2 * time.Minute}, err
 		}
 		controllerutil.RemoveFinalizer(topology, TopologyFinalizerName)
 		query.FlushTopologyCache()
