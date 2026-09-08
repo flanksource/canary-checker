@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { arch: amd64, runner: ubuntu-latest, variant: full }
+          # Helm Test builds and self-tests full/amd64 using the same image it deploys.
           - { arch: amd64, runner: ubuntu-latest, variant: slim }
           - { arch: arm64, runner: ubuntu-24.04-arm, variant: full }
           - { arch: arm64, runner: ubuntu-24.04-arm, variant: slim }
