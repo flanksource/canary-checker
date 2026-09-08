@@ -40,6 +40,7 @@ all: manager
 
 .PHONY: test
 test: manifests generate fmt ginkgo
+	# Recursive Ginkgo also runs Go fuzz seeds (including FuzzParseConfig) in the coverage binaries.
 	ginkgo -vv -r  --cover  --keep-going --junit-report junit-report.xml --
 
 .PHONY: fuzz
