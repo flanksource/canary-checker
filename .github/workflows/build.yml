@@ -1,5 +1,5 @@
 on: pull_request
-name: Build
+name: Build & Smoke Test
 permissions: read-all
 
 concurrency:
@@ -32,7 +32,7 @@ jobs:
           tags: canary-checker:${{ matrix.variant }}-${{ matrix.arch }}
           cache-from: type=gha,scope=image-${{ matrix.variant }}-${{ matrix.arch }}
           cache-to: type=gha,scope=image-${{ matrix.variant }}-${{ matrix.arch }},mode=max
-      - name: Run Container Self-Test
+      - name: Run Container Smoke Test
         run: |
           docker run --rm \
             -v ${{ github.workspace }}/fixtures/selftest:/fixtures:ro \
