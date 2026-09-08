@@ -455,7 +455,11 @@ func (d Description) GetNamespace() string {
 		return ""
 	}
 	if !strings.HasPrefix(s, "{") {
-		return s
+		var namespace string
+		if err := json.Unmarshal(d.Namespace, &namespace); err != nil {
+			return ""
+		}
+		return namespace
 	}
 	var r types.ResourceSelector
 	if err := json.Unmarshal(d.Namespace, &r); err != nil {
