@@ -3,6 +3,7 @@ package topology
 import (
 	"testing"
 
+	"github.com/flanksource/commons/properties"
 	dutyContext "github.com/flanksource/duty/context"
 	"github.com/flanksource/duty/job"
 	"github.com/flanksource/duty/models"
@@ -30,6 +31,11 @@ func expectJobToPass(j *job.Job) {
 }
 
 func TestTopologyJobs(t *testing.T) {
+	// Direct job runs should not wait for production scheduling jitter.
+	previous := properties.Get("job.jitter.disable")
+	properties.Set("job.jitter.disable", true)
+	t.Cleanup(func() { properties.Set("job.jitter.disable", previous) })
+
 	RegisterFailHandler(ginkgo.Fail)
 	ginkgo.RunSpecs(t, "Topology")
 }
