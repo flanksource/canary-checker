@@ -26,8 +26,8 @@ jobs:
           platforms: linux/${{ matrix.arch }}
           load: true
           tags: canary-checker:${{ matrix.variant }}-${{ matrix.arch }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=image-${{ matrix.variant }}-${{ matrix.arch }}
+          cache-to: type=gha,scope=image-${{ matrix.variant }}-${{ matrix.arch }},mode=max
       - name: Run Container Self-Test
         run: |
           docker run --rm \

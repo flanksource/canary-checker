@@ -13,7 +13,9 @@ COPY go.sum /app/go.sum
 RUN go mod download
 
 COPY ./ ./
-RUN OS=${TARGETOS} ARCH=${TARGETARCH} make build
+# Keep compiler scratch data out of exported layers; retain the module download layer.
+RUN --mount=type=cache,target=/root/.cache/go-build,id=go-1.26.1-${TARGETOS}-${TARGETARCH} \
+    OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
 FROM ubuntu:noble@sha256:c35e29c9450151419d9448b0fd75374fec4fff364a27f176fb458d472dfc9e54 AS base
 WORKDIR /app
