@@ -450,12 +450,16 @@ func (d Description) GetHash() string {
 }
 
 func (d Description) GetNamespace() string {
-	s := string(d.Namespace)
+	s := strings.TrimSpace(string(d.Namespace))
 	if s == "" || s == "{}" {
 		return ""
 	}
 	if !strings.HasPrefix(s, "{") {
-		return s
+		var namespace string
+		if err := json.Unmarshal(d.Namespace, &namespace); err != nil {
+			return ""
+		}
+		return namespace
 	}
 	var r types.ResourceSelector
 	if err := json.Unmarshal(d.Namespace, &r); err != nil {
