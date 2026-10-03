@@ -92,6 +92,10 @@ func run() error {
 	if runner.OperatorExecutor {
 		logger.Infof("Starting executors")
 
+		shutdown.AddHookWithPriority("check jobs", shutdown.PriorityJobs, func() {
+			canaryJobs.AcquireAllCheckLocks(ctx)
+		})
+
 		// Some synchronous jobs can take time
 		// so we use a goroutine to unblock server start
 		// to prevent health check from failing
