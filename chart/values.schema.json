@@ -531,6 +531,7 @@
     },
     "serviceMonitorInterval": {
       "default": "30s",
+      "type": "string",
       "description": "Scrape interval for the ServiceMonitor",
       "title": "serviceMonitorInterval"
     },
