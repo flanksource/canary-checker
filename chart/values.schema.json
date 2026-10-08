@@ -529,6 +529,11 @@
       "description": "Set to true to enable prometheus service monitor",
       "title": "serviceMonitor"
     },
+    "serviceMonitorInterval": {
+      "default": "30s",
+      "description": "Scrape interval for the ServiceMonitor",
+      "title": "serviceMonitorInterval"
+    },
     "serviceMonitorLabels": {
       "additionalProperties": true,
       "title": "serviceMonitorLabels"
