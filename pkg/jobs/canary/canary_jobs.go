@@ -92,6 +92,12 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 		return nil
 	}
 
+	releaseCheckSlot, err := acquireCheckSlot(ctx.Context)
+	if err != nil {
+		return fmt.Errorf("failed to acquire check slot: %w", err)
+	}
+	defer releaseCheckSlot()
+
 	canaryCtx := canarycontext.New(ctx.Context, j.Canary)
 	var span trace.Span
 	ctx.Context, span = ctx.StartSpan("RunCanaryChecks")
