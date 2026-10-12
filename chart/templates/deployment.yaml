@@ -161,9 +161,6 @@ spec:
             - "8080"
             - --disable-postgrest={{ .Values.disablePostgrest }}
             - --db-migrations={{ .Values.db.runMigrations }}
-            {{- if .Values.db.postgrestAnonRole}}
-            - --postgrest-anon-role={{.Values.db.postgrestAnonRole}}
-            {{- end }}
             {{- if ne .Values.canaryNamespace "" }}
             - --namespace={{ .Values.canaryNamespace }}
             {{- end }}
