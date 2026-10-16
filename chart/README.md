@@ -139,6 +139,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | serviceAccount.rbac.secrets | bool | `true` | for secret management with valueFrom |
 | serviceAccount.rbac.tokenRequest | bool | `true` | for secret management with valueFrom |
 | serviceMonitor | bool | `false` | Set to true to enable prometheus service monitor |
+| serviceMonitorInterval | string | `"30s"` | Scrape interval for the ServiceMonitor |
 | serviceMonitorLabels | object | `{}` |  |
 | serviceMonitorTlsConfig | object | `{"caFile":"","certFile":"","enabled":false,"insecureSkipVerify":false,"keyFile":""}` | ServiceMonitor TLS config |
 | serviceMonitorTlsConfig.certFile | string | `""` | Cert file for the ServiceMonitor |
