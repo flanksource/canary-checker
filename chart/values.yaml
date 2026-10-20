@@ -113,6 +113,11 @@ serviceMonitor: false
 # @schema
 # required: false
 # @schema
+# --  Scrape interval for the ServiceMonitor
+serviceMonitorInterval: 30s
+# @schema
+# required: false
+# @schema
 # --  ServiceMonitor TLS config
 serviceMonitorTlsConfig:
   # @schema
