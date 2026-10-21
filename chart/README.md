@@ -70,6 +70,8 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | dockerSocket | bool | `false` |  |
 | extra | object | `{}` |  |
 | extraArgs | string | `nil` |  |
+| extraContainers | list | `[]` | Additional sidecar containers to add to the pod |
+| extraInitContainers | list | `[]` | Additional init containers to add to the pod |
 | flanksource-ui.backendURL | string | `"http://canary-checker:8080"` |  |
 | flanksource-ui.enabled | bool | `true` |  |
 | flanksource-ui.image.name | string | `"{{.Values.global.imagePrefix}}/canary-checker-ui"` |  |
