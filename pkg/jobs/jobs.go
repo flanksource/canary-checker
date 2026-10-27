@@ -33,7 +33,7 @@ func Start() {
 			job := j
 			job.Context = context.DefaultContext
 			if err := job.AddToScheduler(FuncScheduler); err != nil {
-				logger.Errorf(err.Error())
+				logger.Errorf("%s", err.Error())
 			}
 		}
 	}
@@ -42,7 +42,7 @@ func Start() {
 		job := j
 		job.Context = context.DefaultContext
 		if err := job.AddToScheduler(FuncScheduler); err != nil {
-			logger.Errorf(err.Error())
+			logger.Errorf("%s", err.Error())
 		}
 	}
 
@@ -50,7 +50,7 @@ func Start() {
 		job := j
 		job.Context = context.DefaultContext
 		if err := job.AddToScheduler(FuncScheduler); err != nil {
-			logger.Errorf(err.Error())
+			logger.Errorf("%s", err.Error())
 		}
 	}
 
@@ -64,7 +64,7 @@ func Start() {
 		job := j
 		job.Context = context.DefaultContext
 		if err := job.AddToScheduler(FuncScheduler); err != nil {
-			logger.Errorf(err.Error())
+			logger.Errorf("%s", err.Error())
 		}
 	}
 
@@ -72,7 +72,7 @@ func Start() {
 		job := canaryJobs.CleanupCRDDeleteCanaries
 		job.Context = context.DefaultContext
 		if err := job.AddToScheduler(FuncScheduler); err != nil {
-			logger.Errorf(err.Error())
+			logger.Errorf("%s", err.Error())
 		}
 	}
 }

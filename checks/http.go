@@ -34,8 +34,6 @@ import (
 )
 
 const (
-	trueString = "true"
-
 	maxRedirectDefault = 10 // default for the http lib we're using. But we enforce it explicitly.
 )
 
@@ -97,8 +95,6 @@ func (c *HTTPChecker) generateHTTPRequest(ctx *context.Context, check v1.HTTPChe
 				Username: username,
 				Password: password,
 			},
-			NTLM:   check.NTLM,
-			NTLMV2: check.NTLMv2,
 			Digest: check.Digest,
 		},
 		URL:      check.URL,
@@ -184,12 +180,6 @@ func hydrate(ctx *context.Context, check v1.HTTPCheck) (*v1.HTTPCheck, *models.C
 
 	if connection.URL == "" {
 		return nil, nil, oops, results.Invalidf("no url or connection specified")
-	}
-
-	if ntlm, ok := connection.Properties["ntlm"]; ok {
-		check.NTLM = ntlm == trueString
-	} else if ntlm, ok := connection.Properties["ntlmv2"]; ok {
-		check.NTLMv2 = ntlm == trueString
 	}
 
 	templateEnv := map[string]any{}

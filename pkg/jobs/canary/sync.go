@@ -120,7 +120,7 @@ func SyncCanaryJob(ctx context.Context, dbCanary pkg.Canary) error {
 
 	if schedule := canary.Spec.GetSchedule(); slices.Contains([]string{"@never", v1.NoSchedule}, schedule) {
 		if schedule == v1.NoSchedule {
-			logger.Warnf("Skipping canary:%s as no schedule is provided")
+			logger.Warnf("Skipping canary:%s as no schedule is provided", canary.Name)
 		}
 		Unschedule(id)
 		return nil

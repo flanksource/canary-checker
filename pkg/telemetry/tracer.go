@@ -84,7 +84,7 @@ func InitTracer(serviceName, collectorURL string, insecure bool) func() {
 		defer cancel()
 		err := exporter.Shutdown(ctx)
 		if err != nil {
-			logger.Errorf(err.Error())
+			logger.Errorf("%s", err.Error())
 		}
 		defer cancel()
 	}

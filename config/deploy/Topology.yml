@@ -1074,10 +1074,6 @@ spec:
                             type: object
                         type: object
                       type: array
-                    ntlm:
-                      type: boolean
-                    ntlmv2:
-                      type: boolean
                     oauth:
                       properties:
                         clientID:

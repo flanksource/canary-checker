@@ -76,7 +76,7 @@ var RunTopology = &cobra.Command{
 		var err error
 		apicontext.DefaultContext, _, err = duty.Start(app, duty.ClientOnly, duty.SkipMigrationByDefaultMode)
 		if err != nil {
-			logger.Errorf(err.Error())
+			logger.Errorf("%s", err.Error())
 			return
 		}
 
@@ -97,7 +97,7 @@ var RunTopology = &cobra.Command{
 				if _config.ID == uuid.Nil {
 					_config.ID = uuid.MustParse(StaticTemplatedID)
 					if _, err := db.PersistTopology(apicontext.DefaultContext, _config); err != nil {
-						logger.Errorf(err.Error())
+						logger.Errorf("%s", err.Error())
 						continue
 					}
 				}
