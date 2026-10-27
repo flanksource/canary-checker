@@ -296,14 +296,6 @@
           "type": "string",
           "description": "Method to use - defaults to GET"
         },
-        "ntlm": {
-          "type": "boolean",
-          "description": "NTLM when set to true will do authentication using NTLM v1 protocol"
-        },
-        "ntlmv2": {
-          "type": "boolean",
-          "description": "NTLM when set to true will do authentication using NTLM v2 protocol"
-        },
         "digest": {
           "type": "boolean",
           "description": "Digest when set to true will do authentication using HTTP digest"

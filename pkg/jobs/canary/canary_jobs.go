@@ -124,7 +124,7 @@ func (j CanaryJob) Run(ctx dutyjob.JobRuntime) error {
 	logFail := j.Canary.IsTrace() || j.Canary.IsDebug() || LogFail
 	for _, result := range results {
 		if logPass && result.Pass || logFail && !result.Pass {
-			ctx.Logger.Named(result.GetName()).Infof(result.String())
+			ctx.Logger.Named(result.GetName()).Infof("%s", result.String())
 		}
 	}
 

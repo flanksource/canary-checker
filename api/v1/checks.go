@@ -186,10 +186,6 @@ type HTTPCheck struct {
 	MaxSSLExpiry int `yaml:"maxSSLExpiry,omitempty" json:"maxSSLExpiry,omitempty"`
 	// Method to use - defaults to GET
 	Method string `yaml:"method,omitempty" json:"method,omitempty"`
-	// NTLM when set to true will do authentication using NTLM v1 protocol
-	NTLM bool `yaml:"ntlm,omitempty" json:"ntlm,omitempty"`
-	// NTLM when set to true will do authentication using NTLM v2 protocol
-	NTLMv2 bool `yaml:"ntlmv2,omitempty" json:"ntlmv2,omitempty"`
 	// Digest when set to true will do authentication using HTTP digest
 	Digest bool `yaml:"digest,omitempty" json:"digest,omitempty"`
 	// Request Body Contents

@@ -2919,10 +2919,6 @@ spec:
                                 type: string
                               insecureSkipVerify:
                                 type: boolean
-                              ntlm:
-                                type: boolean
-                              ntlmv2:
-                                type: boolean
                               password:
                                 properties:
                                   name:
@@ -4090,12 +4086,6 @@ spec:
                       namespace:
                         description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
-                      ntlm:
-                        description: NTLM when set to true will do authentication using NTLM v1 protocol
-                        type: boolean
-                      ntlmv2:
-                        description: NTLM when set to true will do authentication using NTLM v2 protocol
-                        type: boolean
                       oauth2:
                         description: Oauth2 Configuration. The client ID & Client secret should go to username & password respectively.
                         properties:
@@ -7238,10 +7228,6 @@ spec:
                       namespace:
                         description: Namespace to insert the check into, if different to the namespace the canary is defined, e.g.
                         type: string
-                      ntlm:
-                        type: boolean
-                      ntlmv2:
-                        type: boolean
                       oauth:
                         properties:
                           clientID:
@@ -11135,10 +11121,6 @@ spec:
                             type: object
                         type: object
                       type: array
-                    ntlm:
-                      type: boolean
-                    ntlmv2:
-                      type: boolean
                     oauth:
                       properties:
                         clientID:
