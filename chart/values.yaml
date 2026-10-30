@@ -669,3 +669,12 @@ readinessProbe:
   httpGet:
     path: /health
     port: 8080
+
+# @schema
+# required: false
+# $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Probe
+# @schema
+# -- Optional startup probe. When set, liveness and readiness probes are disabled
+# until this probe succeeds. Useful when init takes longer than the default liveness
+# window (e.g. embedded-postgres on low-CPU nodes).
+startupProbe: {}
