@@ -64,8 +64,6 @@ type CanarySpec struct {
 	Postgres           []PostgresCheck           `yaml:"postgres,omitempty" json:"postgres,omitempty"`
 	Mssql              []MssqlCheck              `yaml:"mssql,omitempty" json:"mssql,omitempty"`
 	Mysql              []MysqlCheck              `yaml:"mysql,omitempty" json:"mysql,omitempty"`
-	Restic             []ResticCheck             `yaml:"restic,omitempty" json:"restic,omitempty"`
-	Jmeter             []JmeterCheck             `yaml:"jmeter,omitempty" json:"jmeter,omitempty"`
 	Junit              []JunitCheck              `yaml:"junit,omitempty" json:"junit,omitempty"`
 	Helm               []HelmCheck               `yaml:"helm,omitempty" json:"helm,omitempty"`
 	Namespace          []NamespaceCheck          `yaml:"namespace,omitempty" json:"namespace,omitempty"`
@@ -151,9 +149,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 	for _, check := range spec.Redis {
 		checks = append(checks, check)
 	}
-	for _, check := range spec.Restic {
-		checks = append(checks, check)
-	}
 	for _, check := range spec.ICMP {
 		checks = append(checks, check)
 	}
@@ -161,9 +156,6 @@ func (spec CanarySpec) GetAllChecks() []external.Check {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Namespace {
-		checks = append(checks, check)
-	}
-	for _, check := range spec.Jmeter {
 		checks = append(checks, check)
 	}
 	for _, check := range spec.Junit {
@@ -272,12 +264,6 @@ func (spec CanarySpec) KeepOnly(names ...string) CanarySpec {
 		return lo.Contains(names, c.GetName())
 	})
 	spec.Mysql = lo.Filter(spec.Mysql, func(c MysqlCheck, _ int) bool {
-		return lo.Contains(names, c.GetName())
-	})
-	spec.Restic = lo.Filter(spec.Restic, func(c ResticCheck, _ int) bool {
-		return lo.Contains(names, c.GetName())
-	})
-	spec.Jmeter = lo.Filter(spec.Jmeter, func(c JmeterCheck, _ int) bool {
 		return lo.Contains(names, c.GetName())
 	})
 	spec.Junit = lo.Filter(spec.Junit, func(c JunitCheck, _ int) bool {
