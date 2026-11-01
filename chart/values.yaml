@@ -83,7 +83,7 @@ image:
   # - minimal
   # - slim
   # @schema
-  # -- full image is larger and requires more permissions to run, but is required to execute 3rd party checks (jmeter, restic, k6 etc), minimal includes PowerShell and aws,azure,gcp CLIs
+  # -- full image is larger and requires more permissions to run, but includes additional 3rd party CLIs for exec checks, minimal includes PowerShell and aws,azure,gcp CLIs
   #
   type: minimal
   pullPolicy: IfNotPresent

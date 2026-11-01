@@ -94,7 +94,7 @@ Kubernetes native, multi-tenant synthetic monitoring system
 | image.name | string | `"{{.Values.global.imagePrefix}}/canary-checker"` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.tag | string | `"latest"` |  |
-| image.type | string | `"minimal"` | full image is larger and requires more permissions to run, but is required to execute 3rd party checks (jmeter, restic, k6 etc), minimal includes PowerShell and aws,azure,gcp CLIs  |
+| image.type | string | `"minimal"` | full image is larger and requires more permissions to run, but includes additional 3rd party CLIs for exec checks, minimal includes PowerShell and aws,azure,gcp CLIs  |
 | ingress.annotations | object | `{}` |  |
 | ingress.className | string | `""` |  |
 | ingress.enabled | bool | `false` | Expose the canary-checker service on an ingress, normally not needed as the service is exposed through `flanksource-ui.ingress` |

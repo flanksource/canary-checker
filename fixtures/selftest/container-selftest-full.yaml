@@ -131,12 +131,6 @@ spec:
       test:
         expr: "results.exitCode == 0"
 
-    - name: restic
-      description: "restic is available"
-      script: restic version
-      test:
-        expr: 'results.stdout.contains("restic 0.19.1")'
-
     - name: stopPg
       description: "Stop canary-checker serve"
       dependsOn:
