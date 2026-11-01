@@ -44,7 +44,6 @@ jobs:
           - { name: opensearch, on: ubuntu-latest }
           # - { name: elasticsearch, on: ubuntu-latest }
           - { name: git, on: ubuntu-latest }
-          # - restic
     runs-on: ${{ matrix.suite.on }}
     steps:
       - name: Checkout code
