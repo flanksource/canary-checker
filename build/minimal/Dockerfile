@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26.1-bookworm@sha256:ab3d6955bbc813a0f3fdf220c1d817dd89c0b3f283777db8ece4a32fe7858edd AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.27.3-bookworm@sha256:d9b6a1beb9474adc2a1ce842573639b44b2a0dd49b6669f51d3821baf9ec37c9 AS builder
 WORKDIR /app
 
 ARG TARGETOS
@@ -17,7 +17,7 @@ COPY ./ ./
 RUN --mount=type=cache,target=/root/.cache/go-build,id=go-1.26.1-${TARGETOS}-${TARGETARCH} \
     OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM flanksource/base-image:0.7.1@sha256:5e819e83199855d20ba5b988e8a6f369c6f4332fa6f07c184c99838d06a77cc8
+FROM flanksource/base-image:0.9.0@sha256:17339ffc61a37baf58dd0dd85d8b5e46357c3dcb451f1bbc2fc2bd99576eb70f
 ARG TARGETARCH
 
 WORKDIR /app
