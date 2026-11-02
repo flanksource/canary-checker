@@ -63,7 +63,6 @@ jobs:
       - run: make bin
 
       - name: Set up Kind cluster
-        if: ${{ matrix.suite.name == 'k8s' }}
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
         with:
           version: v0.31.0
@@ -71,7 +70,6 @@ jobs:
           config: test/kind-config.yaml
 
       - name: Wait for cluster ready
-        if: ${{ matrix.suite.name == 'k8s' }}
         run: kubectl wait --for=condition=Ready nodes --all --timeout=300s
 
       - name: Test

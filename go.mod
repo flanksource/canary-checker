@@ -6,8 +6,8 @@ godebug x509negativeserial=1
 
 require (
 	github.com/flanksource/artifacts v1.0.24
-	github.com/flanksource/commons v1.63.0
-	github.com/flanksource/deps v1.0.50 // indirect
+	github.com/flanksource/commons v1.62.0
+	github.com/flanksource/deps v1.0.48 // indirect
 	github.com/flanksource/duty v1.0.1420
 	github.com/flanksource/gomplate/v3 v3.24.91
 	github.com/flanksource/is-healthy v1.0.93
@@ -27,7 +27,7 @@ require (
 	github.com/eko/gocache/lib/v4 v4.2.3
 	github.com/eko/gocache/store/bigcache/v4 v4.2.4
 	github.com/elastic/go-elasticsearch/v8 v8.19.4
-	github.com/flanksource/clicky v1.21.93
+	github.com/flanksource/clicky v1.21.89
 	github.com/friendsofgo/errors v0.9.2
 	github.com/go-ldap/ldap/v3 v3.4.13
 	github.com/go-logr/logr v1.4.4
@@ -44,6 +44,7 @@ require (
 	github.com/labstack/echo/v4 v4.16.3
 	github.com/liamylian/jsontime/v2 v2.0.0
 	github.com/lib/pq v1.12.3
+	github.com/mdelapenya/tlscert v0.2.0
 	github.com/microsoft/azure-devops-go-api/azuredevops/v7 v7.1.0
 	github.com/microsoft/go-mssqldb v1.10.0
 	github.com/nsf/jsondiff v0.0.0-20230430225905-43f6cf3098c1
@@ -66,6 +67,8 @@ require (
 	github.com/sevennt/echo-pprof v0.1.1-0.20220616082843-66a461746b5f
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
+	github.com/testcontainers/testcontainers-go v0.44.0
+	github.com/testcontainers/testcontainers-go/modules/redis v0.44.0
 	github.com/timberio/go-datemath v0.1.0
 	go.mongodb.org/mongo-driver v1.17.9
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.68.0
@@ -170,7 +173,6 @@ require (
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.10.0 // indirect
 	github.com/buger/jsonparser v1.1.2 // indirect
-	github.com/caarlos0/env/v11 v11.3.1 // indirect
 	github.com/casbin/casbin/v2 v2.135.0 // indirect
 	github.com/casbin/casbin/v3 v3.8.1 // indirect
 	github.com/casbin/gorm-adapter/v3 v3.41.0 // indirect
@@ -202,12 +204,6 @@ require (
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/docker/go-connections v0.7.0 // indirect
-	github.com/docker/go-sdk/client v0.1.0-alpha013 // indirect
-	github.com/docker/go-sdk/config v0.1.0-alpha013 // indirect
-	github.com/docker/go-sdk/container v0.1.0-alpha016 // indirect
-	github.com/docker/go-sdk/context v0.1.0-alpha013 // indirect
-	github.com/docker/go-sdk/image v0.1.0-alpha015 // indirect
-	github.com/docker/go-sdk/network v0.1.0-alpha013 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/eapache/go-resiliency v1.7.0 // indirect
@@ -217,16 +213,16 @@ require (
 	github.com/elastic/elastic-transport-go/v8 v8.9.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.13.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
+	github.com/emirpasic/gods/v2 v2.0.0-alpha // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.37.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/evanphx/json-patch v5.9.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.9.11 // indirect
 	github.com/exaring/otelpgx v0.11.1 // indirect
+	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/fergusstrange/embedded-postgres v1.34.0 // indirect
-	github.com/flanksource/commons-db v0.1.65 // indirect
-	github.com/flanksource/deps/start v0.0.0-20261102061210-0299da546f0d // indirect
 	github.com/flanksource/kubectl-neat v1.0.4 // indirect
 	github.com/flanksource/sandbox-runtime v1.0.2 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
@@ -324,25 +320,30 @@ require (
 	github.com/kevinburke/ssh_config v1.4.0 // indirect
 	github.com/klauspost/compress v1.20.3 // indirect
 	github.com/kr/fs v0.1.0 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/labstack/gommon v0.5.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
+	github.com/lmittmann/tint v1.1.3 // indirect
+	github.com/lrita/cmap v0.0.0-20231108122212-cb084a67f554 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
-	github.com/lufia/plan9stats v0.0.0-20251013123823-9fd1530e3ec3 // indirect
+	github.com/lufia/plan9stats v0.0.0-20260330125221-c963978e514e // indirect
 	github.com/magiconair/properties v1.8.10 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.21 // indirect
+	github.com/mattn/go-sqlite3 v1.14.38 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/go-archive v0.3.3 // indirect
-	github.com/moby/moby/api v1.54.2 // indirect
-	github.com/moby/moby/client v0.4.0 // indirect
+	github.com/moby/moby/api v1.55.0 // indirect
+	github.com/moby/moby/client v0.5.0 // indirect
 	github.com/moby/patternmatcher v0.6.1 // indirect
 	github.com/moby/spdystream v0.5.1 // indirect
 	github.com/moby/sys/sequential v0.7.0 // indirect
@@ -383,9 +384,12 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rodaine/table v1.3.1 // indirect
+	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
+	github.com/shirou/gopsutil/v3 v3.24.5 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.7 // indirect
+	github.com/shoenig/go-m1cpu v0.1.7 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/skeema/knownhosts v1.3.2 // indirect
@@ -397,10 +401,13 @@ require (
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/tj/go-naturaldate v1.3.0 // indirect
-	github.com/tklauser/go-sysconf v0.3.16 // indirect
-	github.com/tklauser/numcpus v0.11.0 // indirect
+	github.com/tklauser/go-sysconf v0.4.0 // indirect
+	github.com/tklauser/numcpus v0.12.0 // indirect
 	github.com/ugorji/go/codec v1.3.1 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
+	github.com/vadimi/go-http-ntlm v1.0.3 // indirect
+	github.com/vadimi/go-http-ntlm/v2 v2.5.0 // indirect
+	github.com/vadimi/go-ntlm v1.2.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
