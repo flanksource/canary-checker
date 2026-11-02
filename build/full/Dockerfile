@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26.1-bookworm@sha256:ab3d6955bbc813a0f3fdf220c1d817dd89c0b3f283777db8ece4a32fe7858edd AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.27.3-bookworm@sha256:d9b6a1beb9474adc2a1ce842573639b44b2a0dd49b6669f51d3821baf9ec37c9 AS builder
 WORKDIR /app
 
 ARG TARGETOS
@@ -17,7 +17,7 @@ COPY ./ ./
 RUN --mount=type=cache,target=/root/.cache/go-build,id=go-1.26.1-${TARGETOS}-${TARGETARCH} \
     OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM flanksource/base-image-canary-checker:0.7.1@sha256:010f16e33084db3b94a4b741b5c895fa1274a3b5864bdc05b924940289c456cc
+FROM flanksource/base-image-canary-checker:0.9.0@sha256:2cd2c36835d96d5a072454d032e82860474ccca5708824874ef070a907079c4a
 ARG TARGETARCH
 
 WORKDIR /app
@@ -41,9 +41,11 @@ ENV PATH="${PATH}:/var/lib/canary/bin/"
 
 COPY --from=builder /app/.bin/canary-checker /app
 
-RUN deps install postgrest@v14.4 --bin-dir /app/.bin
+RUN --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_TOKEN \
+    deps install postgrest@v14.4 --bin-dir /app/.bin
 
-RUN /app/canary-checker go-offline
+RUN --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_TOKEN \
+    /app/canary-checker go-offline
 RUN /app/.bin/postgrest --version
 
 ENTRYPOINT ["/app/canary-checker"]
