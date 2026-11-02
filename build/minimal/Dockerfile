@@ -40,9 +40,11 @@ USER canary:canary
 
 COPY --from=builder /app/.bin/canary-checker /app
 
-RUN deps install postgrest@v14.4 --bin-dir /app/.bin
+RUN --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_TOKEN \
+    deps install postgrest@v14.4 --bin-dir /app/.bin
 
-RUN /app/canary-checker go-offline
+RUN --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_TOKEN \
+    /app/canary-checker go-offline
 RUN /app/.bin/postgrest --version
 
 ENTRYPOINT ["/app/canary-checker"]

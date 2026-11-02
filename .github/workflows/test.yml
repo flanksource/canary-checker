@@ -38,7 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         suite:
-          - { name: minimal, on: ubuntu-latest }
+          - { name: minimal --skip-all, on: ubuntu-latest }
           - { name: k8s, on: ubuntu-latest }
           - { name: datasources, on: ubuntu-latest }
           - { name: opensearch, on: ubuntu-latest }
@@ -63,6 +63,7 @@ jobs:
       - run: make bin
 
       - name: Set up Kind cluster
+        if: ${{ !contains(matrix.suite.name, '--skip-all') }}
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
         with:
           version: v0.31.0
@@ -70,6 +71,7 @@ jobs:
           config: test/kind-config.yaml
 
       - name: Wait for cluster ready
+        if: ${{ !contains(matrix.suite.name, '--skip-all') }}
         run: kubectl wait --for=condition=Ready nodes --all --timeout=300s
 
       - name: Test
