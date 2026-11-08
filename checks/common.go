@@ -43,7 +43,7 @@ func getNextRuntime(canary v1.Canary, lastRuntime time.Time) (*time.Time, error)
 		if err != nil {
 			return nil, err
 		}
-		t := schedule.Next(time.Now())
+		t := schedule.Next(lastRuntime)
 		return &t, nil
 	}
 	t := lastRuntime.Add(time.Duration(canary.Spec.Interval) * time.Second)
