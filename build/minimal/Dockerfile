@@ -17,7 +17,7 @@ COPY ./ ./
 RUN --mount=type=cache,target=/root/.cache/go-build,id=go-1.26.1-${TARGETOS}-${TARGETARCH} \
     OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM flanksource/base-image:0.9.0@sha256:17339ffc61a37baf58dd0dd85d8b5e46357c3dcb451f1bbc2fc2bd99576eb70f
+FROM flanksource/base-image:0.9.2@sha256:e60fdf4d9330074579ec880e3b220cb0905cdea4477ea62dde4f25685f5cfd8d
 ARG TARGETARCH
 
 WORKDIR /app
