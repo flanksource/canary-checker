@@ -1,6 +1,6 @@
 module github.com/flanksource/canary-checker
 
-go 1.26.1
+go 1.26.10
 
 godebug x509negativeserial=1
 
@@ -8,8 +8,8 @@ require (
 	github.com/flanksource/artifacts v1.0.24
 	github.com/flanksource/commons v1.56.0
 	github.com/flanksource/deps v1.0.40 // indirect
-	github.com/flanksource/duty v1.0.1419
-	github.com/flanksource/gomplate/v3 v3.24.90
+	github.com/flanksource/duty v1.0.1425
+	github.com/flanksource/gomplate/v3 v3.24.91
 	github.com/flanksource/is-healthy v1.0.90
 	github.com/flanksource/kommons v0.31.7
 )
@@ -79,7 +79,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.44.0
 	go.opentelemetry.io/otel/trace v1.44.0
 	gocloud.dev v0.46.0
-	golang.org/x/sync v0.21.0
+	golang.org/x/sync v0.24.0
 	golang.org/x/time v0.15.0
 	google.golang.org/api v0.283.0
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
@@ -460,15 +460,15 @@ require (
 	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
 	gocloud.dev/pubsub/kafkapubsub v0.46.0 // indirect
 	gocloud.dev/pubsub/natspubsub v0.46.0 // indirect
-	golang.org/x/crypto v0.53.0 // indirect
+	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
-	golang.org/x/mod v0.36.0 // indirect
-	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/mod v0.41.0 // indirect
+	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/term v0.44.0 // indirect
-	golang.org/x/text v0.38.0 // indirect
-	golang.org/x/tools v0.45.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/term v0.47.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
+	golang.org/x/tools v0.51.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	gonum.org/v1/gonum v0.17.0 // indirect
