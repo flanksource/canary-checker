@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strings"
 	"time"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -55,11 +54,11 @@ func (t *TCPChecker) Check(ctx *context.Context, extConfig external.Check) pkg.R
 }
 
 func extractAddrAndPort(e string) (string, string, error) {
-	s := strings.Split(e, ":")
-	if len(s) != 2 {
+	host, port, err := net.SplitHostPort(e)
+	if err != nil {
 		return "", "", errors.New(formatErrorMsg(e))
 	}
-	return s[0], s[1], nil
+	return host, port, nil
 }
 
 func formatErrorMsg(f string) string {
