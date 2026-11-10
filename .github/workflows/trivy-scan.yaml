@@ -1,0 +1,37 @@
+name: Trivy scan of published images
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # upload SARIF to code scanning
+    strategy:
+      fail-fast: false
+      matrix:
+        tag:
+          - latest
+          - latest-full
+          - latest-slim
+    steps:
+      - name: Scan flanksource/canary-checker:${{ matrix.tag }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: flanksource/canary-checker:${{ matrix.tag }}
+          scanners: vuln
+          format: sarif
+          output: trivy-results.sarif
+          version: v0.76.2
+
+      - name: Upload SARIF to code scanning
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-canary-checker-${{ matrix.tag }}
