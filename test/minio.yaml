@@ -1,4 +1,4 @@
-# ABOUTME: MinIO deployment for e2e S3 tests.
+# ABOUTME: S3 server (SeaweedFS) for e2e S3 tests, kept under the minio name the fixtures use.
 # ABOUTME: Provides S3-compatible storage at minio.minio:9000 with test credentials.
 apiVersion: v1
 kind: Namespace
@@ -21,20 +21,22 @@ spec:
         app: minio
     spec:
       containers:
+        # MinIO no longer publishes container images; use the SeaweedFS S3 server that flanksource/duty's e2e tests use
         - name: minio
-          image: minio/minio:RELEASE.2020-09-02T18-19-50Z
-          args: ["server", "/data"]
+          image: chrislusf/seaweedfs:4.48@sha256:4e61d15fd35994cb1e43e1e553dff106794841fd9a99ade2fc8c8bfce4d7872d
+          args: ["mini", "-master.telemetry=false"]
           env:
-            - name: MINIO_ACCESS_KEY
+            # SeaweedFS accepts only these S3 credentials, which the fixtures' aws-credentials secret uses
+            - name: AWS_ACCESS_KEY_ID
               value: minio
-            - name: MINIO_SECRET_KEY
+            - name: AWS_SECRET_ACCESS_KEY
               value: minio123
           ports:
-            - containerPort: 9000
+            - containerPort: 8333
           readinessProbe:
             httpGet:
-              path: /minio/health/ready
-              port: 9000
+              path: /readyz
+              port: 8333
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:
@@ -50,7 +52,7 @@ metadata:
 spec:
   ports:
     - port: 9000
-      targetPort: 9000
+      targetPort: 8333
       protocol: TCP
   selector:
     app: minio

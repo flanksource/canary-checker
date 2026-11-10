@@ -159,6 +159,8 @@ jobs:
         with:
           context: .
           file: build/minimal/Dockerfile
+          secrets: |
+            GITHUB_TOKEN=${{ github.token }}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
@@ -221,6 +223,8 @@ jobs:
         with:
           context: .
           file: build/full/Dockerfile
+          secrets: |
+            GITHUB_TOKEN=${{ github.token }}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
@@ -283,6 +287,8 @@ jobs:
         with:
           context: .
           file: build/slim/Dockerfile
+          secrets: |
+            GITHUB_TOKEN=${{ github.token }}
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |

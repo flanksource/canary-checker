@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.26.1-bookworm@sha256:ab3d6955bbc813a0f3fdf220c1d817dd89c0b3f283777db8ece4a32fe7858edd AS builder
+FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.27.3-bookworm@sha256:d9b6a1beb9474adc2a1ce842573639b44b2a0dd49b6669f51d3821baf9ec37c9 AS builder
 WORKDIR /app
 
 ARG TARGETOS
@@ -53,9 +53,11 @@ USER canary:canary
 
 COPY --from=builder /app/.bin/canary-checker /app
 
-RUN deps --no-progress install  postgrest@v14.4  --bin-dir /app/.bin
+RUN --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_TOKEN \
+    deps --no-progress install  postgrest@v14.4  --bin-dir /app/.bin
 
-RUN /app/canary-checker go-offline
+RUN --mount=type=secret,id=GITHUB_TOKEN,env=GITHUB_TOKEN \
+    /app/canary-checker go-offline
 
 RUN /app/.bin/postgrest --version
 

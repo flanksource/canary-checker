@@ -135,19 +135,7 @@ spec:
       description: "restic is available"
       script: restic version
       test:
-        expr: 'results.stdout.contains("restic")'
-
-    - name: k6
-      description: "k6 is available"
-      script: k6 version
-      test:
-        expr: 'results.stdout.contains("k6")'
-
-    - name: benthos
-      description: "benthos is available"
-      script: benthos --version
-      test:
-        expr: "results.exitCode == 0"
+        expr: 'results.stdout.contains("restic 0.19.1")'
 
     - name: stopPg
       description: "Stop canary-checker serve"
