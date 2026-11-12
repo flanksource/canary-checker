@@ -17,7 +17,7 @@ spec:
       tlsConfig:
         {{- toYaml .Values.serviceMonitorTlsConfig | nindent 8 }}
       {{- end }}
-      interval: 30s
+      interval: {{ .Values.serviceMonitorInterval }}
       honorLabels: true
       metricRelabelings:
       - action: labeldrop
