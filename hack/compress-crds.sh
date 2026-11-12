@@ -25,7 +25,7 @@ for check in "${checks[@]}"; do
 	fi
 done
 
-for removed in containerd containerdPush docker dockerPush helm namespace pod github gitProtocol; do
+for removed in containerd containerdPush docker dockerPush helm namespace pod github gitProtocol jmeter restic; do
 	yq "$schemaPath.$removed.items = {\"type\": \"object\", \"x-kubernetes-preserve-unknown-fields\": true, \"description\": \"Removed: use kubernetesResource or exec checks instead\"}" -i $slim
 done
 
