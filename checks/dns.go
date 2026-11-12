@@ -233,7 +233,7 @@ func checkResult(got []string, check v1.DNSCheck) (result bool, message string) 
 }
 
 func srvInfo(srv string) (service string, proto string, name string, err error) {
-	splited := strings.Split(srv, ".")
+	splited := strings.SplitN(srv, ".", 3)
 	if len(splited) < 3 {
 		return "", "", "", fmt.Errorf("srvInfo: wrong srv string")
 	}
