@@ -607,6 +607,24 @@ extraArgs:
 extra: {}
 
 # @schema
+# required: false
+# type: array
+# items:
+#   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Container
+# @schema
+# -- Additional sidecar containers to add to the pod
+extraContainers: []
+
+# @schema
+# required: false
+# type: array
+# items:
+#   $ref: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0/_definitions.json#/definitions/io.k8s.api.core.v1.Container
+# @schema
+# -- Additional init containers to add to the pod
+extraInitContainers: []
+
+# @schema
 # additionalProperties: true
 # required: false
 # @schema
