@@ -37,19 +37,6 @@ func GetDeadline(canary v1.Canary) time.Time {
 	return time.Now().Add(time.Duration(canary.Spec.Interval) * time.Second)
 }
 
-func getNextRuntime(canary v1.Canary, lastRuntime time.Time) (*time.Time, error) {
-	if canary.Spec.Schedule != "" {
-		schedule, err := cron.ParseStandard(canary.Spec.Schedule)
-		if err != nil {
-			return nil, err
-		}
-		t := schedule.Next(lastRuntime)
-		return &t, nil
-	}
-	t := lastRuntime.Add(time.Duration(canary.Spec.Interval) * time.Second)
-	return &t, nil
-}
-
 // unstructure marshalls a struct to and from JSON to remove any type details
 func unstructure(o any) (out map[string]any, err error) {
 	data, err := json.Marshal(o)

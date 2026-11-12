@@ -20,7 +20,9 @@ import (
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
 	"github.com/flanksource/kommons"
+	"github.com/samber/lo"
 	corev1 "k8s.io/api/core/v1"
+	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 func init() {
@@ -139,6 +141,10 @@ func newPod(ctx *context.Context, check v1.JunitCheck) (*corev1.Pod, error) {
 		},
 	})
 	pod.Spec.RestartPolicy = corev1.RestartPolicyNever
+	// Kubernetes kills the pod after this, even if canary-checker crashed mid-run
+	if pod.Spec.ActiveDeadlineSeconds == nil {
+		pod.Spec.ActiveDeadlineSeconds = lo.ToPtr(int64(podDeadline(check).Seconds()))
+	}
 	//
 	pod.Spec.InitContainers[0].VolumeMounts = append(pod.Spec.InitContainers[0].VolumeMounts, corev1.VolumeMount{Name: volumeName, MountPath: filepath.Dir(check.TestResults)})
 	pod.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{{Name: volumeName, MountPath: mountPath}}
@@ -150,9 +156,15 @@ func deletePod(ctx *context.Context, k8sClient *dutyKubernetes.Client, pod *core
 		return
 	}
 
-	if _, err := k8sClient.DeleteByGVK(ctx, pod.Namespace, pod.Name, pod.GroupVersionKind()); err != nil {
+	if err := k8sClient.CoreV1().Pods(pod.Namespace).Delete(ctx, pod.Name, metav1.DeleteOptions{}); err != nil && !apiErrors.IsNotFound(err) {
 		ctx.Warnf("failed to delete pod %s/%s: %v", pod.Namespace, pod.Name, err)
 	}
+}
+
+// podDeadline is how long a junit pod may live: the time Check waits for it,
+// plus the 60s the results container waits for the done file.
+func podDeadline(check v1.JunitCheck) time.Duration {
+	return time.Duration(check.GetTimeout())*time.Minute + 60*time.Second
 }
 
 func getLogs(ctx *context.Context, k8sClient *dutyKubernetes.Client, pod corev1.Pod) string {
@@ -190,34 +202,38 @@ func podFail(ctx *context.Context, k8sClient *dutyKubernetes.Client, pod corev1.
 	return results.ErrorMessage(fmt.Errorf("%s is %s\n %v", pod.Name, pod.Status.Phase, getLogs(ctx, k8sClient, pod)))
 }
 
-func cleanupExistingPods(ctx *context.Context, k8s *dutyKubernetes.Client, selector string) (bool, error) {
-	pods := k8s.CoreV1().Pods(ctx.Namespace)
-	existingPods, err := pods.List(ctx, metav1.ListOptions{
+// cleanupExistingPods deletes pods left behind by earlier runs, e.g. when
+// canary-checker crashed before its deferred delete ran. Only pods that can no
+// longer be in use are deleted: finished pods, and unfinished pods older than
+// their deadline (which covers pods stuck in Pending). Pods of runs that may
+// still be in progress, such as a concurrent "run now", are left alone.
+func cleanupExistingPods(ctx *context.Context, k8s *dutyKubernetes.Client, selector string, check v1.JunitCheck) error {
+	existingPods, err := k8s.CoreV1().Pods(ctx.Namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: selector,
 	})
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	ctx.Debugf("found %d pods for %s", len(existingPods.Items), selector)
-	skip := len(existingPods.Items) > 1 // allow up to 1 duplicate running container
-	for _, junitPod := range existingPods.Items {
-		_junitPod := junitPod
-		nextRuntime, err := getNextRuntime(ctx.Canary, junitPod.CreationTimestamp.Local())
-		if err != nil {
-			return false, err
+	for i := range existingPods.Items {
+		junitPod := &existingPods.Items[i]
+		if junitPod.DeletionTimestamp != nil {
+			continue
 		}
 
-		if time.Now().After((*nextRuntime)) {
-			defer deletePod(ctx, k8s, &_junitPod)
-			ctx.Warnf("stale pod found: %s, created=%s", junitPod.Name, time.Since(junitPod.GetCreationTimestamp().Local()))
-			skip = true
+		deadline := podDeadline(check)
+		if junitPod.Spec.ActiveDeadlineSeconds != nil {
+			deadline = time.Duration(*junitPod.Spec.ActiveDeadlineSeconds) * time.Second
+		}
+
+		finished := junitPod.Status.Phase == corev1.PodSucceeded || junitPod.Status.Phase == corev1.PodFailed
+		age := time.Since(junitPod.CreationTimestamp.Time)
+		if finished || age > deadline {
+			ctx.Warnf("deleting leftover pod %s (phase=%s, age=%s)", junitPod.Name, junitPod.Status.Phase, age.Round(time.Second))
+			deletePod(ctx, k8s, junitPod)
 		}
 	}
-	if skip {
-		ctx.Debugf("%d existing pods, skipping", len(existingPods.Items))
-	}
-	return skip, err
+	return nil
 }
 
 func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg.Results {
@@ -237,10 +253,8 @@ func (c *JunitChecker) Check(ctx *context.Context, extConfig external.Check) pkg
 	}
 	pods := k8s.CoreV1().Pods(ctx.Namespace)
 
-	if skip, err := cleanupExistingPods(ctx, k8s, fmt.Sprintf("%s=%s", junitCheckSelector, pod.Labels[junitCheckSelector])); err != nil {
+	if err := cleanupExistingPods(ctx, k8s, fmt.Sprintf("%s=%s", junitCheckSelector, pod.Labels[junitCheckSelector]), check); err != nil {
 		return results.ErrorMessage(err)
-	} else if skip {
-		return nil
 	}
 
 	if _, err := k8s.CoreV1().Pods(ctx.Namespace).Create(ctx, pod, metav1.CreateOptions{}); err != nil {
