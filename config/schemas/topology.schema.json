@@ -654,6 +654,18 @@
           },
           "type": "array"
         },
+        "restic": {
+          "items": {
+            "$ref": "#/$defs/ResticCheck"
+          },
+          "type": "array"
+        },
+        "jmeter": {
+          "items": {
+            "$ref": "#/$defs/JmeterCheck"
+          },
+          "type": "array"
+        },
         "junit": {
           "items": {
             "$ref": "#/$defs/JunitCheck"
@@ -3143,6 +3155,96 @@
         "value"
       ]
     },
+    "JmeterCheck": {
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description for the check"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the check"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
+        },
+        "transformDeleteStrategy": {
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "retries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "Retries configures generic retry behavior for this check."
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
+        },
+        "jmx": {
+          "$ref": "#/$defs/EnvVar",
+          "description": "Jmx defines the ConfigMap or Secret reference to get the JMX test plan"
+        },
+        "host": {
+          "type": "string",
+          "description": "Host is the server against which test plan needs to be executed"
+        },
+        "port": {
+          "type": "integer",
+          "description": "Port on which the server is running"
+        },
+        "properties": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "Properties defines the local Jmeter properties"
+        },
+        "systemProperties": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "SystemProperties defines the java system property"
+        },
+        "responseDuration": {
+          "type": "string",
+          "description": "ResponseDuration under which the all the test should pass"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "jmx"
+      ]
+    },
     "JunitCheck": {
       "properties": {
         "description": {
@@ -3626,6 +3728,18 @@
         "mysql": {
           "items": {
             "$ref": "#/$defs/MysqlCheck"
+          },
+          "type": "array"
+        },
+        "restic": {
+          "items": {
+            "$ref": "#/$defs/ResticCheck"
+          },
+          "type": "array"
+        },
+        "jmeter": {
+          "items": {
+            "$ref": "#/$defs/JmeterCheck"
           },
           "type": "array"
         },
@@ -5422,6 +5536,104 @@
         "$ref": "#/$defs/ResourceSelector"
       },
       "type": "array"
+    },
+    "ResticCheck": {
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Description for the check"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the check"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace to insert the check into, if different to the namespace the canary is defined, e.g."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Icon for overwriting default icon on the dashboard"
+        },
+        "labels": {
+          "$ref": "#/$defs/Labels",
+          "description": "Labels for the check"
+        },
+        "transformDeleteStrategy": {
+          "type": "string",
+          "description": "Transformed checks have a delete strategy on deletion they can either be marked healthy, unhealthy or left as is"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/Metrics"
+          },
+          "type": "array",
+          "description": "Metrics to expose from check.\nhttps://canarychecker.io/concepts/metrics-exporter"
+        },
+        "markFailOnEmpty": {
+          "type": "boolean",
+          "description": "If check or transformation returns empty, that should be marked as failed"
+        },
+        "dependsOn": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "description": "DependsOn lists the checks that must complete before this one runs"
+        },
+        "retries": {
+          "$ref": "#/$defs/CheckRetries",
+          "description": "Retries configures generic retry behavior for this check."
+        },
+        "relationships": {
+          "$ref": "#/$defs/CheckRelationship",
+          "description": "Relationships defines a way to link the check results to components and configs\nusing lookup expressions."
+        },
+        "connection": {
+          "type": "string",
+          "description": "Name of the connection used to derive restic password."
+        },
+        "awsConnectionName": {
+          "type": "string",
+          "description": "Name of the AWS connection used to derive the access key and secret key."
+        },
+        "repository": {
+          "type": "string",
+          "description": "Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name"
+        },
+        "password": {
+          "$ref": "#/$defs/EnvVar",
+          "description": "Password for the restic repository"
+        },
+        "maxAge": {
+          "type": "string",
+          "description": "MaxAge for backup freshness"
+        },
+        "checkIntegrity": {
+          "type": "boolean",
+          "description": "CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry"
+        },
+        "accessKey": {
+          "$ref": "#/$defs/EnvVar",
+          "description": "AccessKey access key id for connection with aws s3, minio, wasabi, alibaba oss"
+        },
+        "secretKey": {
+          "$ref": "#/$defs/EnvVar",
+          "description": "SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss"
+        },
+        "caCert": {
+          "type": "string",
+          "description": "CaCert path to the root cert. In case of self-signed certificates"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "repository",
+        "password",
+        "maxAge"
+      ]
     },
     "S3Check": {
       "properties": {

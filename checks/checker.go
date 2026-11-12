@@ -62,6 +62,9 @@ var All = []Checker{
 	}},
 	&HTTPChecker{},
 	&IcmpChecker{},
+	&removedChecker{typeName: "jmeter", specFn: func(ctx *context.Context) []external.Check {
+		return toChecks(ctx.Canary.Spec.Jmeter)
+	}},
 	&JunitChecker{},
 	&KubernetesChecker{},
 	&KubernetesResourceChecker{},
@@ -74,6 +77,9 @@ var All = []Checker{
 	&PrometheusChecker{},
 	&PubSubChecker{},
 	&RedisChecker{},
+	&removedChecker{typeName: "restic", specFn: func(ctx *context.Context) []external.Check {
+		return toChecks(ctx.Canary.Spec.Restic)
+	}},
 	&S3Checker{},
 	&removedChecker{typeName: "namespace", specFn: func(ctx *context.Context) []external.Check {
 		return toChecks(ctx.Canary.Spec.Namespace)

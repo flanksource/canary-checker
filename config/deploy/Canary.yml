@@ -4503,6 +4503,12 @@ spec:
                   description: interval (in seconds) to run checks on Deprecated in favor of Schedule
                   format: int64
                   type: integer
+                jmeter:
+                  items:
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+                    description: 'Removed: use kubernetesResource or exec checks instead'
+                  type: array
                 junit:
                   items:
                     properties:
@@ -8163,6 +8169,12 @@ spec:
                   default: 1
                   description: Replicas pauses the canary if = 0.
                   type: integer
+                restic:
+                  items:
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+                    description: 'Removed: use kubernetesResource or exec checks instead'
+                  type: array
                 resultMode:
                   type: string
                 retries:

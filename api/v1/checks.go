@@ -306,6 +306,62 @@ func (c CloudWatchCheck) GetType() string {
 	return "cloudwatch"
 }
 
+type ResticCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
+	// Name of the connection used to derive restic password.
+	ConnectionName string `yaml:"connection,omitempty" json:"connection,omitempty"`
+	// Name of the AWS connection used to derive the access key and secret key.
+	AWSConnectionName string `yaml:"awsConnectionName,omitempty" json:"awsConnectionName,omitempty"`
+	// Repository The restic repository path eg: rest:https://user:pass@host:8000/ or rest:https://host:8000/ or s3:s3.amazonaws.com/bucket_name
+	Repository string `yaml:"repository" json:"repository"`
+	// Password for the restic repository
+	Password *types.EnvVar `yaml:"password" json:"password"`
+	// MaxAge for backup freshness
+	MaxAge string `yaml:"maxAge" json:"maxAge"`
+	// CheckIntegrity when enabled will check the Integrity and consistency of the restic reposiotry
+	CheckIntegrity bool `yaml:"checkIntegrity,omitempty" json:"checkIntegrity,omitempty"`
+	// AccessKey access key id for connection with aws s3, minio, wasabi, alibaba oss
+	AccessKey *types.EnvVar `yaml:"accessKey,omitempty" json:"accessKey,omitempty"`
+	// SecretKey secret access key for connection with aws s3, minio, wasabi, alibaba oss
+	SecretKey *types.EnvVar `yaml:"secretKey,omitempty" json:"secretKey,omitempty"`
+	// CaCert path to the root cert. In case of self-signed certificates
+	CaCert string `yaml:"caCert,omitempty" json:"caCert,omitempty"`
+}
+
+func (c ResticCheck) GetEndpoint() string {
+	return c.Repository
+}
+
+func (c ResticCheck) GetType() string {
+	return "restic"
+}
+
+type JmeterCheck struct {
+	Description `yaml:",inline" json:",inline"`
+	Relatable   `yaml:",inline" json:",inline"`
+	// Jmx defines the ConfigMap or Secret reference to get the JMX test plan
+	Jmx types.EnvVar `yaml:"jmx" json:"jmx"`
+	// Host is the server against which test plan needs to be executed
+	Host string `yaml:"host,omitempty" json:"host,omitempty"`
+	// Port on which the server is running
+	Port int32 `yaml:"port,omitempty" json:"port,omitempty"`
+	// Properties defines the local Jmeter properties
+	Properties []string `yaml:"properties,omitempty" json:"properties,omitempty"`
+	// SystemProperties defines the java system property
+	SystemProperties []string `yaml:"systemProperties,omitempty" json:"systemProperties,omitempty"`
+	// ResponseDuration under which the all the test should pass
+	ResponseDuration string `yaml:"responseDuration,omitempty" json:"responseDuration,omitempty"`
+}
+
+func (c JmeterCheck) GetEndpoint() string {
+	return c.Host + ":" + string(c.Port)
+}
+
+func (c JmeterCheck) GetType() string {
+	return "jmeter"
+}
+
 type DockerPullCheck struct {
 	Description    `yaml:",inline" json:",inline"`
 	Relatable      `yaml:",inline" json:",inline"`
@@ -1469,6 +1525,26 @@ type Redis struct {
 }
 
 /*
+
+This check will connect to a restic repository and perform Integrity and backup Freshness Tests
+
+[include:datasources/restic_pass.yaml]
+
+*/
+
+type Restic struct {
+	ResticCheck `yaml:",inline" json:"inline"`
+}
+
+/*
+Jmeter check will run jmeter cli against the supplied host
+[include:k8s/jmeter_pass.yaml]
+*/
+type Jmeter struct {
+	JmeterCheck `yaml:",inline" json:",inline"`
+}
+
+/*
 Junit check will wait for the given pod to be completed than parses all the xml files present in the defined testResults directory
 
 [include:k8s/junit_pass.yaml]
@@ -1626,6 +1702,7 @@ var AllChecks = []external.Check{
 	HelmCheck{},
 	HTTPCheck{},
 	ICMPCheck{},
+	JmeterCheck{},
 	JunitCheck{},
 	Kubernetes{},
 	LDAPCheck{},
@@ -1638,6 +1715,7 @@ var AllChecks = []external.Check{
 	PostgresCheck{},
 	PrometheusCheck{},
 	RedisCheck{},
+	ResticCheck{},
 	S3Check{},
 	TCPCheck{},
 	WebhookCheck{},

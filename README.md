@@ -352,7 +352,7 @@ Your feedback is always welcome!
 | Git / GitProtocol                                            | Removed    | Use `exec`, `junit` or `webhook` checks instead              |
 | **Integration Testing**                                      |            |                                                              |
 | [Exec](https://canarychecker.io/reference/exec)              | GA         | Run scripts or commands                                      |
-| JMeter                                                       | Removed    | Use `exec` or `junit` checks with a container instead        |
+| JMeter                                                       | Removed    | Use a `junit` check with an image that bundles JMeter, or `exec` on a custom checker image |
 | [JUnit / BYO](https://canarychecker.io/reference/junit)      | Beta       | Run a pod that saves JUnit test results                      |
 | [K6](https://canarychecker.io/examples/k6)                   | Beta       | Runs k6 tests that export JUnit via a container              |
 | [Newman](https://canarychecker.io/examples/newman)           | Beta       | Runs Newman / Postman tests that export JUnit via a container |
@@ -371,7 +371,7 @@ Your feedback is always welcome!
 | [Kubernetes Resource](https://canarychecker.io/reference/kubernetes-resource) | GA | Create temporary resources, run nested checks and clean up   |
 | **Backups**                                                  |            |                                                              |
 | [GCP Databases](https://canarychecker.io/reference/gcs-database-backup) | GA | Backup freshness                                             |
-| Restic                                                       | Removed    | Use `exec` or `junit` checks with a container instead        |
+| Restic                                                       | Removed    | Use a `junit` check with an image that bundles restic, or `exec` on a custom checker image |
 | **Infrastructure**                                           |            |                                                              |
 | [S3 Protocol](https://canarychecker.io/reference/s3-protocol) | GA        | Ability to read/write/list objects on an S3 compatible object store |
 | Pod / Namespace                                              | Removed    | Use `kubernetesResource` or `kubernetes` checks instead      |
