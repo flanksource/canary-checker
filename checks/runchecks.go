@@ -408,6 +408,10 @@ func TransformResults(ctx *context.Context, in []*pkg.CheckResult) (out []*pkg.C
 			// Keeping the detail field empty as it can have huge json blobs
 			r.Detail = nil
 
+			// The parent skips processTemplates (its test must not run on the raw
+			// result), but its display template still applies.
+			processDisplayTemplate(checkCtx, r)
+
 			// We'll append the original check status to the result
 			// so that it can be tracked
 			out = append(out, r)
@@ -507,6 +511,20 @@ func contextMapToSlice(c map[string]any) []any {
 	return args
 }
 
+// processDisplayTemplate evaluates the check's display template and sets the result message.
+func processDisplayTemplate(ctx *context.Context, r *pkg.CheckResult) {
+	v, ok := r.Check.(v1.DisplayTemplate)
+	if !ok || v.GetDisplayTemplate().IsEmpty() {
+		return
+	}
+	message, err := template(ctx, v.GetDisplayTemplate())
+	if err != nil {
+		r.ErrorMessage(ctx.Oops().With(contextMapToSlice(r.GetContext())...).Wrap(err))
+	} else {
+		r.ResultMessage("%s", message)
+	}
+}
+
 func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult {
 	if r.Invalid {
 		return r
@@ -514,17 +532,7 @@ func processTemplates(ctx *context.Context, r *pkg.CheckResult) *pkg.CheckResult
 	if r.Duration == 0 && r.GetDuration() > 0 {
 		r.Duration = r.GetDuration()
 	}
-	switch v := r.Check.(type) {
-	case v1.DisplayTemplate:
-		if !v.GetDisplayTemplate().IsEmpty() {
-			message, err := template(ctx, v.GetDisplayTemplate())
-			if err != nil {
-				r.ErrorMessage(ctx.Oops().With(contextMapToSlice(r.GetContext())...).Wrap(err))
-			} else {
-				r.ResultMessage("%s", message)
-			}
-		}
-	}
+	processDisplayTemplate(ctx, r)
 
 	switch v := r.Check.(type) {
 	case v1.TestFunction:
