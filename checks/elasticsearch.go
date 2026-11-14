@@ -57,8 +57,13 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 		es.Search.WithBody(body),
 	)
 	if err != nil {
+		// A transport error leaves the response unset. Closing here would panic.
 		return results.ErrorMessage(err)
 	}
+
+	// An HTTP error still has a body. Close it on every return, including
+	// IsError, or the connection is leaked. The OpenSearch check does the same.
+	defer res.Body.Close()
 
 	if res.IsError() {
 		var e map[string]any
@@ -77,9 +82,6 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 		return results.ErrorMessage(fmt.Errorf("error from elasticsearch [%s]: %v", res.Status(), e))
 	}
 
-	// We are closing the body after error as the Body object is not set in case of error
-	// leading to nil pointer errors
-	defer res.Body.Close()
 	var r map[string]any
 	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
 		return results.ErrorMessage(
