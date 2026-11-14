@@ -66,7 +66,8 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 		return results
 	}
 	if !resp.IsOK() {
-		results.ErrorMessage(fmt.Errorf("received non 2xx from alertmanager: %v", err))
+		body, _ := resp.AsString()
+		results.ErrorMessage(fmt.Errorf("received non 2xx from alertmanager: %s: %s", resp.Status, body))
 		return results
 	}
 	respStr, err := resp.AsString()
