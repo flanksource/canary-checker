@@ -82,7 +82,7 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 		if check.ThresholdMillis < latency {
 			return results.Failf("timeout after %d ", latency)
 		}
-		if check.PacketLossThreshold < int64(loss*100) {
+		if packetLossExceeds(loss, check.PacketLossThreshold) {
 			return results.Failf("%s packet loss of %0.0f%% > than threshold of %d%%", urlObj.To4(), loss, check.PacketLossThreshold)
 		}
 
@@ -91,6 +91,12 @@ func (c *IcmpChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	}
 
 	return results.Failf("no IP found for %s", endpoint)
+}
+
+// packetLossExceeds reports whether loss, a percentage (0-100) as returned by
+// pro-bing, is greater than the configured threshold, also a percentage.
+func packetLossExceeds(loss float64, threshold int64) bool {
+	return float64(threshold) < loss
 }
 
 func (c *IcmpChecker) checkICMP(ip net.IP, packetCount int) (*ping.Statistics, error) {
