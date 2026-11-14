@@ -420,3 +420,29 @@ func TestAllCheckersImplementSingleCheckRunner(t *testing.T) {
 		}
 	}
 }
+
+func TestTransformResultsAppliesDisplayToParent(t *testing.T) {
+	ctx := newRetryTestContext(nil)
+	check := v1.HTTPCheck{
+		Description: v1.Description{Name: "parent"},
+		Templatable: v1.Templatable{
+			Display:   v1.Template{Template: "{{ .count }} items processed"},
+			Transform: v1.Template{Expression: `[{'name': 'child', 'pass': true, 'message': 'ok'}].toJSON()`},
+			Test:      v1.Template{Expression: "false"},
+		},
+	}
+	parent := pkg.Success(check, ctx.Canary)
+	parent.Data = map[string]any{"count": 3}
+
+	out := TransformResults(ctx, []*pkg.CheckResult{parent})
+	if len(out) != 2 {
+		t.Fatalf("expected parent and one child, got %d results", len(out))
+	}
+	if got, want := out[0].Message, "3 items processed"; got != want {
+		t.Errorf("parent message = %q, want %q", got, want)
+	}
+	// only display is applied to the parent; test must not change its status
+	if !out[0].Pass {
+		t.Errorf("parent should still pass: test is not evaluated on the parent")
+	}
+}
