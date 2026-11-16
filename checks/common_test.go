@@ -5,6 +5,7 @@ import (
 	"time"
 
 	v1 "github.com/flanksource/canary-checker/api/v1"
+	"github.com/flanksource/canary-checker/pkg"
 )
 
 func TestGetNextRuntime(t *testing.T) {
@@ -40,5 +41,21 @@ func TestGetNextRuntimeInvalidSchedule(t *testing.T) {
 	got, err := getNextRuntime(canary, time.Now())
 	if err == nil || got != nil {
 		t.Fatalf("getNextRuntime() = %v, %v; want nil and an error", got, err)
+	}
+}
+
+func TestGetJunitReportFromResultsSumsDurationOnce(t *testing.T) {
+	results := []*pkg.CheckResult{
+		{Check: v1.HTTPCheck{}, Pass: true, Duration: 1500},
+		{Check: v1.HTTPCheck{}, Pass: false, Duration: 500, Error: "boom"},
+	}
+
+	suite := GetJunitReportFromResults("canary", results)
+
+	if suite.Duration != 2 {
+		t.Fatalf("suite duration = %v, want 2", suite.Duration)
+	}
+	if suite.Passed != 1 || suite.Failed != 1 {
+		t.Fatalf("suite passed=%d failed=%d, want passed=1 failed=1", suite.Passed, suite.Failed)
 	}
 }
