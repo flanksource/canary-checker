@@ -3,6 +3,7 @@ package checks
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
 	"strings"
 
@@ -13,6 +14,9 @@ import (
 	"github.com/flanksource/commons/http"
 	alertmanagerAlert "github.com/prometheus/alertmanager/api/v2/client/alert"
 )
+
+// maxErrorBodyBytes caps how much of a non-2xx response body is read into the error message.
+const maxErrorBodyBytes = 4096
 
 type AlertManagerChecker struct{}
 
@@ -66,7 +70,7 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 		return results
 	}
 	if !resp.IsOK() {
-		body, _ := resp.AsString()
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodyBytes))
 		results.ErrorMessage(fmt.Errorf("received non 2xx from alertmanager: %s: %s", resp.Status, body))
 		return results
 	}

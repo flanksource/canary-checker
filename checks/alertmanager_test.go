@@ -45,3 +45,28 @@ func TestAlertManagerCheckNon2xxMessage(t *testing.T) {
 		}
 	}
 }
+
+func TestAlertManagerCheckNon2xxBodyIsBounded(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(strings.Repeat("x", 1<<20)))
+	}))
+	defer server.Close()
+
+	ctx := &context.Context{
+		Context:   dutyCtx.New(),
+		Namespace: "default",
+		Canary:    v1.Canary{},
+	}
+	check := v1.AlertManagerCheck{
+		Connection: v1.Connection{URL: server.URL},
+	}
+
+	results := (&AlertManagerChecker{}).Check(ctx, check)
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+	if got := len(results[0].Error); got > maxErrorBodyBytes+256 {
+		t.Errorf("error message should be bounded, got %d bytes", got)
+	}
+}
