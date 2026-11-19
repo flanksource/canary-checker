@@ -70,6 +70,7 @@ func (c *AlertManagerChecker) Check(ctx *context.Context, extConfig external.Che
 		return results
 	}
 	if !resp.IsOK() {
+		defer resp.Body.Close()
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrorBodyBytes))
 		results.ErrorMessage(fmt.Errorf("received non 2xx from alertmanager: %s: %s", resp.Status, body))
 		return results
