@@ -108,9 +108,14 @@ func (c *DNSChecker) Check(ctx *canaryContext.Context, extConfig external.Check)
 }
 
 func checkA(ctx context.Context, r *net.Resolver, check v1.DNSCheck) (pass bool, message string, err error) {
-	result, err := r.LookupHost(ctx, check.Query)
+	addresses, err := r.LookupIP(ctx, "ip4", check.Query)
 	if err != nil {
 		return pass, "", err
+	}
+
+	result := make([]string, len(addresses))
+	for i, address := range addresses {
+		result[i] = address.String()
 	}
 
 	pass, message = checkResult(result, check)
