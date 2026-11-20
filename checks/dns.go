@@ -6,6 +6,7 @@ import (
 	"net"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -198,7 +199,7 @@ func getDialer(check v1.DNSCheck, timeout int) (func(ctx context.Context, networ
 		if port == 0 {
 			port = 53
 		}
-		return d.DialContext(ctx, "udp", fmt.Sprintf("%s:%d", check.Server, port))
+		return d.DialContext(ctx, "udp", net.JoinHostPort(strings.Trim(check.Server, "[]"), strconv.Itoa(port)))
 	}, nil
 }
 
