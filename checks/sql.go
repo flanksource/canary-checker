@@ -45,7 +45,7 @@ func querySQL(ctx *context.Context, driver string, connection string, query stri
 		return result, fmt.Errorf("failed to connect to %s db: %w", driver, err)
 	}
 	defer db.Close()
-	tctx, cancel := ctx.WithTimeout(timout * time.Second)
+	tctx, cancel := ctx.WithTimeout(timout)
 	defer cancel()
 	rows, err := db.QueryContext(tctx, query)
 
