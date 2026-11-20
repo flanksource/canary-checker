@@ -65,3 +65,16 @@ func TestMatchPipelineVariables(t *testing.T) {
 		})
 	}
 }
+
+func TestGetRunArgsSkipsInProgressRun(t *testing.T) {
+	runs := []pipelines.Run{
+		{Id: lo.ToPtr(3), State: &pipelines.RunStateValues.InProgress},
+		{Id: lo.ToPtr(2), State: &pipelines.RunStateValues.Completed},
+		{Id: lo.ToPtr(1), State: &pipelines.RunStateValues.Completed},
+	}
+
+	args := getRunArgs("proj", lo.ToPtr(7), getLatestCompletedRun(runs))
+	if args.RunId == nil || *args.RunId != 2 {
+		t.Fatalf("expected the latest completed run (id 2), got %v", args.RunId)
+	}
+}
