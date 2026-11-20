@@ -89,7 +89,13 @@ func (c *ElasticsearchChecker) Check(ctx *context.Context, extConfig external.Ch
 		)
 	}
 
-	count := int(r["hits"].(map[string]any)["total"].(map[string]any)["value"].(float64))
+	hits, _ := r["hits"].(map[string]any)
+	total, _ := hits["total"].(map[string]any)
+	value, ok := total["value"].(float64)
+	if !ok {
+		return results.ErrorMessage(fmt.Errorf("elasticsearch response is missing a numeric hits.total.value; ensure track_total_hits is enabled"))
+	}
+	count := int(value)
 
 	if count == 0 && check.ShouldMarkFailOnEmpty() {
 		return results.Failf("Query has returned empty value")
