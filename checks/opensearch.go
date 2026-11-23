@@ -2,6 +2,7 @@ package checks
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"github.com/flanksource/canary-checker/api/context"
@@ -78,12 +79,17 @@ func (t *OpenSearchChecker) Check(ctx *context.Context, extConfig external.Check
 		return results.Failf("error parsing the response body: %s", err)
 	}
 
-	if response.Hits.Total.Value == 0 && check.ShouldMarkFailOnEmpty() {
+	if response.Hits.Total.Value == nil {
+		return results.ErrorMessage(errors.New("opensearch response is missing a numeric hits.total.value"))
+	}
+	count := *response.Hits.Total.Value
+
+	if count == 0 && check.ShouldMarkFailOnEmpty() {
 		return results.Failf("Query has returned empty value")
 	}
 
-	if response.Hits.Total.Value != check.Results {
-		return results.Failf("Query returned %d rows, expected %d", response.Hits.Total.Value, check.Results)
+	if count != check.Results {
+		return results.Failf("Query returned %d rows, expected %d", count, check.Results)
 	}
 
 	result.AddDetails(response)
@@ -94,7 +100,7 @@ func (t *OpenSearchChecker) Check(ctx *context.Context, extConfig external.Check
 type OpenSearchResponse struct {
 	Hits struct {
 		Total struct {
-			Value int64 `json:"value"`
+			Value *int64 `json:"value"`
 		} `json:"total"`
 	} `json:"hits"`
 }
