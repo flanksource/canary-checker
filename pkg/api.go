@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -204,12 +205,19 @@ func ellipsis(str string, length int) string {
 	return strings.TrimSpace(str[0:length-3]) + "..."
 }
 
+// ansiEscapes matches ANSI CSI escape sequences (colors, cursor movement, erase)
+var ansiEscapes = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
+
+func stripANSI(s string) string {
+	return ansiEscapes.ReplaceAllString(s, "")
+}
+
 func TruncateMessage(s string) string {
-	return ellipsis(s, properties.Int(4*1024, "canary.status.max.message"))
+	return ellipsis(stripANSI(s), properties.Int(4*1024, "canary.status.max.message"))
 }
 
 func TruncateError(s string) string {
-	return ellipsis(s, properties.Int(128*1024, "canary.status.max.error"))
+	return ellipsis(stripANSI(s), properties.Int(128*1024, "canary.status.max.error"))
 }
 
 func CheckStatusFromResult(result CheckResult) CheckStatus {
