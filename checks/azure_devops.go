@@ -105,7 +105,7 @@ func (t *AzureDevopsChecker) Check(ctx *context.Context, extConfig external.Chec
 
 		// Need to query the Run API to get more details about it
 		// because the ListRuns API doesn't return Resources.
-		latestRun, err = pipelineClient.GetRun(ctx, pipelines.GetRunArgs{Project: &projectID, PipelineId: pipeline.Id, RunId: (*runs)[0].Id})
+		latestRun, err = pipelineClient.GetRun(ctx, getRunArgs(projectID, pipeline.Id, latestRun))
 		if err != nil {
 			return results.ErrorMessage(fmt.Errorf("failed to get run (pipeline=%s): %w", check.Pipeline, err))
 		}
@@ -128,6 +128,11 @@ func (t *AzureDevopsChecker) Check(ctx *context.Context, extConfig external.Chec
 	}
 
 	return results
+}
+
+// getRunArgs builds the arguments to fetch the details of the latest completed run.
+func getRunArgs(projectID string, pipelineID *int, latest *pipelines.Run) pipelines.GetRunArgs {
+	return pipelines.GetRunArgs{Project: &projectID, PipelineId: pipelineID, RunId: latest.Id}
 }
 
 // getLatestCompletedRun returns the latest completed pipeline run.
