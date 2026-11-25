@@ -61,24 +61,34 @@ func (c *PrometheusChecker) Check(ctx *context.Context, extConfig external.Check
 	if warning != nil {
 		ctx.Debugf("warnings when running the query: %v", warning)
 	}
+
+	var samples model.Vector
+	switch value := modelValue.(type) {
+	case nil:
+	case model.Vector:
+		samples = value
+	case *model.Scalar:
+		samples = model.Vector{{Value: value.Value, Timestamp: value.Timestamp}}
+	default:
+		return results.Failf("unsupported Prometheus query result type: %s", modelValue.Type())
+	}
+
 	var prometheusResults = make([]map[string]interface{}, 0)
 	var data = map[string]interface{}{
 		"value":       0,
 		"firstResult": make(map[string]string),
 	}
-	if modelValue != nil {
-		for i, value := range modelValue.(model.Vector) {
-			val := make(map[string]interface{})
-			val["value"] = float64(value.Value)
-			if i == 0 {
-				data["firstResult"] = val
-				data["value"] = float64(value.Value)
-			}
-			for k, v := range value.Metric {
-				val[string(k)] = string(v)
-			}
-			prometheusResults = append(prometheusResults, val)
+	for i, value := range samples {
+		val := make(map[string]interface{})
+		val["value"] = float64(value.Value)
+		if i == 0 {
+			data["firstResult"] = val
+			data["value"] = float64(value.Value)
 		}
+		for k, v := range value.Metric {
+			val[string(k)] = string(v)
+		}
+		prometheusResults = append(prometheusResults, val)
 	}
 
 	if len(prometheusResults) == 0 && check.ShouldMarkFailOnEmpty() {
