@@ -51,6 +51,7 @@ func (c *LdapChecker) Check(ctx *context.Context, extConfig external.Check) pkg.
 	if err != nil {
 		return results.Failf("Failed to connect %v", err)
 	}
+	defer ld.Close()
 
 	if err := ld.Bind(connection.Username, connection.Password); err != nil {
 		return results.Failf("Failed to bind using %s %v", connection.Username, err)
