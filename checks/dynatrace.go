@@ -8,6 +8,7 @@ import (
 	"github.com/flanksource/canary-checker/api/external"
 	v1 "github.com/flanksource/canary-checker/api/v1"
 	"github.com/flanksource/canary-checker/pkg"
+	"github.com/samber/lo"
 )
 
 type DynatraceChecker struct{}
@@ -51,7 +52,7 @@ func (t *DynatraceChecker) Check(ctx *context.Context, extConfig external.Check)
 	defer apiResponse.Body.Close()
 
 	var problemDetails []map[string]any
-	for _, problem := range *problems.Problems {
+	for _, problem := range lo.FromPtr(problems.Problems) {
 		data := map[string]any{
 			"title":            fmt.Sprintf("%s %s", problem.Title, problem.ProblemId), // For uniqueness
 			"status":           problem.Status,
@@ -68,7 +69,7 @@ func (t *DynatraceChecker) Check(ctx *context.Context, extConfig external.Check)
 					continue
 				}
 
-				labels[*entity.Key] = *entity.Value
+				labels[*entity.Key] = lo.FromPtr(entity.Value)
 			}
 
 			data["labels"] = labels
